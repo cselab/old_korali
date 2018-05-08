@@ -2,8 +2,6 @@
 Π4U is a high performance framework for Bayesian uncertainty quantification of large scale computational models.
 
 
-# INSTALLATION
-
 ## PREREQUISITES
 - An MPI implementation must be installed on your system (preferably with full thread safety)
 - GSL-2.4 (http://www.gnu.org/software/gsl/) is required by some engines and must be installed on your system
@@ -54,16 +52,16 @@ build the serial version:
 
 
 
-# EXAMPLES
+## EXAMPLES
 Example setups can be found inside the `examples` directory.  
 More details to follow.
 
 
-# TESTING
+## TESTING
 More details to follow.
 
 
-# NOTES
+## NOTES
 
 Do not hesitate to ask for help and report any problems at:
 - chatzidp AT ethz.ch
