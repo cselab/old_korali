@@ -1,4 +1,6 @@
 site_name: Π4U
+repo_name: 'cselab/pi4u'
+repo_url: 'https://github.com/cselab/pi4u'
 
 
 pages:
@@ -14,11 +16,21 @@ pages:
 theme:
     name: material
     palette:
-        primary: 'indigo'
-        accent: 'indigo'
+        primary: 'light blue'
+        accent: 'blue'
+    font:
+        text: 'Ubuntu'
+        code: 'Ubuntu Mono'
+    logo:
+        icon: 'pie_chart'
+
 
 markdown_extensions:
   - pymdownx.arithmatex
+  - admonition
+  - codehilite
+
+
 
 extra_javascript:
   - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'

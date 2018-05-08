@@ -1,17 +1,45 @@
 # Welcome to Π4U
 
-Π4U is a high performance framework for Bayesian uncertainty quantification of large scale computational models.
-The software can be used for the following:
+Π4U is a high performance framework for optimization, sampling and Bayesian uncertainty quantification of large scale computational models.
+
+The framework is based on the [TORC](references.md#anchor_torc) task-parallel library for clusters, which is designed to provide unified programming and runtime support for computing platforms that range from single-core systems to hybrid multicore-GPU clusters and heterogenous Grid based supercomputers.
 
 
 
-$$
-p(\vartheta | d) = \frac{p(d | \vartheta) p(\vartheta)}{p(d)}
-$$
 
-where $p(d | \vartheta)$ is the likelihood function
+<br><br>
 
 
+# What Π4U can do for you
+
+1. Given a cost function $F(\vartheta)$ find
+	$$
+	\vartheta^\star = \mathop{\arg\min}\limits_{\vartheta} F(\vartheta) \,.
+	$$
+
+2. Given the density of a probability distribution $p_{\vartheta}$ draw samples,
+	$$
+		\vartheta^{(k)} \sim p_\vartheta, \quad k=1,\ldots,N_s \, .
+	$$
+
+3. Given a set of data $d$, the output of the model $f(x;\vartheta)$ a likelihood function $p(d|\vartheta)$ and a prior proabablity density $p(\vartheta)$ sample the posterior distribution,
+	$$
+	p(\vartheta | d) = \frac{p(d | \vartheta) p(\vartheta)}{p(d)}\, .
+	$$
+The model output $f$ depends on a set of input parameters $x$.
+
+After [installing](installation.md) the software have a look at the [examples]() and learn how you can run your cases.
+
+
+
+
+
+
+
+<br><br><br><br><br><br>
+
+!!! warning
+    The software and the documentation page are under continuous development. New pages and new feature will be constantly added.
 
 <!--
 # Additional documentation

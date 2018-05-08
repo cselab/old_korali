@@ -12,6 +12,6 @@
 * Hadjidoukas P.E, Angelikopoulos P., Rossinelli D., Alexeev D., Papadimitriou C., Koumoutsakos P., Bayesian uncertainty quantification and propagation for discrete element simulations of granular materials. Comput. Methods Appl. Mech. Engrg., 282:218-238, 2014
 ([doi](http://dx.doi.org/10.1016/j.cma.2014.07.017),[pdf](http://www.cse-lab.ethz.ch/images/stories/Publications/2014/PH_DEM_14.pdf))
 
-## TORC: Task-Based Runtime Library
+## <a name="anchor_torc"></a>TORC: Task-Based Runtime Library
 * Hadjidoukas P.E., Lappas E., Dimakopoulos V.V: A Runtime Library for Platform-Independent Task Parallelism. PDP 2012: 229-236
 ([doi](http://dx.doi.org/10.1109/PDP.2012.89))
