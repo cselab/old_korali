@@ -1,4 +1,6 @@
-# INSTALLATION
+# Π4U
+Π4U is a high performance framework for Bayesian uncertainty quantification of large scale computational models.
+
 
 ## PREREQUISITES
 - An MPI implementation must be installed on your system (preferably with full thread safety)
@@ -28,7 +30,7 @@ Enter the `build` directory:
 
 Before compiling, the following need to be checked: 
 - Path to GSL-2.4 inside the `Makefile`.  
-- Name for the MPI compiler in the `Makefile`, since this can be named differently on different platforms (e.g. CC=cc on Piz Daint).  
+- Name for the MPI compiler in the `Makefile`, since this can be named differently on different platforms (e.g. CC=CC on Piz Daint).  
 
 **Compilation options:**  
 
@@ -49,9 +51,14 @@ build the serial version:
 	make use_omp=0 use_torc=0
 
 
-## TESTING
 
-TODO
+## EXAMPLES
+Example setups can be found inside the `examples` directory.  
+More details to follow.
+
+
+## TESTING
+More details to follow.
 
 
 ## NOTES
