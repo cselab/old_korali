@@ -4,7 +4,7 @@ BASE_DIR="runs"
 DATA_DIR="./data"
 DATA_FILE_PREFIX=
 
-EXEC_FILE="../../../../build/dram_theta_fast"
+EXEC_FILE="../../../../build/dram_theta_internal"
 
 PAR_FILE="./dram.par"
 PRIOR_FILE="./priors.par"

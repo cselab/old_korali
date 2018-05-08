@@ -3,14 +3,14 @@
 #==============================================================================
 GSLROOT=$(HOME)/usr/gsl
 
-TARGET1 := sample_theta
-TARGET2 := sample_theta_fast
-TARGET3 := sample_psi
-TARGET4 := sample_posterior_theta
-TARGET5 := sample_posterior_theta_fast
-TARGET6 := optimize_theta
-TARGET7 := optimize_theta_fast
-TARGET8 := dram_theta_fast
+TARGET1 := tmcmc_theta_external
+TARGET2 := tmcmc_theta_internal
+TARGET3 := tmcmc_psi
+TARGET4 := tmcmc_posterior_theta_external
+TARGET5 := tmcmc_posterior_theta_internal
+TARGET6 := cmaes_theta_external
+TARGET7 := cmaes_theta_internal
+TARGET8 := dram_theta_internal
 TARGET9 := dram_psi
 
 
@@ -91,7 +91,7 @@ OBJ9:= $(patsubst %,$(OBJDIR)/%.o,$(basename  $(TMP)) )
 #==============================================================================
 #	COMPILERS AND FLAGS
 #==============================================================================
-use_torc?=1
+use_torc?=0
 use_omp?=0
 
 CC := gcc
@@ -133,28 +133,28 @@ $(shell mkdir -p $(OBJDIR) )
 all: $(TARGETS)
 
 
-sample_theta: $(OBJ1)
+tmcmc_theta_external: $(OBJ1)
 	$(LINK.o) $^ $(LDLIBS)
 
-sample_theta_fast: $(OBJ2)
+tmcmc_theta_internal: $(OBJ2)
 	$(LINK.o) $^ $(LDLIBS)
 
-sample_psi: $(OBJ3)
+tmcmc_psi: $(OBJ3)
 	$(LINK.o) $^ $(LDLIBS)
 
-sample_posterior_theta: $(OBJ4)
+tmcmc_posterior_theta_external: $(OBJ4)
 	$(LINK.o) $^ $(LDLIBS)
 
-sample_posterior_theta_fast: $(OBJ5)
+tmcmc_posterior_theta_internal: $(OBJ5)
 	$(LINK.o) $^ $(LDLIBS)
 
-optimize_theta: $(OBJ6)
+cmaes_theta_external: $(OBJ6)
 	$(LINK.o) $^ $(LDLIBS)
 
-optimize_theta_fast: $(OBJ7)
+cmaes_theta_internal: $(OBJ7)
 	$(LINK.o) $^ $(LDLIBS)
 
-dram_theta_fast: $(OBJ8)
+dram_theta_internal: $(OBJ8)
 	$(LINK.o) $^ $(LDLIBS)
 
 dram_psi: $(OBJ9)
