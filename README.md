@@ -32,7 +32,7 @@ Enter the `build` directory:
 
 Before compiling, the following need to be checked: 
 - Path to GSL-2.4 inside the `Makefile`.  
-- Name for the MPI compiler in the `Makefile`, since this can be named differently on different platforms (e.g. CC=cc on Piz Daint).  
+- Name for the MPI compiler in the `Makefile`, since this can be named differently on different platforms (e.g. CC=CC on Piz Daint).  
 
 **Compilation options:**  
 
@@ -55,12 +55,12 @@ build the serial version:
 
 
 # EXAMPLES
-Exmple setups can be found inside the `examples` directory.  
-More info will follow.
+Example setups can be found inside the `examples` directory.  
+More details to follow.
 
 
 # TESTING
-More info will follow.
+More details to follow.
 
 
 # NOTES
