@@ -17,7 +17,7 @@
 
 void fitfun_init( ){
 	char str[12];
-	sprintf(str, "%d", options.Npar);
+	sprintf(str, "%d", par.Npar);
 	fitfun_initialize(str);
 }
 

@@ -12,27 +12,9 @@
 #include "../priors/priors.h"
 
 
-/* Variables related to the inferred parameters */
-struct _params
-{
-	double 	*par0;		/* Initial parameter vector */
-	double 	sigma2;		/* Initial/prior value for the Gaussian error variance */
-	double 	n0;			/* Precision of sigma2 as imaginative observations. if n0<0, no sigma2 update */
-	int 	n;			/* Nnumber of actual observations (for sigma2 update) */
-
-	double 	*lbounds;	/* Lower bounds of parameter values */
-	double 	*ubounds;	/* Upper bounds of parameter values */
-
-	Density *prior;
-
-	char 	filename[256];	/* Output file for the chain */
-
-} params;
-
-
 
 /* Variables related to the options of DRAM */
-struct _options
+struct _params
 {
 	int 	Npar;    	/* problem dimensionality (number of parameters) */
     int 	Nsim;    	/* Length of the chain */
@@ -45,10 +27,25 @@ struct _options
 
 	double 	*qcov;     	/* Proposal covariance matrix */
 
+    int     seed;
+
 	int 	printfreq;	/* Time interval for printing info on screen */
 	int 	verbose;
 
-} options;
+
+	double 	*par0;		/* Initial parameter vector */
+	double 	sigma2;		/* Initial/prior value for the Gaussian error variance */
+	double 	n0;			/* Precision of sigma2 as imaginative observations. if n0<0, no sigma2 update */
+	int 	n;			/* Nnumber of actual observations (for sigma2 update) */
+
+	double 	*lbounds;	/* Lower bounds of parameter values */
+	double 	*ubounds;	/* Upper bounds of parameter values */
+
+	Density *prior;
+
+	char 	filename[256];	/* Output file for the chain */
+
+} par;
 
 
 
