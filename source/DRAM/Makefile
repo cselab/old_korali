@@ -60,8 +60,8 @@ $(OBJDIR)/priors/%.o: ../priors/%.c
 
 
 ctags:
-	@rm .tags .tags1 tags
-	@ctags $(ALL_SRC)
+	rm -rf .tags .tags1 tags
+	ctags $(ALL_SRC)
 
 
 print:

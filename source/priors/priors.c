@@ -7,7 +7,7 @@
 #include "priors.h"
 #include "myrand.h"
 
-#define BLANKS " \t"
+#define BLANKS " \t\n"
 
 //=============================================================================
 //
