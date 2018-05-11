@@ -4,7 +4,7 @@ BASE_DIR="runs"
 DATA_DIR="./data"
 DATA_FILE_PREFIX=
 
-EXEC_FILE="../../../../build/sample_theta"
+EXEC_FILE="../../../../build/tmcmc_theta_external"
 PAR_FILE="./tmcmc.par"
 MODEL_FILE="model/my_model.py"
 MODEL_SCRIPT="model/doall.sh"
