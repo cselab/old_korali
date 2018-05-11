@@ -12,23 +12,23 @@ The framework is based on the [TORC](references.md#anchor_torc) task-parallel li
 
 # What Π4U can do for you
 
-1. Given a cost function $F(\vartheta)$ find
+1. **Optimize**: given a cost function $F(\vartheta)$ find
 	$$
 	\vartheta^\star = \mathop{\arg\min}\limits_{\vartheta} F(\vartheta) \,.
 	$$
 
-2. Given the density of a probability distribution $p_{\vartheta}$ draw samples,
+2. **Sample**: given the density of a probability distribution $p_{\vartheta}$ draw samples,
 	$$
 		\vartheta^{(k)} \sim p_\vartheta, \quad k=1,\ldots,N_s \, .
 	$$
 
-3. Given a set of data $d$, the output of the model $f(x;\vartheta)$ a likelihood function $p(d|\vartheta)$ and a prior proabablity density $p(\vartheta)$ sample the posterior distribution,
+3. **Uncertainty Quantification**: given a set of data $d$, the output of the model $f(x;\vartheta)$ a likelihood function $p(d|\vartheta)$ and a prior probablity density $p(\vartheta)$ sample the posterior distribution,
 	$$
 	p(\vartheta | d) = \frac{p(d | \vartheta) p(\vartheta)}{p(d)}\, .
 	$$
 The model output $f$ depends on a set of input parameters $x$.
 
-After [installing](installation.md) the software have a look at the [examples]() and learn how you can run your cases.
+After [installing](installation.md) the software have a look at the [examples](./examples/sampling.md) and learn how you can run your cases.
 
 
 

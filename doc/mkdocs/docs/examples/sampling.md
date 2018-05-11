@@ -64,6 +64,14 @@ cp ../../../../../../source/tools/display/plotmatrix_hist.py .
 
 
 ### Behind the scripts
+The script `./setup_tmcmc.sh` makes a new running folder and copies inside the executable and the needed files:
+
+1. the data file data.txt,
+1. the file that contains the prior information, [priors.par](../developing/par_files.md#priors.par),
+1. the parameter file for tmcmc, [tmcmc.par](../developing/par_files.md#tmcmc.par).
+
+For this example, TMCMC has been linked to the likelihood function `loglike_theta_fast.c`. Inside this file the model $f$ as well as the likelihood function $p(d | \vartheta)$ has beem implemented. More information on the the likelihood implementation and how to write your own likelihood you can find [here](../developing/likelihoods.md).
+
 
 
 
@@ -105,3 +113,4 @@ With this command `tail -n +1000 chain.txt` we discard the first $1000$ samples 
 
 
 ### Behind the scripts
+Same as in the TMCMC example. The only difference is that instead of the tmcmc.par is substituted by [dram.par](../developing/par_files.md#dram.par).

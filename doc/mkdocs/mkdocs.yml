@@ -8,9 +8,16 @@ pages:
   - Installation: installation.md
   - Examples:
       - Sampling: examples/sampling.md
+      - Optimizing: examples/optimizing.md
       - Postprocessing: examples/post.md
-  - Developing: developing.md
-  - Performance and Scalability: hpc.md
+  - Developing:
+      - Structure: developing/structure.md
+      - Conventions: developing/conventions.md
+      - Par files: developing/par_files.md
+      - Likelihoods: developing/likelihoods.md
+      - Upcoming: developing/upcoming.md
+      - Beta: developing/beta.md
+  - Performance: hpc.md
   - References: references.md
 
 theme:
