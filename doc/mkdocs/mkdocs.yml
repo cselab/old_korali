@@ -8,6 +8,7 @@ pages:
   - Installation: installation.md
   - Examples:
       - Sampling: examples/sampling.md
+      - External: examples/external.md
       - Optimizing: examples/optimizing.md
       - Postprocessing: examples/post.md
   - Developing:
