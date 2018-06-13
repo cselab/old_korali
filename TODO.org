@@ -1,0 +1,7 @@
+* [0/3] file organisation
+** TODO no .par inside source dir
+** TODO no postprocessing scripts inside source
+
+* [0/2] Makefile
+** TODO use gsl-config --libs and gsl-config --cflags
+** TODO add PHONY
