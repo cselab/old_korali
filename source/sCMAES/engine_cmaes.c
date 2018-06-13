@@ -13,11 +13,14 @@
 #include <mpi.h>
 #include <torc.h>
 
+static double get_time() {
+    return torc_gettime();
+}
+
 #else
 
 #include <sys/time.h>
-static double torc_gettime()
-{
+static double get_time() {
     struct timeval t;
     gettimeofday(&t, NULL);
     return (double)t.tv_sec + (double)t.tv_usec*1.0E-6;
@@ -31,9 +34,6 @@ static double torc_gettime()
 #define _IODUMP_ 1
 #define JOBMAXTIME    0
 #define _RESTART_
-
-
-
 
 
 void set_bounds( double **p_lower_bound, double **p_upper_bound, int dim);
@@ -52,7 +52,6 @@ int is_there_enough_time( double gt0, double dt );
 
 
 
-
 int main(int argn, char **args)
 {
     cmaes_t evo; 
@@ -68,18 +67,17 @@ int main(int argn, char **args)
     double *lower_bound, *upper_bound;
 
 
-
-
 #if defined(_USE_TORC_)
     torc_register_task(taskfun);
     torc_init(argn, args, MODE_MS);
 #endif
 
 
-    gt0 = torc_gettime();
+    gt0 = get_time();
 
 
-    if(  argn==2  &&  !strcmp(args[1], "-cr")  )	checkpoint_restart = 1;
+    if ( argn==2  &&  !strcmp(args[1], "-cr") )
+	checkpoint_restart = 1;
 
     
     arFunvals = cmaes_init(&evo, 0, NULL, NULL, 0, 0, "cmaes_initials.par");
@@ -108,7 +106,7 @@ int main(int argn, char **args)
     fitfun_initialize( dim_str );
 
 
-    gt1 = torc_gettime();
+    gt1 = get_time();
     while( !cmaes_TestForTermination(&evo) ){
 
         pop = cmaes_SamplePopulation(&evo); 
@@ -147,13 +145,13 @@ int main(int argn, char **args)
         
         step++;
     }
-    gt2 = torc_gettime();
+    gt2 = get_time();
 
     printf("Stop:\n %s \n",  cmaes_TestForTermination(&evo)); /* print termination reason */
     cmaes_WriteToFile( &evo, "all", "allcmaes.dat" );         /* write final results */
     cmaes_exit(&evo); /* release memory */
 
-    gt3 = torc_gettime();
+    gt3 = get_time();
     
     printf("Total elapsed time = %.3lf  seconds\n", gt3-gt0);
     printf("Initialization time = %.3lf  seconds\n", gt1-gt0);
@@ -305,7 +303,7 @@ double load_pop_from_file( int step, double * const* pop, double *arFunvals, int
     FILE *fp = fopen(filename, "r");
     double tt0, tt1 ;
      
-    tt0 = torc_gettime();
+    tt0 = get_time();
 
     if( fp != NULL ){
    
@@ -335,7 +333,7 @@ double load_pop_from_file( int step, double * const* pop, double *arFunvals, int
     else
         *checkp = 0;
 
-    tt1 = torc_gettime();
+    tt1 = get_time();
 
     return tt1-tt0;
 
@@ -375,7 +373,7 @@ double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop
     int info[4];
     double tt0, tt1 ;
     	
-    tt0 = torc_gettime();
+    tt0 = get_time();
 	
     for( int i = 0; i < lambda; ++i){
         info[0] = 0; info[1] = 0; info[2] = step; info[3] = i;     /* gen, chain, step, task */
@@ -409,7 +407,7 @@ double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop
     }
 
 
-    tt1 = torc_gettime();
+    tt1 = get_time();
   
     return tt1-tt0;
 }
@@ -483,7 +481,7 @@ int is_there_enough_time( double gt0, double dt ){
     static long maxt = JOBMAXTIME;    //get_job_maxTime(); // from lsf or provided by the user
     printf("job maxtime = %ld\n", maxt);
 
-    runt = torc_gettime()-gt0;    //runt = get_job_runTime(); // from lsf or provided by the application: runt = omp_get_wtime()-gt0;
+    runt = get_time()-gt0;    //runt = get_job_runTime(); // from lsf or provided by the application: runt = omp_get_wtime()-gt0;
     remt = maxt - runt;
     printf("job runtime = %ld remtime = %ld\n", runt, remt);
 
