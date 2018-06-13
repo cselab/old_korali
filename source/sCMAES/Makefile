@@ -21,13 +21,14 @@ OBJ:= $(patsubst %,$(OBJDIR)/%.o,$(basename  $(TMP)))
 #==============================================================================
 use_torc?=0
 
-CXX := mpic++
-CC := mpicc
-LD := mpic++
+CXX := g++
+CC := gcc
+LD := g++
 
 ifeq ($(use_torc),1)
 	CC = mpicc
-	CC = mpic++
+	CXX = mpic++
+	LD = mpic++
 	CFLAGS += -D_USE_TORC_=1 `torc_cflags`
 	LDLIBS += `torc_libs`
 endif

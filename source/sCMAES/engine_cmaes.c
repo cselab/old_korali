@@ -54,7 +54,7 @@ int is_there_enough_time( double gt0, double dt );
 
 
 void add_population_to_surrogate(int lambda, double *const *pop, double *arFunvals, Surrogate *s);
-
+double evaluate_population_surrogate( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step, Surrogate *s );
 
 int main(int argn, char **args) {
     cmaes_t evo; 
@@ -63,7 +63,9 @@ int main(int argn, char **args) {
     double gt0, gt1, gt2, gt3;
     double stt = 0.0, dt;
     char dim_str[12];
-    int step = 0;
+    int step = 0, substep;
+    int nsteps_surrogate = 5;
+    int step_start_surrogate = 2;
     Surrogate *surrogate;
     
     static int checkpoint_restart = 0;
@@ -79,7 +81,7 @@ int main(int argn, char **args) {
 
     gt0 = get_time();
 
-
+        
     if ( argn==2  &&  !strcmp(args[1], "-cr") )
 	checkpoint_restart = 1;
 
@@ -113,8 +115,9 @@ int main(int argn, char **args) {
 
 
     gt1 = get_time();
-    while( !cmaes_TestForTermination(&evo) ){
-
+        
+    while ( !cmaes_TestForTermination(&evo) ) {
+        
         pop = cmaes_SamplePopulation(&evo); 
 
         if( checkpoint_restart ){
@@ -129,13 +132,27 @@ int main(int argn, char **args) {
             stt += dt;
         }
 
+        if (step >= step_start_surrogate) {
+            double err = surrogate_error(lambda, pop, arFunvals, surrogate);
+            printf("surrogate error: %g\n", err);
+        }
+
         add_population_to_surrogate(lambda, pop, arFunvals, surrogate);
+        surrogate_optimize(surrogate);
 
         cmaes_UpdateDistribution(&evo, arFunvals);
 
         cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
 
         print_the_best( evo, step );
+
+        for (substep = 0; substep < nsteps_surrogate; ++substep) {
+            pop = cmaes_SamplePopulation(&evo);
+            make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
+            dt = evaluate_population_surrogate(&evo, arFunvals, pop, priors, step, surrogate);
+            cmaes_UpdateDistribution(&evo, arFunvals);
+            //step++;
+        }
 
 		
        	if (!checkpoint_restart){
@@ -409,7 +426,7 @@ double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop
 #endif
   	
 
-    // subtruct the log-prior from the log-likelohood
+    // subtract the log-prior from the log-likelohood
     for( int i=0; i<lambda; i++){
         arFunvals[i] -= prior_log_pdf(d, dim, pop[i]);
     }
@@ -420,9 +437,26 @@ double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop
     return tt1-tt0;
 }
 
+double evaluate_population_surrogate( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step, Surrogate *s ){
+    int i, dim, lambda;
+    double tt0, tt1 ;
 
+    lambda = cmaes_Get( evo, "lambda");
+    dim    = cmaes_Get( evo, "dim");
+    
+    tt0 = get_time();
+	
+    for (i = 0; i < lambda; ++i)
+        arFunvals[i] = surrogate_eval(pop[i], s);
+    
+    // subtract the log-prior from the log-likelohood
+    for (i = 0; i < lambda; ++i)
+        arFunvals[i] -= prior_log_pdf(d, dim, pop[i]);
 
-
+    tt1 = get_time();
+  
+    return tt1-tt0;
+}
 
 
 
