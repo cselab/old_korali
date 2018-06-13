@@ -1,6 +1,6 @@
 struct Surrogate;
 
-void surrogate_ini(Surrogate **s);
+void surrogate_ini(int dim, Surrogate **s);
 void surrogate_fin(Surrogate *s);
 
 void surrogate_add_point(const double *x, double y, Surrogate *s);

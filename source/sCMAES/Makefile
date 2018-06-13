@@ -1,6 +1,7 @@
 SRC := 	engine_cmaes.c \
 		cmaes.c \
 		fitfun.c \
+		surrogate.cpp \
 		../priors/priors.c \
 		../priors/myrand.c
 
@@ -20,11 +21,13 @@ OBJ:= $(patsubst %,$(OBJDIR)/%.o,$(basename  $(TMP)))
 #==============================================================================
 use_torc?=0
 
+CXX := mpic++
 CC := mpicc
-LD := mpicc
+LD := mpic++
 
 ifeq ($(use_torc),1)
 	CC = mpicc
+	CC = mpic++
 	CFLAGS += -D_USE_TORC_=1 `torc_cflags`
 	LDLIBS += `torc_libs`
 endif
@@ -35,11 +38,19 @@ CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
 CFLAGS += `gsl-config --cflags`
 
-LDLIBS += `gsl-config --libs`  -lm -lpthread
+CXXFLAGS += -O3
+CXXFLAGS += -Wall
+CXXFLAGS += `pkg-config libgp --cflags`
 
 
-COMPILE.c = $(CC) $(CFLAGS) -c -o $@
-LINK.o    = $(LD) $(LDFLAGS) -o $@
+LDLIBS += `gsl-config --libs`
+LDLIBS += `pkg-config libgp --libs`
+LDLIBS += -lm -lpthread
+
+
+COMPILE.c   = $(CC)  $(CFLAGS)   -c -o $@
+COMPILE.cxx = $(CXX) $(CXXFLAGS) -c -o $@
+LINK.o      = $(LD)  $(LDFLAGS)     -o $@
 
 
 $(shell mkdir -p $(OBJDIR) )
@@ -57,6 +68,10 @@ scma: $(OBJ)
 $(OBJDIR)/%.o: %.c
 	@mkdir -p "$(@D)"
 	$(COMPILE.c) $<
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p "$(@D)"
+	$(COMPILE.cxx) $<
 
 
 $(OBJDIR)/priors/%.o: ../priors/%.c
