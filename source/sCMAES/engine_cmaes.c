@@ -5,6 +5,8 @@
 #include <math.h>
 #include <string.h>
 
+#include "surrogate.h"
+
 #include "fitfun.h"
 #include "../priors/priors.h"
 
@@ -51,9 +53,10 @@ void write_pop_to_file( cmaes_t evo, double *arFunvals, double * const* pop, int
 int is_there_enough_time( double gt0, double dt );
 
 
+void add_population_to_surrogate(int lambda, double *const *pop, double *arFunvals, Surrogate *s);
 
-int main(int argn, char **args)
-{
+
+int main(int argn, char **args) {
     cmaes_t evo; 
     double *arFunvals, *const*pop;
     int lambda, dim;
@@ -61,7 +64,8 @@ int main(int argn, char **args)
     double stt = 0.0, dt;
     char dim_str[12];
     int step = 0;
-	
+    Surrogate *surrogate;
+    
     static int checkpoint_restart = 0;
 
     double *lower_bound, *upper_bound;
@@ -89,6 +93,8 @@ int main(int argn, char **args)
     lambda = cmaes_Get(&evo, "lambda");
     set_bounds( &lower_bound, &upper_bound, dim );
 
+    surrogate_ini(dim, &surrogate);
+    
 
     // Initialize prior distributions
     Density *priors;
@@ -122,6 +128,8 @@ int main(int argn, char **args)
             dt = evaluate_population( &evo, arFunvals, pop, priors, step );
             stt += dt;
         }
+
+        add_population_to_surrogate(lambda, pop, arFunvals, surrogate);
 
         cmaes_UpdateDistribution(&evo, arFunvals);
 
@@ -159,7 +167,7 @@ int main(int argn, char **args)
     printf("Funtion Evaluation time = %.3lf  seconds\n", stt);
     printf("Finalization time = %.3lf  seconds\n", gt3-gt2);
 
-
+    surrogate_fin(surrogate);
 
 
 #if defined(_USE_TORC_)
@@ -500,3 +508,12 @@ int is_there_enough_time( double gt0, double dt ){
 
 
 
+void add_population_to_surrogate(int lambda, double *const *pop, double *arFunvals, Surrogate *s) {
+    int i;
+    double *x, y;
+    for (i = 0; i < lambda; ++i) {
+        x = pop[i];
+        y = arFunvals[i];
+        surrogate_add_point(x, y, s);
+    }
+}

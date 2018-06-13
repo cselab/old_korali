@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <gp.h>
 
+extern "C" {
 #include "surrogate.h"
+}
 
 typedef libgp::GaussianProcess GP;
 

@@ -1,4 +1,4 @@
-struct Surrogate;
+typedef struct Surrogate Surrogate;
 
 void surrogate_ini(int dim, Surrogate **s);
 void surrogate_fin(Surrogate *s);
