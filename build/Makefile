@@ -1,7 +1,6 @@
 #==============================================================================
 #	PATHS AND SOURCE FILES
 #==============================================================================
-GSLROOT=$(HOME)/usr/gsl
 
 TARGET1 := tmcmc_theta_external
 TARGET2 := tmcmc_theta_internal
@@ -115,10 +114,11 @@ endif
 CFLAGS += -O3 -std=c99
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
-CFLAGS += -I${GSLROOT}/include
+CFLAGS += `gsl-config --cflags`
 CFLAGS += -I./$(SRC)/TMCMC
 
-LDLIBS += -L${GSLROOT}/lib -lgsl -lgslcblas -lm -lpthread
+LDLIBS += `gsl-config --libs`
+LDLIBS += -lm -lpthread
 
 
 COMPILE.c = $(CC) $(CFLAGS) -c -o $@
@@ -180,3 +180,5 @@ clean:
 
 clear:
 	rm -rf .tags* tags
+
+.PHONY: clean clear print ctags

@@ -1,5 +1,3 @@
-GSLROOT:=$(HOME)/usr/gsl/
-
 SRC := 	engine_cmaes.c \
 		cmaes.c \
 		fitfun.c \
@@ -35,9 +33,9 @@ endif
 CFLAGS += -O3 -std=c99
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
-CFLAGS += -I${GSLROOT}/include
+CFLAGS += `gsl-config --cflags`
 
-LDLIBS += -L${GSLROOT}/lib -lgsl -lgslcblas  -lm -lpthread
+LDLIBS += `gsl-config --libs`  -lm -lpthread
 
 
 COMPILE.c = $(CC) $(CFLAGS) -c -o $@
@@ -81,3 +79,5 @@ clean:
 
 clear:
 	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
+
+.PHONY: clear clean print ctags
