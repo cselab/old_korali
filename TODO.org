@@ -5,3 +5,6 @@
 * [0/2] Makefile
 ** TODO use gsl-config --libs and gsl-config --cflags
 ** TODO add PHONY
+* [0/2] Add tests
+** TODO CMAES
+** TODO TMCMC
