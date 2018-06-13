@@ -73,6 +73,9 @@ ctags:
 print:
 
 
+test: scma
+	atest `find test -name main`
+
 clean:
 	rm -rf  $(TARGETS) $(OBJDIR)
 
@@ -80,4 +83,4 @@ clean:
 clear:
 	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
 
-.PHONY: clear clean print ctags
+.PHONY: clear clean print ctags test
