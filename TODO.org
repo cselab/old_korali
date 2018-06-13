@@ -1,10 +1,17 @@
+* [0/1] Code structure
+** TODO isolate torc/openmp
 * [0/3] file organisation
 ** TODO no .par inside source dir
 ** TODO no postprocessing scripts inside source
+** TODO only one fitfun.h
 
-* [0/2] Makefile
+* [0/4] Makefile
 ** TODO use gsl-config --libs and gsl-config --cflags
-** TODO add PHONY
+** TODO add .PHONY
+** TODO separate dependencies
+** TODO add separate makefiles
 * [0/2] Add tests
 ** TODO CMAES
 ** TODO TMCMC
+* [0/1] Features
+** TODO Surrogate based CMAES
