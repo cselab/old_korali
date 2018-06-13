@@ -4,7 +4,7 @@ BASE_DIR="runs"
 DATA_DIR="./data"
 DATA_FILE_PREFIX=
 
-EXEC_FILE="../../../build/optimize_theta"
+EXEC_FILE="../../../build/cmaes_theta_external"
 
 MODEL_FILE="model/my_model.py"
 MODEL_SCRIPT="model/doall.sh"

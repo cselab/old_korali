@@ -4,7 +4,7 @@ BASE_DIR="runs"
 DATA_DIR="./data"
 DATA_FILE_PREFIX=
 
-EXEC_FILE="../../../build/optimize_theta_fast"
+EXEC_FILE="../../../build/cmaes_theta_internal"
 
 #Ilist=(1)
 Ilist=(1 2 3 4 5)
