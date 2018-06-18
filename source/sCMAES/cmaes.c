@@ -751,7 +751,7 @@ const double * cmaes_Optimize(cmaes_t *evo, double(*pFun)(double const *, int di
         }
 
         /* update search distribution */
-        cmaes_UpdateDistribution(evo, evo->publicFitness); 
+        cmaes_UpdateDistribution(0, evo, evo->publicFitness); 
 
         /* read control signals for output and termination */
         if (signalsFilename)
@@ -767,7 +767,7 @@ const double * cmaes_Optimize(cmaes_t *evo, double(*pFun)(double const *, int di
 
 /* --------------------------------------------------------- */
 /* --------------------------------------------------------- */
-double * cmaes_UpdateDistribution(cmaes_t *t, const double *rgFunVal)
+double * cmaes_UpdateDistribution(int save_best, cmaes_t *t, const double *rgFunVal)
 {
     int i, j, iNk, hsig, N=t->sp.N;
     int flgdiag = ((t->sp.diagonalCov == 1) || (t->sp.diagonalCov >= t->gen)); 
@@ -808,7 +808,7 @@ double * cmaes_UpdateDistribution(cmaes_t *t, const double *rgFunVal)
     t->arFuncValueHist[0] = rgFunVal[t->index[0]];
 
     /* update xbestever */
-    if (t->rgxbestever[N] > t->rgrgx[t->index[0]][N] || t->gen == 1)
+    if (save_best && (t->rgxbestever[N] > t->rgrgx[t->index[0]][N] || t->gen == 1))
         for (i = 0; i <= N; ++i) {
             t->rgxbestever[i] = t->rgrgx[t->index[0]][i];
             t->rgxbestever[N+1] = t->countevals;
@@ -878,47 +878,9 @@ double * cmaes_UpdateDistribution(cmaes_t *t, const double *rgFunVal)
             t->flgIniphase = 0;
     }
 
-#if 0
-    /* remove momentum in ps, if ps is large and fitness is getting worse */
-    /* This is obsolete due to hsig and harmful in a dynamic environment */
-    if(psxps/N > 1.5 + 10.*sqrt(2./N) 
-            && t->arFuncValueHist[0] > t->arFuncValueHist[1]
-            && t->arFuncValueHist[0] > t->arFuncValueHist[2]) {
-        double tfac = sqrt((1 + douMax(0, log(psxps/N))) * N / psxps);
-        for (i=0; i<N; ++i) 
-            t->rgps[i] *= tfac;
-        psxps *= tfac*tfac; 
-    }
-#endif
-
     /* update of C  */
 
     Adapt_C2(t, hsig);
-
-    /* Adapt_C(t); not used anymore */
-
-#if 0
-    if (t->sp.ccov != 0. && t->flgIniphase == 0) {
-        int k; 
-
-        t->flgEigensysIsUptodate = 0;
-
-        /* update covariance matrix */
-        for (i = 0; i < N; ++i)
-            for (j = 0; j <=i; ++j) {
-                t->C[i][j] = (1 - t->sp.ccov) * t->C[i][j] 
-                    + t->sp.ccov * (1./t->sp.mucov) 
-                    * (t->rgpc[i] * t->rgpc[j] 
-                            + (1-hsig)*t->sp.ccumcov*(2.-t->sp.ccumcov) * t->C[i][j]);
-                for (k = 0; k < t->sp.mu; ++k) /* additional rank mu update */
-                    t->C[i][j] += t->sp.ccov * (1-1./t->sp.mucov) * t->sp.weights[k]  
-                        * (t->rgrgx[t->index[k]][i] - t->rgxold[i]) 
-                        * (t->rgrgx[t->index[k]][j] - t->rgxold[j])
-                        / t->sigma / t->sigma; 
-            }
-    }
-#endif
-
 
     /* update of sigma */
     t->sigma *= exp(((sqrt(psxps)/t->chiN)-1.)*t->sp.cs/t->sp.damps);
