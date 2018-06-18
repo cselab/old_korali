@@ -64,8 +64,12 @@ int main(int argn, char **args) {
     double stt = 0.0, dt;
     char dim_str[12];
     int step = 0, substep;
-    int nsteps_surrogate = 5;
-    int step_start_surrogate = 2;
+
+    double surrogate_err = 0.5;
+    double t_err = 0.5, b_err = 1.;
+    int nsteps_surrogate = 0;
+    const int max_nsteps_surrogate = 20;
+    int step_start_surrogate = 4;
     Surrogate *surrogate;
     
     static int checkpoint_restart = 0;
@@ -134,13 +138,25 @@ int main(int argn, char **args) {
 
         if (step >= step_start_surrogate) {
             double err = surrogate_error(lambda, pop, arFunvals, surrogate);
-            printf("surrogate error: %g\n", err);
+
+            surrogate_err = err * b_err + (1.0 - b_err) * surrogate_err;
+            
+            nsteps_surrogate = (t_err - surrogate_err) / t_err * max_nsteps_surrogate;
+            printf("%g\n", surrogate_err);
+            nsteps_surrogate = nsteps_surrogate < 0 ? 0 : nsteps_surrogate;
+
+            printf("surrogate error: %g -> %d\n", err, nsteps_surrogate);
+            // nsteps_surrogate = 1e-5 / err;
+            // nsteps_surrogate = nsteps_surrogate > 100 ? 100 : nsteps_surrogate;
         }
 
-        add_population_to_surrogate(lambda, pop, arFunvals, surrogate);
-        surrogate_optimize(surrogate);
+        if (step >= step_start_surrogate - 1) {
+            surrogate_reset(surrogate);
+            add_population_to_surrogate(lambda, pop, arFunvals, surrogate);
+            surrogate_optimize(surrogate);
+        }
 
-        cmaes_UpdateDistribution(&evo, arFunvals);
+        cmaes_UpdateDistribution(1, &evo, arFunvals);
 
         cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
 
@@ -150,7 +166,7 @@ int main(int argn, char **args) {
             pop = cmaes_SamplePopulation(&evo);
             make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
             dt = evaluate_population_surrogate(&evo, arFunvals, pop, priors, step, surrogate);
-            cmaes_UpdateDistribution(&evo, arFunvals);
+            cmaes_UpdateDistribution(0, &evo, arFunvals);
             //step++;
         }
 
