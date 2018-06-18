@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <gp.h>
 #include <rprop.h>
@@ -29,6 +30,10 @@ void surrogate_fin(Surrogate *s) {
     free(s);
 }
 
+void surrogate_reset(Surrogate *s) {
+    s->gp->clear_sampleset();
+}
+
 void surrogate_add_point(const double *x, double y, Surrogate *s) {
     s->gp->add_pattern(x, y);
 }
@@ -54,7 +59,9 @@ double surrogate_error(int n, double* const* xx, const double *yyexact, Surrogat
         dy = surrogate_eval(x, s);
         dy -= yyexact[i];
         err += dy * dy;
+
+        // err += s->gp->var(x);
     }
-    return n ? err / n : 0.0;
+    return sqrt(n ? err / n : 0.0);
 }
 
