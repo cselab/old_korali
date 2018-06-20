@@ -10,10 +10,12 @@ DIR_PRIORS=../priors
 DIR_CMAES=../lib/cmaes
 
 LDLIBS += -L$(DIR_PRIORS) -lpriors
-CFLAGS += -I$(FITFUN_DIR)
+CFLAGS += -I$(DIR_PRIORS)
 
 LDLIBS += -L$(DIR_CMAES) -lcmaes
 CFLAGS += -I$(DIR_CMAES)
+
+CFLAGS += -I$(FITFUN_DIR)
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)

@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h> 
-#include "cmaes_interface.h"
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
 
-#include "fitfun.h"
-#include "../priors/priors.h"
+#include <cmaes.h>
+#include <fitfun.h>
+#include <priors.h>
 
 #if defined(_USE_TORC_)
 
@@ -31,8 +31,6 @@ static double torc_gettime()
 #define _IODUMP_ 1
 #define JOBMAXTIME    0
 #define _RESTART_
-
-
 
 
 
