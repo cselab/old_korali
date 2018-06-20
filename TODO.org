@@ -5,13 +5,15 @@
 ** TODO no postprocessing scripts inside source
 ** TODO only one fitfun.h
 
-* [2/4] Makefile
+* [4/4] Makefile
 ** DONE use gsl-config --libs and gsl-config --cflags
    CLOSED: [2018-06-13 Wed 14:01]
 ** DONE add .PHONY
    CLOSED: [2018-06-13 Wed 14:01]
-** TODO separate dependencies
-** TODO add separate makefiles
+** DONE separate dependencies
+   CLOSED: [2018-06-20 Wed 17:14]
+** DONE add separate makefiles
+   CLOSED: [2018-06-20 Wed 17:14]
 * [0/2] Add tests
 ** TODO CMAES
 ** TODO TMCMC
