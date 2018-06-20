@@ -2,21 +2,21 @@ include ../make/common.mk
 
 FITFUN_OBJS ?= ./fitfun.o
 FITFUN_DIR  ?= ../likelihoods
-TARGETS := cma
+TARGET      ?= cma
 
-all: $(TARGETS)
+all: $(TARGET)
 
 DIR_PRIORS=../priors
 LDLIBS += -L$(DIR_PRIORS) -lpriors
 CFLAGS += -I$(FITFUN_DIR)
 
-cma:
-	(cd $(DIR_PRIORS); make priors.a)
+$(TARGET):
+	(cd $(DIR_PRIORS); make libpriors.a)
 	$(LINK.o) $^ $(LDLIBS)
 
 # dependencies
 
-cma: cmaes.o engine_cmaes.o $(FITFUN_OBJS)
+$(TARGET): cmaes.o engine_cmaes.o $(FITFUN_OBJS)
 cmaes.o: cmaes.c cmaes.h cmaes_interface.h
 engine_cmaes.o: engine_cmaes.c cmaes.h cmaes_interface.h
 

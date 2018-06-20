@@ -2,21 +2,21 @@ include ../make/common.mk
 
 FITFUN_OBJS ?= ./fitfun.o
 FITFUN_DIR  ?= ../likelihoods
-TARGETS := engine_tmcmc
+TARGET      ?= engine_tmcmc
 
-all: $(TARGETS)
+all: $(TARGET)
 
 DIR_PRIORS=../priors
 LDLIBS += -L$(DIR_PRIORS) -lpriors
 CFLAGS += -I$(FITFUN_DIR)
 
-engine_tmcmc:
-	(cd $(DIR_PRIORS); make priors.a)
+$(TARGET):
+	(cd $(DIR_PRIORS); make libpriors.a)
 	$(LINK.o) $^ $(LDLIBS)
 
 # dependencies
 
-engine_tmcmc: tmcmc_run.o \
+$(TARGET): tmcmc_run.o \
 	tmcmc_stats.o \
 	tmcmc_db.o \
 	tmcmc_aux.o \
@@ -31,7 +31,7 @@ tmcmc_engine.o: tmcmc_engine.c
 
 fitfun.o: fitfun.c
 
-clean:; rm -rf  $(TARGETS) *.o
+clean:; rm -rf  $(TARGET) *.o
 clear:;	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
 
 .PHONY: clear clean all

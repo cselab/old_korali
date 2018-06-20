@@ -28,4 +28,3 @@ LINK.o    = $(LD) $(LDFLAGS) -o $@
 	$(COMPILE.c) $<
 
 %.a:; ar rcs $@ $^
-
