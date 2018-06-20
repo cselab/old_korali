@@ -66,10 +66,10 @@ int main(int argn, char **args) {
     int step = 0, substep;
 
     double surrogate_err = 0.5;
-    double t_err = 0.5, b_err = 1.;
+    double t_err = 0, b_err = 1.0;
     int nsteps_surrogate = 0;
-    const int max_nsteps_surrogate = 20;
-    int step_start_surrogate = 4;
+    const int max_nsteps_surrogate = 5;
+    int step_start_surrogate = 2;
     Surrogate *surrogate;
     
     static int checkpoint_restart = 0;
@@ -138,7 +138,7 @@ int main(int argn, char **args) {
 
         if (step >= step_start_surrogate) {
             double err = surrogate_error(lambda, pop, arFunvals, surrogate);
-
+            t_err = 1e-3 * cmaes_Get(&evo, "lastrange");
             surrogate_err = err * b_err + (1.0 - b_err) * surrogate_err;
             
             nsteps_surrogate = (t_err - surrogate_err) / t_err * max_nsteps_surrogate;
@@ -146,8 +146,6 @@ int main(int argn, char **args) {
             nsteps_surrogate = nsteps_surrogate < 0 ? 0 : nsteps_surrogate;
 
             printf("surrogate error: %g -> %d\n", err, nsteps_surrogate);
-            // nsteps_surrogate = 1e-5 / err;
-            // nsteps_surrogate = nsteps_surrogate > 100 ? 100 : nsteps_surrogate;
         }
 
         if (step >= step_start_surrogate - 1) {
