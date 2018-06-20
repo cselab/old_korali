@@ -878,47 +878,9 @@ double * cmaes_UpdateDistribution(cmaes_t *t, const double *rgFunVal)
             t->flgIniphase = 0;
     }
 
-#if 0
-    /* remove momentum in ps, if ps is large and fitness is getting worse */
-    /* This is obsolete due to hsig and harmful in a dynamic environment */
-    if(psxps/N > 1.5 + 10.*sqrt(2./N) 
-            && t->arFuncValueHist[0] > t->arFuncValueHist[1]
-            && t->arFuncValueHist[0] > t->arFuncValueHist[2]) {
-        double tfac = sqrt((1 + douMax(0, log(psxps/N))) * N / psxps);
-        for (i=0; i<N; ++i) 
-            t->rgps[i] *= tfac;
-        psxps *= tfac*tfac; 
-    }
-#endif
-
     /* update of C  */
 
     Adapt_C2(t, hsig);
-
-    /* Adapt_C(t); not used anymore */
-
-#if 0
-    if (t->sp.ccov != 0. && t->flgIniphase == 0) {
-        int k; 
-
-        t->flgEigensysIsUptodate = 0;
-
-        /* update covariance matrix */
-        for (i = 0; i < N; ++i)
-            for (j = 0; j <=i; ++j) {
-                t->C[i][j] = (1 - t->sp.ccov) * t->C[i][j] 
-                    + t->sp.ccov * (1./t->sp.mucov) 
-                    * (t->rgpc[i] * t->rgpc[j] 
-                            + (1-hsig)*t->sp.ccumcov*(2.-t->sp.ccumcov) * t->C[i][j]);
-                for (k = 0; k < t->sp.mu; ++k) /* additional rank mu update */
-                    t->C[i][j] += t->sp.ccov * (1-1./t->sp.mucov) * t->sp.weights[k]  
-                        * (t->rgrgx[t->index[k]][i] - t->rgxold[i]) 
-                        * (t->rgrgx[t->index[k]][j] - t->rgxold[j])
-                        / t->sigma / t->sigma; 
-            }
-    }
-#endif
-
 
     /* update of sigma */
     t->sigma *= exp(((sqrt(psxps)/t->chiN)-1.)*t->sp.cs/t->sp.damps);
@@ -1350,16 +1312,6 @@ void cmaes_WriteToFilePtr(cmaes_t *t, const char *key, FILE *fp)
                 ++key;
         } /* "all" */
 
-#if 0 /* could become generic part */
-        s0 = key;
-        d = cmaes_Get(t, key); /* TODO find way to detect whether key was found */
-        if (key == s0) /* this does not work, is always true */
-        {
-            /* write out stuff, problem: only generic format is available */
-            /* move in key until "+" or end */
-        }
-#endif 
-
         if (*key == '\0') 
             break; 
         else if (*key != '+') { /* last key was not recognized */
@@ -1607,17 +1559,6 @@ const char * cmaes_TestForTermination( cmaes_t *t)
                 t->gen, t->sp.stopMaxIter); 
     if(t->flgStop)
         cp += sprintf(cp, "Manual: stop signal read\n");
-
-#if 0
-    else if (0) {
-        for(i=0, cTemp=0; i<N; ++i) {
-            cTemp += (sigma * sqrt(C[i][i]) < stopdx) ? 1 : 0;
-            cTemp += (sigma * rgpc[i] < stopdx) ? 1 : 0;
-        }
-        if (cTemp == 2*N)
-            flgStop = 1;
-    }
-#endif
 
     if (cp - sTestOutString>320)
         ERRORMESSAGE("Bug in cmaes_t:Test(): sTestOutString too short",0,0,0);
@@ -1880,23 +1821,6 @@ void cmaes_UpdateEigensystem(cmaes_t *t, int flgforce)
         /* needs O(n^3)! writes, in case, error message in error file */ 
         i = Check_Eigen( N, t->C, t->rgD, t->B);
 
-#if 0 
-    /* Limit Condition of C to dMaxSignifKond+1 */
-    if (t->maxEW > t->minEW * t->dMaxSignifKond) {
-        ERRORMESSAGE("Warning: Condition number of covariance matrix at upper limit.",
-                " Consider a rescaling or redesign of the objective function. " ,"","");
-        printf("\nWarning: Condition number of covariance matrix at upper limit\n");
-        tmp = t->maxEW/t->dMaxSignifKond - t->minEW;
-        tmp = t->maxEW/t->dMaxSignifKond;
-        t->minEW += tmp;
-        for (i=0;i<N;++i) {
-            t->C[i][i] += tmp;
-            t->rgD[i] += tmp;
-        }
-    } /* if */
-    t->dLastMinEWgroesserNull = minEW;
-#endif   
-
     for (i = 0; i < N; ++i)
         t->rgD[i] = sqrt(t->rgD[i]);
 
@@ -1933,14 +1857,8 @@ static void Eigen( int N,  double **C, double *diag, double **Q, double *rgtmp)
                 Q[i][j] = Q[j][i] = C[i][j];
     }
 
-#if 0
-    Householder( N, Q, diag, rgtmp);
-    QLalgo( N, diag, Q, 30*N, rgtmp+1);
-#else
     Householder2( N, Q, diag, rgtmp);
     QLalgo2( N, diag, rgtmp, Q);
-#endif
-
 }  
 
 /* ========================================================= */
@@ -2217,36 +2135,6 @@ static void Householder2(int n, double **V, double *d, double *e)
 
 } /* Housholder() */
 
-#if 0
-/* ========================================================= */
-static void WriteMaxErrorInfo(cmaes_t *t)
-{
-    int i,j, N=t->sp.N; 
-    char *s = (char *)new_void(200+30*(N+2), sizeof(char)); s[0] = '\0';
-
-    sprintf( s+strlen(s),"\nComplete Info\n");
-    sprintf( s+strlen(s)," Gen       %20.12g\n", t->gen);
-    sprintf( s+strlen(s)," Dimension %d\n", N);
-    sprintf( s+strlen(s)," sigma     %e\n", t->sigma);
-    sprintf( s+strlen(s)," lastminEW %e\n", 
-            t->dLastMinEWgroesserNull);
-    sprintf( s+strlen(s)," maxKond   %e\n\n", t->dMaxSignifKond);
-    sprintf( s+strlen(s),"     x-vector          rgD     Basis...\n");
-    ERRORMESSAGE( s,0,0,0);
-    s[0] = '\0';
-    for (i = 0; i < N; ++i)
-    {
-        sprintf( s+strlen(s), " %20.12e", t->rgxmean[i]);
-        sprintf( s+strlen(s), " %10.4e", t->rgD[i]);
-        for (j = 0; j < N; ++j)
-            sprintf( s+strlen(s), " %10.2e", t->B[i][j]);
-        ERRORMESSAGE( s,0,0,0);
-        s[0] = '\0';
-    }
-    ERRORMESSAGE( "\n",0,0,0);
-    free( s);
-} /* WriteMaxErrorInfo() */
-#endif
 
 /* --------------------------------------------------------- */
 /* --------------- Functions: cmaes_timings_t -------------- */
