@@ -1,7 +1,5 @@
 CC=gcc
 
-GSLROOT:=$(HOME)/usr/gsl/
-
 SRC := 	run_dram.c \
 		dram.c \
 		fitfun.c \
@@ -26,10 +24,10 @@ LD := gcc
 CFLAGS += -O3 -std=c99
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
-CFLAGS += -I${GSLROOT}/include
+CFLAGS += `gsl-config --cflags`
 
 
-LDLIBS += -L${GSLROOT}/lib -lgsl -lgslcblas -lm
+LDLIBS += `gsl-config --libs`
 
 
 COMPILE.c = $(CC) $(CFLAGS) -c -o $@
