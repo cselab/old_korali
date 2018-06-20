@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h> 
-#include "cmaes_interface.h"
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
 
 #include "surrogate.h"
 
-#include "fitfun.h"
-#include "../priors/priors.h"
+#include <fitfun.h>
+#include <cmaes.h>
+#include <priors.h>
 
 #if defined(_USE_TORC_)
 

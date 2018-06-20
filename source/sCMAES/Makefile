@@ -1,102 +1,44 @@
-SRC := 	engine_cmaes.c \
-		cmaes.c \
-		fitfun.c \
-		surrogate.cpp \
-		../priors/priors.c \
-		../priors/myrand.c
+include ../make/common.mk
 
+FITFUN_OBJS ?= ./fitfun.o
+FITFUN_DIR  ?= ../likelihoods
+TARGET      ?= scma
 
-ALL_SRC := $(SRC)
-TARGETS := scma
+all: $(TARGET)
 
-OBJDIR = .o
-TMP=$(subst ../,,$(SRC))
-OBJ:= $(patsubst %,$(OBJDIR)/%.o,$(basename  $(TMP)))
+DIR_PRIORS=../priors
+DIR_CMAES=../lib/cmaes
 
+LDLIBS += -L$(DIR_PRIORS) -lpriors
+CFLAGS += -I$(DIR_PRIORS)
 
+LDLIBS += -L$(DIR_CMAES) -lcmaes
+CFLAGS += -I$(DIR_CMAES)
 
+CFLAGS += -I$(FITFUN_DIR)
 
-#==============================================================================
-#	COMPILERS AND FLAGS
-#==============================================================================
-use_torc?=0
-
-CXX := g++
-CC := gcc
-LD := g++
-
-ifeq ($(use_torc),1)
-	CC = mpicc
-	CXX = mpic++
-	LD = mpic++
-	CFLAGS += -D_USE_TORC_=1 `torc_cflags`
-	LDLIBS += `torc_libs`
-endif
-
-
-CFLAGS += -O3 -std=c99
-CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
-CFLAGS += -Wall -Wno-unused-function
-CFLAGS += `gsl-config --cflags`
-
-CXXFLAGS += -O3
-CXXFLAGS += -Wall
 CXXFLAGS += `pkg-config libgp --cflags`
-
-
-LDLIBS += `gsl-config --libs`
 LDLIBS += `pkg-config libgp --libs`
-LDLIBS += -lm -lpthread
+
+$(TARGET):
+	(cd $(DIR_PRIORS); make libpriors.a)
+	(cd $(DIR_CMAES); make libcmaes.a)
+	$(LINK.o.xx) $^ $(LDLIBS)
+
+# dependencies
+
+$(TARGET): engine_cmaes.o surrogate.o $(FITFUN_OBJS)
+engine_cmaes.o: engine_cmaes.c
+surrogate.o: surrogate.cpp surrogate.h
 
 
-COMPILE.c   = $(CC)  $(CFLAGS)   -c -o $@
-COMPILE.cxx = $(CXX) $(CXXFLAGS) -c -o $@
-LINK.o      = $(LD)  $(LDFLAGS)     -o $@
+# optional: only when FITFUN_OBJS not specified
+fitfun.o: fitfun.c
 
+clean:; rm -rf  $(TARGET) *.o
+clear:;	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
 
-$(shell mkdir -p $(OBJDIR) )
-
-#==============================================================================
-#	RULES
-#==============================================================================
-all: $(TARGETS)
-
-
-scma: $(OBJ)
-	$(LINK.o) $^ $(LDLIBS)
-
-
-$(OBJDIR)/%.o: %.c
-	@mkdir -p "$(@D)"
-	$(COMPILE.c) $<
-
-$(OBJDIR)/%.o: %.cpp
-	@mkdir -p "$(@D)"
-	$(COMPILE.cxx) $<
-
-
-$(OBJDIR)/priors/%.o: ../priors/%.c
-	@mkdir -p "$(@D)"
-	$(COMPILE.c) $<
-
-
-
-ctags:
-	@rm .tags .tags1 tags
-	@ctags $(ALL_SRC)
-
-
-print:
-
-
-test: scma
+test: cma
 	atest `find test -name main`
 
-clean:
-	rm -rf  $(TARGETS) $(OBJDIR)
-
-
-clear:
-	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
-
-.PHONY: clear clean print ctags test
+.PHONY: clear clean all test

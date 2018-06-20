@@ -4,9 +4,10 @@ use_torc?=1
 
 CC := mpicc
 LD := mpicc
+CXX := mpic++
+LDX := mpic++
 
 ifeq ($(use_torc),1)
-	CC = mpicc
 	CFLAGS += -D_USE_TORC_=1 `torc_cflags`
 	LDLIBS += `torc_libs`
 endif
@@ -18,13 +19,21 @@ CFLAGS += `gsl-config --cflags`
 
 LDLIBS += `gsl-config --libs`  -lm -lpthread
 
+CXXFLAGS += -O3
+CXXFLAGS += -Wall
 
-COMPILE.c = $(CC) $(CFLAGS) -c -o $@
-LINK.o    = $(LD) $(LDFLAGS) -o $@
+COMPILE.c   = $(CC)  $(CFLAGS)   -c -o $@
+COMPILE.cxx = $(CXX) $(CXXFLAGS) -c -o $@
+LINK.o      = $(LD)  $(LDFLAGS)     -o $@
+LINK.o.xx   = $(LDX) $(LDFLAGS)     -o $@
+
 
 # rules
 
 %.o: %.c
 	$(COMPILE.c) $<
+
+%.o: %.cpp
+	$(COMPILE.cxx) $<
 
 %.a:; ar rcs $@ $^
