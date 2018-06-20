@@ -69,7 +69,7 @@ int main(int argn, char **args) {
     double t_err = 0, b_err = 1.0;
     int nsteps_surrogate = 0;
     const int max_nsteps_surrogate = 5;
-    int step_start_surrogate = 2;
+    int step_start_surrogate = 2000;
     Surrogate *surrogate;
     
     static int checkpoint_restart = 0;

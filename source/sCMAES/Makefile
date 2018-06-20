@@ -38,7 +38,7 @@ fitfun.o: fitfun.c
 clean:; rm -rf  $(TARGET) *.o
 clear:;	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
 
-test: cma
+test: scma
 	atest `find test -name main`
 
 .PHONY: clear clean all test
