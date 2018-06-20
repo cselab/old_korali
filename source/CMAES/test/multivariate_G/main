@@ -1,0 +1,7 @@
+### CMAES with multivariate gaussian (see source/sCMAES/fitfun.c)
+# nTEST: opt.multivariate.gaussian.t1
+set -eu
+all=allcmaes.dat
+rm -rf $all
+./cma
+awk '{if ($1 == "xbestever") {getline; print}}' $all | uscale 10000 > final.out.dat
