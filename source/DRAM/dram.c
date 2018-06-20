@@ -6,7 +6,10 @@
  *  Copyright 2014 ETH Zurich. All rights reserved.
  *
  */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -48,30 +51,30 @@ void print_error(char *var)
 
 
 
-void print_params()
+void print_params(Params * par)
 {
 	/* Print all user-defined parameters */
 	printf("\n***************************\n");
 	printf("Running with parameters:\n");
-	printf(" > Npar          =  %d\n", par.Npar);
-	printf(" > Nsim          =  %d\n", par.Nsim);
-	printf(" > DRscale       =  %g\n", par.DRscale);
-	printf(" > AMinterv      =  %d\n", par.AMinterv);
-	printf(" > seed          =  %d\n", par.seed);
-	printf(" > Co            =  %g\n", par.qcov[0]);
-	printf(" > Initial point =  %g ", par.par0[0] );
-	for (int i = 1; i < par.Npar; i++)
-		printf(" - %g ", par.par0[i]);
+	printf(" > Npar          =  %d\n", par->Npar);
+	printf(" > Nsim          =  %d\n", par->Nsim);
+	printf(" > DRscale       =  %g\n", par->DRscale);
+	printf(" > AMinterv      =  %d\n", par->AMinterv);
+	printf(" > seed          =  %d\n", par->seed);
+	printf(" > Co            =  %g\n", par->qcov[0]);
+	printf(" > Initial point =  %g ", par->par0[0] );
+	for (int i = 1; i < par->Npar; i++)
+		printf(" - %g ", par->par0[i]);
     printf("\n");
-	printf(" > printfreq = %d\n", par.printfreq);
+	printf(" > printfreq = %d\n", par->printfreq);
 	printf("***************************\n");
 	printf("\n");
 
 
     //printf("\npar.qcov:\n");
-    //for (int i = 0; i < par.Npar; i++){
-    //    for (int j = 0; j < par.Npar; j++)
-    //        printf("%6.3f", par.qcov[i*par.Npar+j]);
+    //for (int i = 0; i < par->Npar; i++){
+    //    for (int j = 0; j < par->Npar; j++)
+    //        printf("%6.3f", par->qcov[i*par->Npar+j]);
     //    printf("\n");
     //}
     //printf("\n");
@@ -87,7 +90,7 @@ void print_params()
 
 
 
-void read_par_file( const char * file){
+void read_par_file( const char * file, Params * par ){
 
 
 	FILE *fp = fopen( file , "r");
@@ -111,44 +114,44 @@ void read_par_file( const char * file){
             
             if( strcmp(pch,"Npar")==0 ){
                 pch = strtok(NULL, BLANKS );
-                par.Npar = atoi( pch );
-			    par.AMscale = 2.4/sqrt(par.Npar);
+                par->Npar = atoi( pch );
+			    par->AMscale = 2.4/sqrt(par->Npar);
                 break;
             }
 
             if( strcmp(pch,"Nsim")==0 ){
                 pch = strtok(NULL, BLANKS );
-                par.Nsim = atoi( pch );
+                par->Nsim = atoi( pch );
                 break;
             }
 
             if( strcmp(pch,"seed")==0 ){
                 pch = strtok(NULL, BLANKS );
-                par.seed = atoi( pch );
+                par->seed = atoi( pch );
                 break;
             }
 
             if( strcmp(pch,"printfreq")==0 ){
                 pch = strtok(NULL, BLANKS );
-                par.printfreq = atoi( pch );
+                par->printfreq = atoi( pch );
                 break;
             }
 
             if( strcmp(pch,"verbose")==0 ){
                 pch = strtok(NULL, BLANKS );
-                par.verbose = atoi( pch );
+                par->verbose = atoi( pch );
                 break;
             }
 
             if( strcmp(pch,"DRscale")==0 ){
                 pch = strtok(NULL, BLANKS );
-                par.DRscale = atof( pch );
+                par->DRscale = atof( pch );
                 break;
             }
 
             if( strcmp(pch,"AMinterv")==0 ){
                 pch = strtok(NULL, BLANKS );
-                par.AMinterv = atof( pch );
+                par->AMinterv = atof( pch );
                 break;
             }
 
@@ -156,35 +159,35 @@ void read_par_file( const char * file){
                 pch = strtok(NULL, BLANKS );
                 double Co = atof( pch );
                 
-                if( par.Npar<=0 ){
+                if( par->Npar<=0 ){
                     printf("Define 'Npar' before 'Co' in %s. Exit...",file);
                     exit(EXIT_FAILURE);
                 }
                 
-                par.qcov = (double *)malloc( sizeof(double)*par.Npar*par.Npar );
+                par->qcov = (double *)malloc( sizeof(double)*par->Npar*par->Npar );
 
-                for (int i = 0; i < par.Npar; i++)
-                    for (int j = 0; j < par.Npar; j++)
+                for (int i = 0; i < par->Npar; i++)
+                    for (int j = 0; j < par->Npar; j++)
                         if (i == j) 
-                            par.qcov[i*par.Npar+j] = Co;
+                            par->qcov[i*par->Npar+j] = Co;
                         else 
-                            par.qcov[i*par.Npar+j] = 0.0;
+                            par->qcov[i*par->Npar+j] = 0.0;
                 break;
             }
 
             if( strcmp(pch,"par0")==0 ){
                 
-                if( par.Npar<=0 ){
+                if( par->Npar<=0 ){
                     printf("Define 'Npar' before 'par0' in %s. Exit...",file);
                     exit(EXIT_FAILURE);
                 }
 
-                par.par0 = (double *)malloc( sizeof(double)*par.Npar );
+                par->par0 = (double *)malloc( sizeof(double)*par->Npar );
 
                 //TODO: check if there are enough initial points
-                for(int i=0; i<par.Npar; i++){ 
+                for(int i=0; i<par->Npar; i++){ 
                     pch = strtok(NULL, BLANKS );
-                    par.par0[i] = atof( pch );
+                    par->par0[i] = atof( pch );
                 }
                 break;
             }
@@ -209,72 +212,72 @@ void read_par_file( const char * file){
 
 
 
-void dram_init(){
+void dram_init(Params * par){
 
     // default values
-	par.Npar		= -1;
-	par.Nsim		= -1;
-	par.DRscale		= -1;
+	par->Npar		= -1;
+	par->Nsim		= -1;
+	par->DRscale		= -1;
 
-	par.AMinterv	= -1;
-	par.AMscale		= -1;
-	par.AMepsilon	= 1e-5; //val.
-
-
-	par.sigma2 	= 1; 	// val.
-	par.n0 		= -1;	// val.
-	par.n 		= 0;	// val.
-
-	par.qcov    = NULL;
-	par.par0 	= NULL;
-	par.lbounds = NULL;
-	par.ubounds = NULL;
-
-	strcpy(par.filename, "chain.txt");
+	par->AMinterv	= -1;
+	par->AMscale		= -1;
+	par->AMepsilon	= 1e-5; //val.
 
 
-	par.printfreq	= 2000;
-	par.verbose		= 1;
-    par.seed    	= 123987;
+	par->sigma2 	= 1; 	// val.
+	par->n0 		= -1;	// val.
+	par->n 		= 0;	// val.
+
+	par->qcov    = NULL;
+	par->par0 	= NULL;
+	par->lbounds = NULL;
+	par->ubounds = NULL;
+
+	strcpy(par->filename, "chain.txt");
 
 
-    read_par_file("dram.par");
+	par->printfreq	= 2000;
+	par->verbose		= 1;
+    par->seed    	= 123987;
+
+
+    read_par_file("dram.par", par);
 
 
 
 	/* Check if user has provided all necessary parameters */
-   	if (par.Npar == -1)		print_error("Npar");
-   	if (par.Nsim == -1)		print_error("Nsim");
-   	if (par.DRscale == -1)	print_error("DRscale");
-	if (par.AMinterv == -1)	print_error("AMinterv");
-	if (par.AMscale == -1)	print_error("Npar");
-    if (par.par0 == NULL) 	print_error("Initial chain point");
-    if (par.qcov == NULL) 	print_error("Covariance");
+   	if (par->Npar == -1)		print_error((char*)"Npar");
+   	if (par->Nsim == -1)		print_error((char*)"Nsim");
+   	if (par->DRscale == -1)	print_error((char*)"DRscale");
+	if (par->AMinterv == -1)	print_error((char*)"AMinterv");
+	if (par->AMscale == -1)	print_error((char*)"Npar");
+    if (par->par0 == NULL) 	print_error((char*)"Initial chain point");
+    if (par->qcov == NULL) 	print_error((char*)"Covariance");
 
     
-    par.lbounds = (double *)malloc(par.Npar*sizeof(double));
-	par.ubounds = (double *)malloc(par.Npar*sizeof(double)); 
-    for (int i = 0; i < par.Npar; i++){
-        par.lbounds[i] = -1e16;
-        par.ubounds[i] = +1e16;
+    par->lbounds = (double *)malloc(par->Npar*sizeof(double));
+	par->ubounds = (double *)malloc(par->Npar*sizeof(double)); 
+    for (int i = 0; i < par->Npar; i++){
+        par->lbounds[i] = -1e16;
+        par->ubounds[i] = +1e16;
     }
         
 
 
 	int Ntmp;
-	read_priors("priors.par", &par.prior, &Ntmp );
-	if( Ntmp  != par.Npar ){
+	read_priors("priors.par", &par->prior, &Ntmp );
+	if( Ntmp  != par->Npar ){
 		printf("\nNumber of parameters in 'priors.par' is different than dram.par \n");
 		exit(1);
 	}
 
 
-	gsl_rand_init(par.seed);
+	gsl_rand_init(par->seed);
 
 
-	if (par.verbose){
-        print_priors( par.prior, par.Npar );
-        print_params();
+	if (par->verbose){
+        print_priors( par->prior, par->Npar );
+        print_params( par );
     }
 
 
@@ -478,7 +481,7 @@ int check_bounds(double *x, double *lbounds, double *ubounds, int n)
 
 
 
-void dram()
+void dram(Params * par)
 {
 /* Metropolis-Hastings MCMC with adaptive delayed rejection (DRAM)
  * Based on the MATLAB implementation of 
@@ -486,14 +489,14 @@ void dram()
  */
 
 	// parameters for the simulation model
-	int npar	 = par.Npar;
-	int nsimu	 = par.Nsim;
-	double *par0 = par.par0;
+	int npar	 = par->Npar;
+	int nsimu	 = par->Nsim;
+	double *par0 = par->par0;
 
-	Density *prior = par.prior;
+	Density *prior = par->prior;
 
-	double *lbounds	= par.lbounds;
-	double *ubounds	= par.ubounds;
+	double *lbounds	= par->lbounds;
+	double *ubounds	= par->ubounds;
 	if ((lbounds == NULL)||(ubounds == NULL))
 	{
 		printf("bounds not initialized\n");
@@ -501,23 +504,23 @@ void dram()
 	}
 
 	// parameters for DRAM
-	int    adaptint = par.AMinterv;
-	double drscale 	= par.DRscale;
-	double adascale	= par.AMscale;
-	double qcovadj 	= par.AMepsilon;
-	int    n0 	= par.n0;
-	double sigma2 	= par.sigma2;
+	int    adaptint = par->AMinterv;
+	double drscale 	= par->DRscale;
+	double adascale	= par->AMscale;
+	double qcovadj 	= par->AMepsilon;
+	int    n0 	= par->n0;
+	double sigma2 	= par->sigma2;
 
 #if 0
 	// number of observations (needed for sigma2 update)
 	int n = 0;
 	if (n0 >= 0)
 	{
-		n = par.n;
+		n = par->n;
 	}
 #endif
 
-	double *qcov = par.qcov;
+	double *qcov = par->qcov;
 
 	// to DR or not to DR
 	int dodr;
@@ -527,8 +530,8 @@ void dram()
 		dodr=1;
 
 
-	int printint  = par.printfreq;
-	int verbosity = par.verbose;
+	int printint  = par->printfreq;
+	int verbosity = par->verbose;
 
 	double R[npar*npar];
 	double R2[npar*npar];
@@ -737,7 +740,7 @@ void dram()
 
 
 	printf("acceptance = %d\n", (int)((100.0*acce)/nsimu));
-	FILE *fp = fopen(par.filename, "w");
+	FILE *fp = fopen(par->filename, "w");
 	for (int isimu=0; isimu<nsimu; isimu++){
 
 		for( int j=0; j<npar; j++)

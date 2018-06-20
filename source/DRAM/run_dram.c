@@ -15,9 +15,9 @@
 #include "fitfun.h"
 
 
-void fitfun_init( ){
+void fitfun_init(Params *par){
 	char str[12];
-	sprintf(str, "%d", par.Npar);
+	sprintf(str, "%d", par->Npar);
 	fitfun_initialize(str);
 }
 
@@ -26,14 +26,17 @@ void fitfun_init( ){
 
 int main(int argc, char *argv[]){
 
-
-	dram_init();
-
-
-	fitfun_init();
+    Params par;
 
 
-	dram();
+	dram_init(&par);
+
+
+	fitfun_init(&par);
+
+
+	dram(&par);
+
 
 	dram_finalize();
 	fitfun_finalize();

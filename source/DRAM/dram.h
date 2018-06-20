@@ -14,7 +14,7 @@
 
 
 /* Variables related to the options of DRAM */
-struct _params
+typedef struct _params
 {
 	int 	Npar;    	/* problem dimensionality (number of parameters) */
     int 	Nsim;    	/* Length of the chain */
@@ -45,12 +45,11 @@ struct _params
 
 	char 	filename[256];	/* Output file for the chain */
 
-} par;
+} Params;
 
 
-
-void dram_init();
-void dram();
+void dram_init(Params *);
+void dram(Params *);
 void dram_finalize();
 
 

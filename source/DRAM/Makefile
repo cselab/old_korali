@@ -1,5 +1,3 @@
-CC=gcc
-
 SRC := 	run_dram.c \
 		dram.c \
 		fitfun.c \
