@@ -123,7 +123,7 @@ int main(int argn, char **args)
             stt += dt;
         }
 
-        cmaes_UpdateDistribution(&evo, arFunvals);
+        cmaes_UpdateDistribution(1, &evo, arFunvals);
 
         cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
 

@@ -751,7 +751,7 @@ const double * cmaes_Optimize(cmaes_t *evo, double(*pFun)(double const *, int di
         }
 
         /* update search distribution */
-        cmaes_UpdateDistribution(evo, evo->publicFitness); 
+        cmaes_UpdateDistribution(0, evo, evo->publicFitness); 
 
         /* read control signals for output and termination */
         if (signalsFilename)
@@ -767,7 +767,7 @@ const double * cmaes_Optimize(cmaes_t *evo, double(*pFun)(double const *, int di
 
 /* --------------------------------------------------------- */
 /* --------------------------------------------------------- */
-double * cmaes_UpdateDistribution(cmaes_t *t, const double *rgFunVal)
+double * cmaes_UpdateDistribution(int save_hist, cmaes_t *t, const double *rgFunVal)
 {
     int i, j, iNk, hsig, N=t->sp.N;
     int flgdiag = ((t->sp.diagonalCov == 1) || (t->sp.diagonalCov >= t->gen)); 
@@ -781,7 +781,7 @@ double * cmaes_UpdateDistribution(cmaes_t *t, const double *rgFunVal)
         FATAL("cmaes_UpdateDistribution(): ", 
                 "Fitness function value array input is missing.",0,0);
 
-    if(t->state == 1)  /* function values are delivered here */
+    if(save_hist && t->state == 1)  /* function values are delivered here */
         t->countevals += t->sp.lambda;
     else
         ERRORMESSAGE("cmaes_UpdateDistribution(): unexpected state",0,0,0);
@@ -803,12 +803,14 @@ double * cmaes_UpdateDistribution(cmaes_t *t, const double *rgFunVal)
     }
 
     /* update function value history */
-    for(i = (int)*(t->arFuncValueHist-1)-1; i > 0; --i) /* for(i = t->arFuncValueHist[-1]-1; i > 0; --i) */
-        t->arFuncValueHist[i] = t->arFuncValueHist[i-1];
-    t->arFuncValueHist[0] = rgFunVal[t->index[0]];
-
+    if (save_hist) {
+        for(i = (int)*(t->arFuncValueHist-1)-1; i > 0; --i)
+            t->arFuncValueHist[i] = t->arFuncValueHist[i-1];
+        t->arFuncValueHist[0] = rgFunVal[t->index[0]];
+    }
+    
     /* update xbestever */
-    if (t->rgxbestever[N] > t->rgrgx[t->index[0]][N] || t->gen == 1)
+    if (save_hist && (t->rgxbestever[N] > t->rgrgx[t->index[0]][N] || t->gen == 1))
         for (i = 0; i <= N; ++i) {
             t->rgxbestever[i] = t->rgrgx[t->index[0]][i];
             t->rgxbestever[N+1] = t->countevals;
@@ -1328,6 +1330,13 @@ void cmaes_WriteToFilePtr(cmaes_t *t, const char *key, FILE *fp)
 
 } /* WriteToFilePtr */
 
+static double function_value_difference(cmaes_t *t) {
+    return douMax(rgdouMax(t->arFuncValueHist, (int)douMin(t->gen,*(t->arFuncValueHist-1))), 
+                  rgdouMax(t->rgFuncValue, t->sp.lambda)) -
+        douMin(rgdouMin(t->arFuncValueHist, (int)douMin(t->gen, *(t->arFuncValueHist-1))), 
+               rgdouMin(t->rgFuncValue, t->sp.lambda));
+}
+
 /* --------------------------------------------------------- */
 double cmaes_Get( cmaes_t *t, char const *s)
 {
@@ -1385,6 +1394,9 @@ double cmaes_Get( cmaes_t *t, char const *s)
     }
     else if (strncmp(s, "sigma", 3) == 0) {
         return(t->sigma);
+    }
+    else if (strncmp(s, "lastrange", 3) == 0) {
+        return function_value_difference(t);
     }
     FATAL( "cmaes_Get(cmaes_t, char const * s): No match found for s='", s, "'",0);
     return(0);
@@ -1464,10 +1476,7 @@ const char * cmaes_TestForTermination( cmaes_t *t)
                 t->rgFuncValue[t->index[0]], t->sp.stStopFitness.val);
 
     /* TolFun */
-    range = douMax(rgdouMax(t->arFuncValueHist, (int)douMin(t->gen,*(t->arFuncValueHist-1))), 
-            rgdouMax(t->rgFuncValue, t->sp.lambda)) -
-        douMin(rgdouMin(t->arFuncValueHist, (int)douMin(t->gen, *(t->arFuncValueHist-1))), 
-                rgdouMin(t->rgFuncValue, t->sp.lambda));
+    range = function_value_difference(t);
 
     if (t->gen > 0 && range <= t->sp.stopTolFun) {
         cp += sprintf(cp, 
