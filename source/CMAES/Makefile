@@ -8,14 +8,13 @@ all: $(TARGETS)
 
 DIR_PRIORS=../priors
 LDLIBS += -L$(DIR_PRIORS) -lpriors
+CFLAGS += -I$(FITFUN_DIR)
 
 cma:
 	(cd $(DIR_PRIORS); make priors.a)
 	$(LINK.o) $^ $(LDLIBS)
 
 # dependencies
-
-CFLAGS += -I$(FITFUN_DIR)
 
 cma: cmaes.o engine_cmaes.o $(FITFUN_OBJS)
 cmaes.o: cmaes.c cmaes.h cmaes_interface.h
