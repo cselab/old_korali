@@ -25,7 +25,6 @@ LINK.o    = $(LD) $(LDFLAGS) -o $@
 # rules
 
 %.o: %.c
-	@mkdir -p "$(@D)"
 	$(COMPILE.c) $<
 
 %.a:; ar rcs $@ $^

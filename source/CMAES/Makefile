@@ -1,6 +1,7 @@
 include ../make/common.mk
 
 FITFUN_OBJS ?= ./fitfun.o
+FITFUN_DIR  ?= ../likelihoods
 TARGETS := cma
 
 all: $(TARGETS)
@@ -13,6 +14,8 @@ cma:
 	$(LINK.o) $^ $(LDLIBS)
 
 # dependencies
+
+CFLAGS += -I$(FITFUN_DIR)
 
 cma: cmaes.o engine_cmaes.o $(FITFUN_OBJS)
 cmaes.o: cmaes.c cmaes.h cmaes_interface.h
