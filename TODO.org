@@ -14,8 +14,9 @@
    CLOSED: [2018-06-20 Wed 17:14]
 ** DONE add separate makefiles
    CLOSED: [2018-06-20 Wed 17:14]
-* [0/2] Add tests
-** TODO CMAES
+* [1/2] Add tests
+** DONE CMAES
+   CLOSED: [2018-06-20 Wed 17:16]
 ** TODO TMCMC
 * [0/1] Features
 ** TODO Surrogate based CMAES
