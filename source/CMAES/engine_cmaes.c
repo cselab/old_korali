@@ -59,7 +59,7 @@ int main(int argn, char **args) {
 
     dim = cmaes_Get(&evo, "dim");
     lambda = cmaes_Get(&evo, "lambda");
-    set_bounds(VERBOSE, "cmaes_bounds.par", &lower_bound, &upper_bound, dim );
+    cmaes_utils_read_bounds(VERBOSE, "cmaes_bounds.par", &lower_bound, &upper_bound, dim );
 
 
     // Initialize prior distributions
@@ -84,9 +84,9 @@ int main(int argn, char **args) {
         pop = cmaes_SamplePopulation(&evo); 
 
         if (checkpoint_restart) {
-            dt = load_pop_from_file(VERBOSE, step, pop, arFunvals, dim, lambda, &checkpoint_restart);
+            dt = cmaes_utils_load_pop_from_file(VERBOSE, step, pop, arFunvals, dim, lambda, &checkpoint_restart);
     	} else {
-            make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
+            cmaes_utils_make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
             dt = evaluate_population( &evo, arFunvals, pop, priors, step );
         }
         stt += dt;
@@ -95,17 +95,17 @@ int main(int argn, char **args) {
 
         cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
 
-        if (VERBOSE) print_the_best( evo, step );
+        if (VERBOSE) cmaes_utils_print_the_best( evo, step );
 		
        	if (_IODUMP_ && !checkpoint_restart ){
-            write_pop_to_file( evo, arFunvals, pop, step );
+            cmaes_utils_write_pop_to_file( evo, arFunvals, pop, step );
         }
 
 #if defined(_RESTART_)
         cmaes_WriteToFile(&evo, "resume", "allresumes.dat");
 #endif
 
-        if( ! is_there_enough_time( JOBMAXTIME, gt0, dt ) ){
+        if( ! cmaes_utils_is_there_enough_time( JOBMAXTIME, gt0, dt ) ){
             evo.sp.stopMaxIter=step+1;
             break;
         }

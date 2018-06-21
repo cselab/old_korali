@@ -24,7 +24,7 @@ double get_time() {
 
 #endif
 
-void set_bounds(int verbose, const char *fname, double **p_lower_bound, double **p_upper_bound, int dim) {
+void cmaes_utils_read_bounds(int verbose, const char *fname, double **p_lower_bound, double **p_upper_bound, int dim) {
     double *lower_bound = malloc(dim*sizeof(double));
     double *upper_bound = malloc(dim*sizeof(double));
 
@@ -79,7 +79,7 @@ void set_bounds(int verbose, const char *fname, double **p_lower_bound, double *
     (*p_upper_bound) = upper_bound;
 }
 
-double load_pop_from_file(int verbose, int step, double * const* pop, double *arFunvals, int dim, int lambda, int * checkp) {	
+double cmaes_utils_load_pop_from_file(int verbose, int step, double * const* pop, double *arFunvals, int dim, int lambda, int * checkp) {	
     char filename[256];
     sprintf(filename, "curgen_db_%03d.txt", step);
     FILE *fp = fopen(filename, "r");
@@ -131,7 +131,7 @@ static int is_feasible(double *pop, double *lower_bound, double *upper_bound, in
     return 1;
 }
 
-void make_all_points_feasible( cmaes_t *evo, double* const *pop, double * lower_bound, double * upper_bound ){
+void cmaes_utils_make_all_points_feasible( cmaes_t *evo, double* const *pop, double * lower_bound, double * upper_bound ){
     int lambda = cmaes_Get( evo, "lambda");
     int dim    = cmaes_Get( evo, "dim");
 
@@ -141,7 +141,7 @@ void make_all_points_feasible( cmaes_t *evo, double* const *pop, double * lower_
 
 }
 
-void print_the_best( cmaes_t evo, int step ) {
+void cmaes_utils_print_the_best( cmaes_t evo, int step ) {
     int dim    = cmaes_Get( &evo, "dim");
     	
     const double *xbever = cmaes_GetPtr(&evo, "xbestever");
@@ -153,7 +153,7 @@ void print_the_best( cmaes_t evo, int step ) {
     printf("%25.16lf\n", fbever);
 }
 
-void write_pop_to_file( cmaes_t evo, double *arFunvals, double * const* pop, int step ){
+void cmaes_utils_write_pop_to_file( cmaes_t evo, double *arFunvals, double * const* pop, int step ){
     int dim    = cmaes_Get( &evo, "dim");
     int lambda = cmaes_Get( &evo, "lambda");
     	
@@ -168,7 +168,7 @@ void write_pop_to_file( cmaes_t evo, double *arFunvals, double * const* pop, int
     fclose(fp);
 }
 
-int is_there_enough_time(long job_max_time, double gt0, double dt ) {
+int cmaes_utils_is_there_enough_time(long job_max_time, double gt0, double dt ) {
 	
     if (job_max_time <= 0) return 1;
 	
