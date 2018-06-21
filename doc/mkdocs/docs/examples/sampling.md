@@ -56,7 +56,7 @@ Run the TMCMC sampling algorithm:
 Finally, visualize the samples:
 ```sh
 cp ../../../../../../source/tools/display/plotmatrix_hist.py .
-./plotmatrix_hist.py final.txt
+python plotmatrix_hist.py final.txt
 ```
 
 ![](fig_tmcmc.png)
