@@ -109,7 +109,17 @@ int main(int argn, char **args) {
         }
         stt += dt;
 
-        archive_add(archive, lambda, pop);
+        archive_add(archive, lambda, pop, arFunvals);
+        archive_mark_candidates(archive, 8.0, &evo);
+        surrogate_pop_select_from_archive(surrogate_pop, archive);
+
+        surrogate_reset(surrogate);
+        add_population_to_surrogate(
+            surrogate_pop_get_n(surrogate_pop),
+            surrogate_pop_get_pop(surrogate_pop),
+            surrogate_pop_get_funvals(surrogate_pop),
+            surrogate);
+        surrogate_optimize(surrogate);
         
         cmaes_UpdateDistribution(1, &evo, arFunvals);
 

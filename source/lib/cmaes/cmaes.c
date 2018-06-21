@@ -2170,14 +2170,14 @@ void cmaes_transform_to_eigen_space( cmaes_t *t, double *xr, double *xe ) {
 static double distance_in_eigen_space( int n, double *diag, double **Q, double *mean, double *x, double *w ) {
     int i, j;
     double d = 0;
-    
+
     for (i = 0; i < n; ++i) {
         w[i] = 0;
-        for (j = 0; j < n; ++j) w[i] += (x[j] - mean[i]) * Q[j][i];
+        for (j = 0; j < n; ++j) w[i] += (x[j] - mean[j]) * Q[j][i];
     }
 
     for (i = 0; i < n; ++i) {
-        d += w[i] * w[i] / sqrt(diag[i]);
+        d += w[i] * w[i] / (diag[i] * diag[i]);
     }
     return d;
 }
