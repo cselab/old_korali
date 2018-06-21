@@ -83,24 +83,19 @@ int main(int argn, char **args) {
 
         pop = cmaes_SamplePopulation(&evo); 
 
-        if( checkpoint_restart ){
+        if (checkpoint_restart) {
             dt = load_pop_from_file(VERBOSE, step, pop, arFunvals, dim, lambda, &checkpoint_restart);
-            stt += dt;
-    	}
-
-        
-        if( !checkpoint_restart ){
+    	} else {
             make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
             dt = evaluate_population( &evo, arFunvals, pop, priors, step );
-            stt += dt;
         }
+        stt += dt;
 
         cmaes_UpdateDistribution(1, &evo, arFunvals);
 
         cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
 
         if (VERBOSE) print_the_best( evo, step );
-
 		
        	if (_IODUMP_ && !checkpoint_restart ){
             write_pop_to_file( evo, arFunvals, pop, step );
@@ -125,11 +120,11 @@ int main(int argn, char **args) {
 
     gt3 = get_time();
     
-    printf("Total elapsed time = %.3lf  seconds\n", gt3-gt0);
-    printf("Initialization time = %.3lf  seconds\n", gt1-gt0);
-    printf("Processing time = %.3lf  seconds\n", gt2-gt1);
+    printf("Total elapsed time      = %.3lf  seconds\n", gt3-gt0);
+    printf("Initialization time     = %.3lf  seconds\n", gt1-gt0);
+    printf("Processing time         = %.3lf  seconds\n", gt2-gt1);
     printf("Funtion Evaluation time = %.3lf  seconds\n", stt);
-    printf("Finalization time = %.3lf  seconds\n", gt3-gt2);
+    printf("Finalization time       = %.3lf  seconds\n", gt3-gt2);
 
 
 #if defined(_USE_TORC_)
