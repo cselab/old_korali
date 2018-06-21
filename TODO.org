@@ -24,3 +24,6 @@
 ** TODO TMCMC
 * [0/1] Features
 ** TODO Surrogate based CMAES
+* [0/1] Others
+** TODO fix priors test
+

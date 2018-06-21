@@ -24,11 +24,11 @@ all: $(TARGETS)
 
 
 
-FITFUN_OBJ_EXT = $(LIK)/fitfun_theta_fast.o $(LIK)/loglike_theta_fast.o
-FITFUN_OBJ_INT = $(LIK)/fitfun_theta.o      $(LIK)/loglike_theta.o      $(LIK)/spawner.o
+FITFUN_OBJ_INT = $(LIK)/fitfun_theta_fast.o $(LIK)/loglike_theta_fast.o
+FITFUN_OBJ_EXT = $(LIK)/fitfun_theta.o      $(LIK)/loglike_theta.o      $(LIK)/spawner.o
 FITFUN_OBJ_PSI = $(LIK)/fitfun_psi.o        $(LIK)/loglike_psi.o
 
-OBJ_POST = $(LIK)/fitfun_posterior_theta.o $(LIK)/loglike_posterior_theta.o
+OBJ_POSTERIOR = $(LIK)/fitfun_posterior_theta.o $(LIK)/loglike_posterior_theta.o
 
 FITFUN_OBJ_POST_INT = $(OBJ_POSTERIOR) $(LIK)/loglike_theta_fast.o
 FITFUN_OBJ_POST_EXT = $(OBJ_POSTERIOR) $(LIK)/loglike_theta.o      $(LIK)/spawner.o
@@ -46,6 +46,8 @@ $(BUILD)/tmcmc_posterior_theta_external: $(FITFUN_OBJ_POST_EXT); $(link.tmcmc)
 $(BUILD)/tmcmc_posterior_theta_internal: $(FITFUN_OBJ_POST_INT); $(link.tmcmc)
 $(BUILD)/dram_theta_internal:            $(FITFUN_OBJ_INT);      $(link.dram)
 $(BUILD)/dram_psi:                       $(FITFUN_OBJ_PSI);      $(link.dram)
+
+# todo deps
 
 clean:; rm -rf $(TARGETS)
 
