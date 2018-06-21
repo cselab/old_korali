@@ -22,5 +22,6 @@ int            surrogate_pop_get_n      (Surrogate_pop *s);
 double *const* surrogate_pop_get_pop    (Surrogate_pop *s);
 double *       surrogate_pop_get_funvals(Surrogate_pop *s);
 
+void archive_shift_fvals(Archive *a, int n, double *fvals);
 
 #endif // SUROOGATE_STORAGE_H

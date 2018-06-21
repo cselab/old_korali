@@ -23,6 +23,7 @@ struct Surrogate_pop {
 };
 
 static int min2i(int a, int b) {return a < b ? a : b;}
+static double min2d(double a, double b) {return a < b ? a : b;}
 
 static void coords_array_ini(int dim, int nmax, CoordsArray **cap) {
     CoordsArray *ca;
@@ -127,3 +128,27 @@ void surrogate_pop_select_from_archive(Surrogate_pop *s, Archive *a) {
 int surrogate_pop_get_n (Surrogate_pop *s) {return s->n;}
 double *const* surrogate_pop_get_pop (Surrogate_pop *s) {return s->ca->pop;}
 double * surrogate_pop_get_funvals(Surrogate_pop *s) {return s->funvals;}
+
+
+static double minnd(int n, const double *a) {
+    int i;
+    if (n <= 0) return 1e9;
+    double m = a[0];
+    for (i = 1; i < n; ++i) m = min2d(m, a[i]);
+    return m;
+}
+
+static void shift_fvals(double mina, double mins, int n, double *fvals) {
+    double shift = mina - mins;
+    int i;
+    if (mina <= mins) return;
+    for (i = 0; i < n; ++i) fvals[i] += shift;
+}
+
+void archive_shift_fvals(Archive *a, int n, double *fvals) {
+    double mina, mins;
+    mina = minnd(a->size, a->funvals);
+    mins = minnd(n, fvals);
+
+    shift_fvals(mina, mins, n, fvals);
+}
