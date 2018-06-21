@@ -24,9 +24,8 @@ $(TARGET):
 
 # dependencies
 
-$(TARGET): engine_cmaes.o cmaes_utils.o $(FITFUN_OBJS)
-engine_cmaes.o: engine_cmaes.c cmaes_utils.h
-cmaes_utils.o: cmaes_utils.c cmaes_utils.h
+$(TARGET): engine_cmaes.o $(FITFUN_OBJS)
+engine_cmaes.o: engine_cmaes.c
 
 # optional: only when FITFUN_OBJS not specified
 fitfun.o: fitfun.c

@@ -1,7 +1,7 @@
 #ifndef CMAES_UTILS_H
 #define CMAES_UTILS_H
 
-#include <cmaes.h>
+#include "cmaes.h"
 
 double get_time();
 

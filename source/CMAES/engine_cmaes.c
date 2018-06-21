@@ -5,9 +5,9 @@
 #include <string.h>
 
 #include <cmaes.h>
+#include <cmaes_utils.h>
 #include <fitfun.h>
 #include <priors.h>
-#include "cmaes_utils.h"
 
 #if defined(_USE_TORC_)
 
