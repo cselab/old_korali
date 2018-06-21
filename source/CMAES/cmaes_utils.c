@@ -43,7 +43,7 @@ void set_bounds(int verbose, const char *fname, double **p_lower_bound, double *
     
     if (f != NULL){
       
-        printf("Reading the bounds from cmaes_bounds.par\n");
+        printf("Reading the bounds from '%s'\n", fname);
 
       	char line[256];
       	int found;
@@ -65,7 +65,7 @@ void set_bounds(int verbose, const char *fname, double **p_lower_bound, double *
                 }
             }
             if (!found) {
-                printf("Bounds for parameters %d not found in 'cmaes_bounds.par. Exit...'\n", i);
+                printf("Bounds for parameters %d not found in '%s'. Exit...'\n", i, fname);
                 exit(1);
             }
             rewind(f);
@@ -74,7 +74,7 @@ void set_bounds(int verbose, const char *fname, double **p_lower_bound, double *
       	fclose(f);
     }
     else {
-        printf("Parameters file 'cmaes_bounds.par' could not be opened. Exit...\n");
+        printf("Parameters file '%s' could not be opened. Exit...\n", fname);
         exit(1);
     }
 
