@@ -2173,7 +2173,7 @@ static double distance_in_eigen_space( int n, double *diag, double **Q, double *
 
     for (i = 0; i < n; ++i) {
         w[i] = 0;
-        for (j = 0; j < n; ++j) w[i] += (x[j] - mean[j]) * Q[j][i];
+        for (j = 0; j < n; ++j) w[i] += (x[j] - mean[j]) * Q[i][j];
     }
 
     for (i = 0; i < n; ++i) {
