@@ -19,8 +19,12 @@
 
 
 enum {
-    NSTEPS_ARCHIVE = 3
+    SUR_NSTEPS_ARCHIVE = 1,  // number of past steps saved
+    SUR_NREQ           = 10, // number of required data points to build the surrogate
+    SUR_NSTEPS         = 5   // number of steps allowed by the surrogate
 };
+
+#define SUR_R 800.0             // Data points selection radius
 
 #define VERBOSE 1
 #define _STEALING_
@@ -76,7 +80,7 @@ int main(int argn, char **args) {
 
     surrogate_ini(dim, &surrogate);
     surrogate_pop_ini(dim, lambda, &surrogate_pop);
-    archive_ini(dim, NSTEPS_ARCHIVE * lambda, &archive);
+    archive_ini(dim, SUR_NSTEPS_ARCHIVE * lambda, &archive);
     
 
     // Initialize prior distributions
@@ -113,13 +117,13 @@ int main(int argn, char **args) {
         cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
         
         archive_add(archive, lambda, pop, arFunvals);
-        archive_mark_candidates(archive, 800.0, &evo);
+        archive_mark_candidates(archive, SUR_R, &evo);
         surrogate_pop_select_from_archive(surrogate_pop, archive);
 
         nselected = surrogate_pop_get_n(surrogate_pop);
 
         /* printf("%d selected\n", nselected); */
-        if (nselected > 10) {
+        if (nselected > SUR_NREQ) {
             surrogate_reset(surrogate);
             add_population_to_surrogate(
                 nselected,
@@ -128,9 +132,11 @@ int main(int argn, char **args) {
                 surrogate);
             surrogate_optimize(surrogate);        
 
-            for (substep = 0; substep < 10; ++substep) {
-                pop = cmaes_SamplePopulation(&evo);            
+            for (substep = 0; substep < SUR_NSTEPS; ++substep) {
+                pop = cmaes_SamplePopulation(&evo);
+                cmaes_utils_make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
                 evaluate_population_surrogate( &evo, arFunvals, pop, priors, step, surrogate );
+                archive_shift_fvals(archive, lambda, arFunvals);
                 cmaes_UpdateDistribution(0, &evo, arFunvals);
             }
         }
