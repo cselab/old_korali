@@ -1,9 +1,13 @@
 * [0/1] Code structure
 ** TODO isolate torc/openmp
-* [0/3] file organisation
-** TODO no .par inside source dir
+* [1/4] file organisation
+** TODO [1/2] no .par inside source dir
+*** DONE CMAES
+    CLOSED: [2018-06-21 Thu 08:47]
+*** TODO TMCMC
 ** TODO no postprocessing scripts inside source
-** TODO only one fitfun.h
+** DONE only one fitfun.h
+   CLOSED: [2018-06-21 Thu 08:45]
 
 * [4/4] Makefile
 ** DONE use gsl-config --libs and gsl-config --cflags
