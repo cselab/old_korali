@@ -162,11 +162,11 @@ int main(int argn, char **args) {
 
     gt3 = get_time();
     
-    printf("Total elapsed time = %.3lf  seconds\n", gt3-gt0);
-    printf("Initialization time = %.3lf  seconds\n", gt1-gt0);
-    printf("Processing time = %.3lf  seconds\n", gt2-gt1);
+    printf("Total elapsed time      = %.3lf  seconds\n", gt3-gt0);
+    printf("Initialization time     = %.3lf  seconds\n", gt1-gt0);
+    printf("Processing time         = %.3lf  seconds\n", gt2-gt1);
     printf("Funtion Evaluation time = %.3lf  seconds\n", stt);
-    printf("Finalization time = %.3lf  seconds\n", gt3-gt2);
+    printf("Finalization time       = %.3lf  seconds\n", gt3-gt2);
 
     surrogate_fin(surrogate);
 
