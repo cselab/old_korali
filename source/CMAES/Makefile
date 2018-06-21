@@ -24,13 +24,14 @@ $(TARGET):
 
 # dependencies
 
-$(TARGET): engine_cmaes.o $(FITFUN_OBJS)
-engine_cmaes.o: engine_cmaes.c
+$(TARGET): engine_cmaes.o cmaes_utils.o $(FITFUN_OBJS)
+engine_cmaes.o: engine_cmaes.c cmaes_utils.h
+cmaes_utils.o: cmaes_utils.c cmaes_utils.h
 
 # optional: only when FITFUN_OBJS not specified
 fitfun.o: fitfun.c
 
-clean:; rm -rf  $(TARGETS) *.o
+clean:; rm -rf  $(TARGET) *.o
 clear:;	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
 
 test: cma
