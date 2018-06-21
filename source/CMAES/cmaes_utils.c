@@ -24,17 +24,6 @@ double get_time() {
 
 #endif
 
-int is_feasible(double *pop, double *lower_bound, double *upper_bound, int dim) {
-    int i, good;
-    for (i = 0; i < dim; i++) {
-        good = (lower_bound[i] <= pop[i]) && (pop[i] <= upper_bound[i]);
-        if (!good) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
 void set_bounds(int verbose, const char *fname, double **p_lower_bound, double **p_upper_bound, int dim) {
     double *lower_bound = malloc(dim*sizeof(double));
     double *upper_bound = malloc(dim*sizeof(double));
@@ -129,6 +118,17 @@ double load_pop_from_file(int verbose, int step, double * const* pop, double *ar
     tt1 = get_time();
 
     return tt1-tt0;
+}
+
+static int is_feasible(double *pop, double *lower_bound, double *upper_bound, int dim) {
+    int i, good;
+    for (i = 0; i < dim; i++) {
+        good = (lower_bound[i] <= pop[i]) && (pop[i] <= upper_bound[i]);
+        if (!good) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 void make_all_points_feasible( cmaes_t *evo, double* const *pop, double * lower_bound, double * upper_bound ){
