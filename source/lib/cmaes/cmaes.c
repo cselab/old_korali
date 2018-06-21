@@ -2144,6 +2144,48 @@ static void Householder2(int n, double **V, double *d, double *e)
 
 } /* Housholder() */
 
+static double dot(int n, const double *a, const double *b) {
+    double d = 0;
+    int i;
+    for (i = 0; i < n; ++i) d += a[i] * b[i];
+    return d;
+}
+
+static void project_eigen_space( int n, double *diag, double **Q, double *xr, double *xe, double *w) {
+    int i, j;
+
+    for (i = 0; i < n; ++i) {
+        w[i] = 0;
+        for (j = 0; j < n; ++j) w[i] += xr[j] * Q[j][i];
+        w[i] /= sqrt(diag[i]);        
+    }
+
+    for (i = 0; i < n; ++i)  xe[i] = dot(n, w, Q[i]);
+}
+
+void cmaes_transform_to_eigen_space( cmaes_t *t, double *xr, double *xe ) {
+    project_eigen_space( t->sp.N, t->rgD, t->B, xr, xe, t->rgdTmp );
+}
+
+static double distance_in_eigen_space( int n, double *diag, double **Q, double *mean, double *x, double *w ) {
+    int i, j;
+    double d = 0;
+    
+    for (i = 0; i < n; ++i) {
+        w[i] = 0;
+        for (j = 0; j < n; ++j) w[i] += (x[j] - mean[i]) * Q[j][i];
+    }
+
+    for (i = 0; i < n; ++i) {
+        d += w[i] * w[i] / sqrt(diag[i]);
+    }
+    return d;
+}
+
+double cmaes_transform_distance( cmaes_t *t, double *x ) {
+    return distance_in_eigen_space( t->sp.N, t->rgD, t->B, t->rgxmean, x, t->rgdTmp );
+}
+
 
 /* --------------------------------------------------------- */
 /* --------------- Functions: cmaes_timings_t -------------- */

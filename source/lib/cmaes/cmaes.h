@@ -62,6 +62,9 @@ double *       cmaes_NewDouble(int n); /* user is responsible to free */
 void           cmaes_FATAL(char const *s1, char const *s2, char const *s3, 
                char const *s4);
 
+void cmaes_transform_to_eigen_space( cmaes_t *t, double *xr, double *xe );
+double cmaes_transform_distance( cmaes_t *t, double *x );
+    
 #ifdef __cplusplus
 } // end extern "C"
 #endif
