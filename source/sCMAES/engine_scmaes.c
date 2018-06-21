@@ -41,7 +41,7 @@ int main(int argn, char **args) {
     double gt0, gt1, gt2, gt3;
     double stt = 0.0, dt;
     char dim_str[12];
-    int step = 0;
+    int step = 0, substep, nselected;
 
     Surrogate *surrogate;
     Surrogate_pop *surrogate_pop;
@@ -109,25 +109,35 @@ int main(int argn, char **args) {
         }
         stt += dt;
 
+        cmaes_UpdateDistribution(1, &evo, arFunvals);
+        cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
+        
         archive_add(archive, lambda, pop, arFunvals);
-        archive_mark_candidates(archive, 8.0, &evo);
+        archive_mark_candidates(archive, 800.0, &evo);
         surrogate_pop_select_from_archive(surrogate_pop, archive);
 
-        surrogate_reset(surrogate);
-        add_population_to_surrogate(
-            surrogate_pop_get_n(surrogate_pop),
-            surrogate_pop_get_pop(surrogate_pop),
-            surrogate_pop_get_funvals(surrogate_pop),
-            surrogate);
-        surrogate_optimize(surrogate);
+        nselected = surrogate_pop_get_n(surrogate_pop);
+
+        /* printf("%d selected\n", nselected); */
+        if (nselected > 10) {
+            surrogate_reset(surrogate);
+            add_population_to_surrogate(
+                nselected,
+                surrogate_pop_get_pop(surrogate_pop),
+                surrogate_pop_get_funvals(surrogate_pop),
+                surrogate);
+            surrogate_optimize(surrogate);        
+
+            for (substep = 0; substep < 10; ++substep) {
+                pop = cmaes_SamplePopulation(&evo);            
+                evaluate_population_surrogate( &evo, arFunvals, pop, priors, step, surrogate );
+                cmaes_UpdateDistribution(0, &evo, arFunvals);
+            }
+        }
         
-        cmaes_UpdateDistribution(1, &evo, arFunvals);
-
-        cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
-
         if (VERBOSE) cmaes_utils_print_the_best( evo, step );
 		
-       	if (!checkpoint_restart){
+       	if (!checkpoint_restart) {
             cmaes_utils_write_pop_to_file( evo, arFunvals, pop, step );
         }
 
