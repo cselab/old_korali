@@ -19,12 +19,12 @@
 
 
 enum {
-    SUR_NSTEPS_ARCHIVE = 1,  // number of past steps saved
-    SUR_NREQ           = 10, // number of required data points to build the surrogate
+    SUR_NSTEPS_ARCHIVE = 3, // number of past steps saved
+    SUR_NREQ           = 128, // number of required data points to build the surrogate
     SUR_NSTEPS         = 5   // number of steps allowed by the surrogate
 };
 
-#define SUR_R 800.0             // Data points selection radius
+#define SUR_R 8.0             // Data points selection radius
 
 #define VERBOSE 1
 #define _STEALING_
@@ -40,15 +40,16 @@ double evaluate_population_surrogate( cmaes_t *evo, double *arFunvals, double * 
 
 int main(int argn, char **args) {
     cmaes_t evo; 
-    double *arFunvals, *const*pop;
+    double *arFunvals, *const* pop;
     int lambda, dim;
     double gt0, gt1, gt2, gt3;
     double stt = 0.0, dt;
     char dim_str[12];
     int step = 0, substep, nselected;
 
+    cmaes_distr_t cma_distr;
     Surrogate *surrogate;
-    Surrogate_pop *surrogate_pop;
+    Surrogate_pop *surrogate_popt, *surrogate_popo;
     Archive *archive;
     
     static int checkpoint_restart = 0;
@@ -78,8 +79,10 @@ int main(int argn, char **args) {
     lambda = cmaes_Get(&evo, "lambda");
     cmaes_utils_read_bounds(VERBOSE, "cmaes_bounds.par", &lower_bound, &upper_bound, dim );
 
+    cmaes_distr_ini(dim, &cma_distr);
     surrogate_ini(dim, &surrogate);
-    surrogate_pop_ini(dim, lambda, &surrogate_pop);
+    surrogate_pop_ini(dim, 2*lambda, &surrogate_popt);
+    surrogate_pop_ini(dim, lambda, &surrogate_popo);
     archive_ini(dim, SUR_NSTEPS_ARCHIVE * lambda, &archive);
     
 
@@ -115,29 +118,41 @@ int main(int argn, char **args) {
 
         cmaes_UpdateDistribution(1, &evo, arFunvals);
         cmaes_ReadSignals(&evo, "cmaes_signals.par"); fflush(stdout);
-        
+
+        cmaes_get_distr(&evo, &cma_distr);
         archive_add(archive, lambda, pop, arFunvals);
-        archive_mark_candidates(archive, SUR_R, &evo);
-        surrogate_pop_select_from_archive(surrogate_pop, archive);
+        archive_mark_candidates(archive, SUR_R, &cma_distr);
+        surrogate_pop_select_from_archive(surrogate_popt, archive);
 
-        nselected = surrogate_pop_get_n(surrogate_pop);
+        nselected = surrogate_pop_get_n(surrogate_popt);
 
-        /* printf("%d selected\n", nselected); */
+        printf("%d selected\n", nselected);
         if (nselected > SUR_NREQ) {
+            surrogate_pop_transform_coords(surrogate_popt, &cma_distr);
             surrogate_reset(surrogate);
             add_population_to_surrogate(
                 nselected,
-                surrogate_pop_get_pop(surrogate_pop),
-                surrogate_pop_get_funvals(surrogate_pop),
+                surrogate_pop_get_pop(surrogate_popt),
+                surrogate_pop_get_funvals(surrogate_popt),
                 surrogate);
             surrogate_optimize(surrogate);        
 
             for (substep = 0; substep < SUR_NSTEPS; ++substep) {
+                double *const* pop_s;
+                double *fvals_s;
+
                 pop = cmaes_SamplePopulation(&evo);
                 cmaes_utils_make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
-                evaluate_population_surrogate( &evo, arFunvals, pop, priors, step, surrogate );
-                archive_shift_fvals(archive, lambda, arFunvals);
-                cmaes_UpdateDistribution(0, &evo, arFunvals);
+
+                surrogate_pop_set(surrogate_popo, lambda, pop);
+                surrogate_pop_transform_coords(surrogate_popo, &cma_distr);
+
+                pop_s   = surrogate_pop_get_pop(surrogate_popo);
+                fvals_s = surrogate_pop_get_funvals(surrogate_popo);
+
+                evaluate_population_surrogate( &evo, fvals_s, pop_s, priors, step, surrogate );
+                archive_shift_fvals(archive, lambda, fvals_s);
+                cmaes_UpdateDistribution(0, &evo, fvals_s);
             }
         }
         
@@ -172,8 +187,10 @@ int main(int argn, char **args) {
     printf("Funtion Evaluation time = %.3lf  seconds\n", stt);
     printf("Finalization time       = %.3lf  seconds\n", gt3-gt2);
 
+    cmaes_distr_fin(&cma_distr);
     surrogate_fin(surrogate);
-    surrogate_pop_fin(surrogate_pop);
+    surrogate_pop_fin(surrogate_popt);
+    surrogate_pop_fin(surrogate_popo);
     archive_fin(archive);
 
 

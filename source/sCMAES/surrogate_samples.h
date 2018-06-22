@@ -10,8 +10,7 @@ void archive_ini(int dim, int nmax, Archive **ap);
 void archive_fin(Archive *a);
 
 void archive_add(Archive *a, int n, double *const* pop, double *funvals);
-void archive_mark_candidates(Archive *a, double r, cmaes_t *t);
-
+void archive_mark_candidates(Archive *a, double r, cmaes_distr_t *d);
 
 void surrogate_pop_ini(int dim, int nmax, Surrogate_pop **sp);
 void surrogate_pop_fin(Surrogate_pop *sp);

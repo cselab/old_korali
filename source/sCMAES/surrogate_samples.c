@@ -80,15 +80,44 @@ void archive_add(Archive *a, int n, double *const* pop, double *funvals) {
     a->size   = min2i(a->size + n, ca->nmax);
 }
 
-void archive_mark_candidates(Archive *a, double r, cmaes_t *t) {
-    double d;
+
+static double distance_in_eigen_space(cmaes_distr_t *d, double *x) {
+    int i, j, n;
+    double dist, *D, **Q, *mu, *w;
+
+    n = d->dim;
+    Q = d->Q;
+    D = d->D;
+    mu = d->mu;
+    w = d->w;
+    
+    if (d->flgdiag) {
+        for (i = 0; i < n; ++i)
+            w[i] = x[i] - mu[i];
+    } else {
+        for (i = 0; i < n; ++i) {
+            w[i] = 0;
+            for (j = 0; j < n; ++j)
+                w[i] += (x[j] - mu[j]) * Q[j][i];
+        }
+    }
+
+    dist = 0;
+    for (i = 0; i < n; ++i)
+        dist += w[i] * w[i] / D[i];
+    return dist;
+}
+
+
+void archive_mark_candidates(Archive *a, double r, cmaes_distr_t *d) {
+    double dist;
     int i;
     CoordsArray *ca = a->ca;
     
     for (i = 0; i < a->size; ++i) {
-        d = cmaes_transform_distance(t, ca->pop[i]);
-        /* printf("%g\n", d); */
-        a->candidates[i] = d < r;
+        dist = distance_in_eigen_space(d, ca->pop[i]);
+        /* printf("%g\n", dist); */
+        a->candidates[i] = dist < r;
     }
 }
 
