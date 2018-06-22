@@ -2151,39 +2151,53 @@ static double dot(int n, const double *a, const double *b) {
     return d;
 }
 
-static void project_eigen_space( int n, double *diag, double **Q, double *xr, double *xe, double *w) {
+static void project_eigen_space( int flgdiag, int n, double sigma, double *diag, double **Q, double *xr, double *xe, double *w) {
     int i, j;
 
-    for (i = 0; i < n; ++i) {
-        w[i] = 0;
-        for (j = 0; j < n; ++j) w[i] += xr[j] * Q[j][i];
-        w[i] /= sqrt(diag[i]);        
+    if (flgdiag) {
+        for (i = 0; i < n; ++i)
+            xe[i] = xr[i] / sqrt(sigma*diag[i]);
+    } else {
+        for (i = 0; i < n; ++i) {
+            w[i] = 0;
+            for (j = 0; j < n; ++j) 
+                w[i] += xr[j] * Q[j][i];
+            w[i] /= sqrt(sigma*diag[i]);
+        }
+        for (i = 0; i < n; ++i)
+            xe[i] = dot(n, w, Q[i]);
     }
-
-    for (i = 0; i < n; ++i)  xe[i] = dot(n, w, Q[i]);
 }
 
 void cmaes_transform_to_eigen_space( cmaes_t *t, double *xr, double *xe ) {
-    project_eigen_space( t->sp.N, t->rgD, t->B, xr, xe, t->rgdTmp );
+    int flgdiag = ((t->sp.diagonalCov == 1) || (t->sp.diagonalCov >= t->gen)); 
+    project_eigen_space( flgdiag, t->sp.N, t->sigma, t->rgD, t->B, xr, xe, t->rgdTmp );
 }
 
-static double distance_in_eigen_space( int n, double *diag, double **Q, double *mean, double *x, double *w ) {
+static double distance_in_eigen_space( int flgdiag, int n, double sigma, double *diag, double **Q, double *mean, double *x, double *w ) {
     int i, j;
-    double d = 0;
+    double d;
 
-    for (i = 0; i < n; ++i) {
-        w[i] = 0;
-        for (j = 0; j < n; ++j) w[i] += (x[j] - mean[j]) * Q[i][j];
+    if (flgdiag) {
+        for (i = 0; i < n; ++i)
+            w[i] = x[i] - mean[i];
+    } else {
+        for (i = 0; i < n; ++i) {
+            w[i] = 0;
+            for (j = 0; j < n; ++j)
+                w[i] += (x[j] - mean[j]) * Q[j][i];
+        }
     }
 
-    for (i = 0; i < n; ++i) {
-        d += w[i] * w[i] / (diag[i] * diag[i]);
-    }
-    return d;
+    d = 0;
+    for (i = 0; i < n; ++i)
+        d += w[i] * w[i] / diag[i];
+    return d / sigma;
 }
 
 double cmaes_transform_distance( cmaes_t *t, double *x ) {
-    return distance_in_eigen_space( t->sp.N, t->rgD, t->B, t->rgxmean, x, t->rgdTmp );
+    int flgdiag = ((t->sp.diagonalCov == 1) || (t->sp.diagonalCov >= t->gen)); 
+    return distance_in_eigen_space( flgdiag, t->sp.N, t->sigma, t->rgD, t->B, t->rgxmean, x, t->rgdTmp );
 }
 
 
