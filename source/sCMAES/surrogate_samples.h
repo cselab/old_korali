@@ -24,4 +24,7 @@ double *       surrogate_pop_get_funvals(Surrogate_pop *s);
 
 void archive_shift_fvals(Archive *a, int n, double *fvals);
 
+void surrogate_pop_set(Surrogate_pop *s, int n, double *const* pop);
+void surrogate_pop_transform_coords(Surrogate_pop *s, cmaes_distr_t *d);
+
 #endif // SUROOGATE_STORAGE_H

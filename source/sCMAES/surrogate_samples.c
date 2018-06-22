@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "surrogate_samples.h"
 
@@ -19,6 +20,7 @@ struct Archive {
 struct Surrogate_pop {
     CoordsArray *ca;
     double *funvals;
+    double *w; // work, dimension: dim
     int n;
 };
 
@@ -79,15 +81,13 @@ void archive_add(Archive *a, int n, double *const* pop, double *funvals) {
 }
 
 void archive_mark_candidates(Archive *a, double r, cmaes_t *t) {
-    double sigma, d;
+    double d;
     int i;
     CoordsArray *ca = a->ca;
     
-    sigma = cmaes_Get(t, "sigma");
-    
     for (i = 0; i < a->size; ++i) {
         d = cmaes_transform_distance(t, ca->pop[i]);
-        d *= sigma;
+        /* printf("%g\n", d); */
         a->candidates[i] = d < r;
     }
 }
@@ -99,13 +99,15 @@ void surrogate_pop_ini(int dim, int nmax, Surrogate_pop **sp) {
     s = malloc(sizeof(*s));
     coords_array_ini(dim, nmax, &s->ca);
     s->funvals = malloc(nmax * sizeof(double));
-    s->n = 0;        
+    s->w = malloc(dim * sizeof(double));
+    s->n = 0;
     *sp = s;
 }
 
 void surrogate_pop_fin(Surrogate_pop *s) {
     coords_array_fin(s->ca);
     free(s->funvals);
+    free(s->w);
     free(s);
 }
 
@@ -121,8 +123,62 @@ void surrogate_pop_select_from_archive(Surrogate_pop *s, Archive *a) {
             ++n;
         }
     }
-    /* printf("keep %d points\n", n); */
     s->n = n;
+}
+
+void surrogate_pop_set(Surrogate_pop *s, int n, double *const* pop) {
+    int i;
+    size_t sz = s->ca->dim * sizeof(double);
+    
+    for (i = 0; i < n; ++i)
+        memcpy(s->ca->pop[i], pop[i], sz);
+    s->n = n;
+}
+
+static double dot(int n, const double *a, const double *b) {
+    double d = 0;
+    int i;
+    for (i = 0; i < n; ++i) d += a[i] * b[i];
+    return d;
+}
+
+static void project_eigen_space(cmaes_distr_t *d, double *xr, double *xe) {
+    int i, j, n;
+    double **Q, *D, *mu, *w;
+
+    n = d->dim;
+    Q = d->Q;
+    D = d->D;
+    mu = d->mu;
+    w = d->w;
+    
+    if (d->flgdiag) {
+        for (i = 0; i < n; ++i)
+            xe[i] = (xr[i] - mu[i]) / sqrt(D[i]);
+    } else {
+        for (i = 0; i < n; ++i) {
+            w[i] = 0;
+            for (j = 0; j < n; ++j) 
+                w[i] += (xr[j] - mu[j]) * Q[j][i];
+            w[i] /= sqrt(D[i]);
+        }
+        for (i = 0; i < n; ++i)
+            xe[i] = dot(n, w, Q[i]);
+    }
+}
+
+
+void surrogate_pop_transform_coords(Surrogate_pop *s, cmaes_distr_t *d) {
+    double *w = s->w;
+    int i, dim, n;
+    dim = s->ca->dim;
+    n = s->n;
+    size_t sz = dim * sizeof(double);
+    
+    for (i = 0; i < n; ++i) {
+        project_eigen_space(d, s->ca->pop[i], w);
+        memcpy(s->ca->pop[i], w, sz);
+    }
 }
 
 int surrogate_pop_get_n (Surrogate_pop *s) {return s->n;}

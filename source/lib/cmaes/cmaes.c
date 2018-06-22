@@ -2144,35 +2144,6 @@ static void Householder2(int n, double **V, double *d, double *e)
 
 } /* Housholder() */
 
-static double dot(int n, const double *a, const double *b) {
-    double d = 0;
-    int i;
-    for (i = 0; i < n; ++i) d += a[i] * b[i];
-    return d;
-}
-
-static void project_eigen_space( int flgdiag, int n, double sigma, double *diag, double **Q, double *xr, double *xe, double *w) {
-    int i, j;
-
-    if (flgdiag) {
-        for (i = 0; i < n; ++i)
-            xe[i] = xr[i] / sqrt(sigma*diag[i]);
-    } else {
-        for (i = 0; i < n; ++i) {
-            w[i] = 0;
-            for (j = 0; j < n; ++j) 
-                w[i] += xr[j] * Q[j][i];
-            w[i] /= sqrt(sigma*diag[i]);
-        }
-        for (i = 0; i < n; ++i)
-            xe[i] = dot(n, w, Q[i]);
-    }
-}
-
-void cmaes_transform_to_eigen_space( cmaes_t *t, double *xr, double *xe ) {
-    int flgdiag = ((t->sp.diagonalCov == 1) || (t->sp.diagonalCov >= t->gen)); 
-    project_eigen_space( flgdiag, t->sp.N, t->sigma, t->rgD, t->B, xr, xe, t->rgdTmp );
-}
 
 static double distance_in_eigen_space( int flgdiag, int n, double sigma, double *diag, double **Q, double *mean, double *x, double *w ) {
     int i, j;
@@ -2200,6 +2171,43 @@ double cmaes_transform_distance( cmaes_t *t, double *x ) {
     return distance_in_eigen_space( flgdiag, t->sp.N, t->sigma, t->rgD, t->B, t->rgxmean, x, t->rgdTmp );
 }
 
+
+void cmaes_distr_ini(int dim, cmaes_distr_t *t) {
+    int i;
+    t->Q  = (double**) new_void(dim, sizeof(double*));
+    t->D  = new_double(dim);
+    t->mu = new_double(dim);
+    t->w  = new_double(dim);
+    for (i = 0; i < dim; ++i)
+        t->Q[i] = new_double(dim);
+    t->dim = dim;
+}
+
+void cmaes_distr_fin(cmaes_distr_t *t) {
+    int i;
+    for (i = 0; i < t->dim; ++i)
+        free(t->Q[i]);
+    free(t->Q);
+    free(t->D);
+    free(t->mu);
+    free(t->w);
+}
+
+void cmaes_get_distr(cmaes_t *t, cmaes_distr_t *d) {
+    int i, flgdiag, n;
+    size_t sz;
+    n = d->dim;
+    flgdiag = ((t->sp.diagonalCov == 1) || (t->sp.diagonalCov >= t->gen));
+    d->flgdiag = flgdiag;
+
+    for (i = 0; i < n; ++i)
+        d->D[i] = t->rgD[i] * t->sigma;
+
+    sz = n * sizeof(double);
+    for (i = 0; i < n; ++i)
+        memcpy(d->Q[i], t->B[i], sz);
+    memcpy(d->mu, t->rgxmean, sz);
+}
 
 /* --------------------------------------------------------- */
 /* --------------- Functions: cmaes_timings_t -------------- */
