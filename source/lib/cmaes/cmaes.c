@@ -2145,33 +2145,6 @@ static void Householder2(int n, double **V, double *d, double *e)
 } /* Housholder() */
 
 
-static double distance_in_eigen_space( int flgdiag, int n, double sigma, double *diag, double **Q, double *mean, double *x, double *w ) {
-    int i, j;
-    double d;
-
-    if (flgdiag) {
-        for (i = 0; i < n; ++i)
-            w[i] = x[i] - mean[i];
-    } else {
-        for (i = 0; i < n; ++i) {
-            w[i] = 0;
-            for (j = 0; j < n; ++j)
-                w[i] += (x[j] - mean[j]) * Q[j][i];
-        }
-    }
-
-    d = 0;
-    for (i = 0; i < n; ++i)
-        d += w[i] * w[i] / diag[i];
-    return d / sigma;
-}
-
-double cmaes_transform_distance( cmaes_t *t, double *x ) {
-    int flgdiag = ((t->sp.diagonalCov == 1) || (t->sp.diagonalCov >= t->gen)); 
-    return distance_in_eigen_space( flgdiag, t->sp.N, t->sigma, t->rgD, t->B, t->rgxmean, x, t->rgdTmp );
-}
-
-
 void cmaes_distr_ini(int dim, cmaes_distr_t *t) {
     int i;
     t->Q  = (double**) new_void(dim, sizeof(double*));
