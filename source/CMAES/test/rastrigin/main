@@ -1,0 +1,12 @@
+### rastrigin 4d
+# nTEST: opt.rastrigin4d
+set -eu
+make
+EXE=cma
+T=test/rastrigin
+cp $EXE $T
+cd $T
+all=allcmaes.dat
+rm -rf $all
+./$EXE "Rastrigin"
+awk '{if ($1 == "xbestever") {getline; print}}' $all | uscale 1e10 > final.out.dat
