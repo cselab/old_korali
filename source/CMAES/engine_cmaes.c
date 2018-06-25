@@ -26,30 +26,46 @@
 void taskfun(double *x, int *pn, double *res, int *info);
 double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
 
-int main(int argn, char **args) {
+typedef struct {
+    int restart;
+} Args;
+
+static int shift(int *c, char ***v) {
+    (*c)--; (*v)++;
+    return (*c) > 0;
+}
+
+static void parse(int *c, char ***v, Args *a) {
+    shift(c, v); // skip executable
+    if (*c && (0 == strcmp(**v, "-cr"))) {
+        a->restart = 1;
+        shift(c, v);
+    } else {
+        a->restart = 0;
+    }
+}
+
+int main(int argc, char **argv) {
     cmaes_t evo; 
     double *arFunvals, *const*pop;
     int lambda, dim;
     double gt0, gt1, gt2, gt3;
     double stt = 0.0, dt;
     int step = 0;
-	
-    static int checkpoint_restart = 0;
+    Args a;
+    static int checkpoint_restart;
 
     double *lower_bound, *upper_bound;
 
-
 #if defined(_USE_TORC_)
     torc_register_task(taskfun);
-    torc_init(argn, args, MODE_MS);
+    torc_init(argc, argv, MODE_MS);
 #endif
-
 
     gt0 = get_time();
 
-
-    if(  argn==2  &&  !strcmp(args[1], "-cr")  )	checkpoint_restart = 1;
-
+    parse(&argc, &argv, &a);
+    checkpoint_restart = a.restart;
     
     arFunvals = cmaes_init(&evo, 0, NULL, NULL, 0, 0, "cmaes_initials.par");
     printf("%s\n", cmaes_SayHello(&evo));
