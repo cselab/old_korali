@@ -108,12 +108,13 @@ static double f_multivariate_gaussian(double *x, int N) {
         gsl_matrix_set( sigma, i, i-1, D0 );
     }
 
+    gsl_linalg_cholesky_decomp( sigma );
+    
     for (i = 0; i < N; i++)
         gsl_vector_set( xg, i, x[i] );
     
     gsl_ran_multivariate_gaussian_log_pdf( xg, mu, sigma, &result, work);
 
-    gsl_linalg_cholesky_decomp( sigma );
     gsl_vector_free(xg);
     gsl_vector_free(work);
     gsl_vector_free(mu);
