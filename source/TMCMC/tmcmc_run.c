@@ -84,11 +84,7 @@ int main(int argc, char *argv[])
 	//XXX: check that Nps==data.Nth
 
 
-
-
-    char str[12];
-    sprintf(str, "%d", data.Nth);
-    fitfun_initialize(str);
+        fitfun_initialize(argc, argv);
 
 	#if defined(_USE_TORC_)
 		torc_init(argc, argv, MODE_MS);

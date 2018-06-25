@@ -23,7 +23,7 @@ run_dram.o: run_dram.c dram.h
 # optional: only when FITFUN_OBJS not specified
 fitfun.o: fitfun.c
 
-clean:; rm -rf  $(TARGETS) *.o
+clean:; rm -rf  $(TARGET) *.o
 clear:;	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
 
 .PHONY: clear clean all

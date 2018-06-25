@@ -1,7 +1,7 @@
 #include <fitfun.h>
 #include "loglike_theta_fast.h"
 
-void fitfun_initialize(char* s) {
+void fitfun_initialize(int argc, char **argv) {
 
 	loglike_theta_fast_initialize();
 

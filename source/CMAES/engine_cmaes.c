@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
     }
 
     // Initialize log-likelihood
-    fitfun_initialize( *argv );
+    fitfun_initialize( argc, argv );
 
     gt1 = get_time();
     while( !cmaes_TestForTermination(&evo) ){

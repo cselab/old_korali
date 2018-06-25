@@ -35,7 +35,12 @@ static int same_str(const char *a, const char *b) {
     return strcmp(a, b) == 0;
 }
 
-void fitfun_initialize(char *s) {
+void fitfun_initialize(int argc, char **argv) {
+    if (argc != 1) {
+        fprintf(stderr, "expected exactly one argument in fitfun_initialize, %d given\n", argc);
+        exit(1);
+    }
+    char *s = *argv;
     if      (same_str(s, "multivariate_gaussian"))
         my_fitfun = &f_multivariate_gaussian;
     else if (same_str(s, "Ackley"))
@@ -73,7 +78,7 @@ void fitfun_initialize(char *s) {
 }
 
 double fitfun(double *x, int N, void *output, int *info) {
-    return my_fitfun(x, N);
+    return -my_fitfun(x, N);
 }
 
 void fitfun_finalize() {}
@@ -114,7 +119,7 @@ static double f_multivariate_gaussian(double *x, int N) {
     gsl_vector_free(mu);
     gsl_matrix_free(sigma);
 
-    return result;
+    return -result;
 }
 
 static double f_Ackley(double *x, int N) {

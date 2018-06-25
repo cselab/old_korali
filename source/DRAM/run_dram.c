@@ -14,24 +14,10 @@
 #include "dram.h"
 #include "fitfun.h"
 
-
-void fitfun_init( ){
-	char str[12];
-	sprintf(str, "%d", par.Npar);
-	fitfun_initialize(str);
-}
-
-
-
-
-int main(int argc, char *argv[]){
-
+int main(int argc, char *argv[]) {
 
 	dram_init();
-
-
-	fitfun_init();
-
+        fitfun_initialize(argc, argv);
 
 	dram();
 
