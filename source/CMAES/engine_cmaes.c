@@ -144,8 +144,7 @@ void taskfun(double *x, int *n, double *res, int *info) {
     (*res) = - fitfun(x, *n, (void *)NULL, info);    // minus for minimization
 }
 
-double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step ){
-
+double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step ) {
     int lambda = cmaes_Get( evo, "lambda");
     int dim    = cmaes_Get( evo, "dim");
     int info[4];
