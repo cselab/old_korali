@@ -1,5 +1,5 @@
 ### ackley 4d
-# nTEST: opt.ackley4d.t1
+# nTEST: opt.ackley4d
 set -eu
 make
 EXE=cma

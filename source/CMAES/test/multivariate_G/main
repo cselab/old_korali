@@ -1,5 +1,5 @@
 ### CMAES with multivariate gaussian (see source/sCMAES/fitfun.c)
-# nTEST: opt.multivariate.gaussian.t1
+# nTEST: opt.multivariate.gaussian
 set -eu
 make
 EXE=cma

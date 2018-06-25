@@ -1,5 +1,5 @@
 ### dixon_price 4d
-# nTEST: opt.dixon_price4d.t1
+# nTEST: opt.dixon_price4d
 set -eu
 make
 EXE=cma

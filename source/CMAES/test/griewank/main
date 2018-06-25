@@ -1,5 +1,5 @@
 ### griewank 4d
-# nTEST: opt.griewank4d.t1
+# nTEST: opt.griewank4d
 set -eu
 make
 EXE=cma
