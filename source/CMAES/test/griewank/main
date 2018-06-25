@@ -1,0 +1,12 @@
+### griewank 4d
+# nTEST: opt.griewank4d.t1
+set -eu
+make
+EXE=cma
+T=test/griewank
+cp $EXE $T
+cd $T
+all=allcmaes.dat
+rm -rf $all
+./$EXE "Griewank"
+awk '{if ($1 == "xbestever") {getline; print}}' $all | uscale 1e10 > final.out.dat

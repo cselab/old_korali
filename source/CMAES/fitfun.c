@@ -46,6 +46,8 @@ void fitfun_initialize(int argc, char **argv) {
     else if (same_str(s, "Ackley"))
         my_fitfun = &f_Ackley;
     else if (same_str(s, "Dixon_Price"))
+        my_fitfun = &f_Dixon_Price;
+    else if (same_str(s, "Griewank"))
         my_fitfun = &f_Griewank;
     else if (same_str(s, "Levy"))
         my_fitfun = &f_Levy;
