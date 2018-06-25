@@ -1,5 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_linalg.h>
@@ -7,7 +9,7 @@
 #include <gsl/gsl_matrix.h>
 
 
-static double f_multi_gaussian(double *x, int N);
+static double f_multivariate_gaussian(double *x, int N);
 static double f_Ackley(double *x, int N);
 static double f_Dixon_Price(double *x, int N);
 static double f_Griewank(double *x, int N);
@@ -26,21 +28,58 @@ static double f_Zakharov(double *x, int N);
 
 typedef double (*fitfun_t)(double*, int);
 
-
 static fitfun_t my_fitfun;
 
-void fitfun_initialize(char *s) {
-    // TODO
-    my_fitfun = &f_multi_gaussian;
+
+static int same_str(const char *a, const char *b) {
+    return strcmp(a, b) == 0;
 }
 
-void fitfun_finalize() {}
+void fitfun_initialize(char *s) {
+    if      (same_str(s, "multivariate_gaussian"))
+        my_fitfun = &f_multivariate_gaussian;
+    else if (same_str(s, "Ackley"))
+        my_fitfun = &f_Ackley;
+    else if (same_str(s, "Dixon_Price"))
+        my_fitfun = &f_Griewank;
+    else if (same_str(s, "Levy"))
+        my_fitfun = &f_Levy;
+    else if (same_str(s, "Perm"))
+        my_fitfun = &f_Perm;
+    else if (same_str(s, "Perm0"))
+        my_fitfun = &f_Perm0;
+    else if (same_str(s, "Rastrigin"))
+        my_fitfun = &f_Rastrigin;
+    else if (same_str(s, "Rosenbrock"))
+        my_fitfun = &f_Rosenbrock;
+    else if (same_str(s, "Rotated_Hyper_Ellipsoid"))
+        my_fitfun = &f_Rotated_Hyper_Ellipsoid;
+    else if (same_str(s, "Schwefel"))
+        my_fitfun = &f_Schwefel;
+    else if (same_str(s, "Sphere"))
+        my_fitfun = &f_Sphere;
+    else if (same_str(s, "Styblinski_Tang"))
+        my_fitfun = &f_Styblinski_Tang;
+    else if (same_str(s, "Sum_Of_Power"))
+        my_fitfun = &f_Sum_Of_Power;
+    else if (same_str(s, "Sum_Of_Squares"))
+        my_fitfun = &f_Sum_Of_Squares;
+    else if (same_str(s, "Zakharov"))
+        my_fitfun = &f_Zakharov;
+    else {
+        fprintf(stderr, "unknown funciotn <%s>\nexiting...\n", s);
+        exit(1);
+    }
+}
 
 double fitfun(double *x, int N, void *output, int *info) {
     return my_fitfun(x, N);
 }
 
-static double f_multi_gaussian(double *x, int N) {
+void fitfun_finalize() {}
+
+
+static double f_multivariate_gaussian(double *x, int N) {
     gsl_vector *mu, *xg, *work;
     gsl_matrix *sigma;
     int i;

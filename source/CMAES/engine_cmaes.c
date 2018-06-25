@@ -32,7 +32,6 @@ int main(int argn, char **args) {
     int lambda, dim;
     double gt0, gt1, gt2, gt3;
     double stt = 0.0, dt;
-    char dim_str[12];
     int step = 0;
 	
     static int checkpoint_restart = 0;
@@ -72,11 +71,8 @@ int main(int argn, char **args) {
         exit(1);
     }
 
-
     // Initialize log-likelihood
-    sprintf(dim_str, "%d", dim );
-    fitfun_initialize( dim_str );
-
+    fitfun_initialize( "multivariate_gaussian" );
 
     gt1 = get_time();
     while( !cmaes_TestForTermination(&evo) ){
