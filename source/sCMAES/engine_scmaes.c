@@ -38,20 +38,41 @@ double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop
 void add_population_to_surrogate(int lambda, double *const *pop, double *arFunvals, Surrogate *s);
 double evaluate_population_surrogate( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step, Surrogate *s );
 
-int main(int argn, char **args) {
+typedef struct {
+    int restart;
+} Args;
+
+/* shift arguments */
+static int shift(int *c, char ***v) {
+    (*c)--; (*v)++;
+    return (*c) > 0;
+}
+
+/* parse optional arguments and "eats" them */
+static void parse(int *c, char ***v, Args *a) {
+    shift(c, v); // skip executable
+    if (*c && (0 == strcmp(**v, "-cr"))) {
+        a->restart = 1;
+        shift(c, v);
+    } else {
+        a->restart = 0;
+    }
+}
+
+int main(int argc, char **argv) {
     cmaes_t evo; 
     double *arFunvals, *const* pop;
     int lambda, dim;
     double gt0, gt1, gt2, gt3;
     double stt = 0.0, dt;
-    char dim_str[12];
     int step = 0, substep, nselected;
 
     cmaes_distr_t cma_distr;
     Surrogate *surrogate;
     Surrogate_pop *surrogate_popt, *surrogate_popo;
     Archive *archive;
-    
+
+    Args a;
     static int checkpoint_restart = 0;
 
     double *lower_bound, *upper_bound;
@@ -59,15 +80,14 @@ int main(int argn, char **args) {
 
 #if defined(_USE_TORC_)
     torc_register_task(taskfun);
-    torc_init(argn, args, MODE_MS);
+    torc_init(argc, argv, MODE_MS);
 #endif
 
 
     gt0 = get_time();
 
-        
-    if ( argn==2  &&  !strcmp(args[1], "-cr") )
-	checkpoint_restart = 1;
+    parse(&argc, &argv, &a);
+    checkpoint_restart = a.restart;
 
     
     arFunvals = cmaes_init(&evo, 0, NULL, NULL, 0, 0, "cmaes_initials.par");
@@ -98,9 +118,7 @@ int main(int argn, char **args) {
 
 
     // Initialize log-likelihood
-    sprintf(dim_str, "%d", dim );
-    fitfun_initialize( dim_str );
-
+    fitfun_initialize( argc, argv );
 
     gt1 = get_time();
         

@@ -28,7 +28,6 @@ $(TARGET):
 # dependencies
 
 $(TARGET): engine_scmaes.o surrogate_samples.o surrogate.o $(FITFUN_OBJS)
-engine_cmaes.o: engine_cmaes.c
 engine_scmaes.o: engine_scmaes.c
 surrogate.o: surrogate.cpp surrogate.h
 surrogate_samples.o: surrogate_samples.c surrogate_samples.h
