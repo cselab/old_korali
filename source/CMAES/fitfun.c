@@ -7,9 +7,7 @@
 #include <gsl/gsl_matrix.h>
 
 
-static gsl_vector *mu;
-static gsl_matrix *sigma;
-
+static double f_multi_gaussian(double *x, int N);
 static double f_Ackley(double *x, int N);
 static double f_Dixon_Price(double *x, int N);
 static double f_Griewank(double *x, int N);
@@ -26,52 +24,59 @@ static double f_Sum_Of_Power(double *x, int N);
 static double f_Sum_Of_Squares(double *x, int N);
 static double f_Zakharov(double *x, int N);
 
-void fitfun_initialize(char *s) {
-    int i, N = atoi(s);
+typedef double (*fitfun_t)(double*, int);
 
-    mu = gsl_vector_calloc(N);
-    for( i = 0; i < N; ++i)
+
+static fitfun_t my_fitfun;
+
+void fitfun_initialize(char *s) {
+    // TODO
+    my_fitfun = &f_multi_gaussian;
+}
+
+void fitfun_finalize() {}
+
+double fitfun(double *x, int N, void *output, int *info) {
+    return my_fitfun(x, N);
+}
+
+static double f_multi_gaussian(double *x, int N) {
+    gsl_vector *mu, *xg, *work;
+    gsl_matrix *sigma;
+    int i;
+    double D0, result;
+    
+    mu    = gsl_vector_calloc(N);
+    sigma = gsl_matrix_calloc( N,N );
+    xg    = gsl_vector_calloc(N);
+    work  = gsl_vector_calloc(N);
+
+    for (i = 0; i < N; ++i)
         gsl_vector_set( mu, i, (double)i );
 
-    sigma = gsl_matrix_calloc( N,N );
-
-    double D0;
-    for( i = 0; i < N; ++i) {
+    for (i = 0; i < N; ++i) {
         D0 = (i%2)*0.5 + 0.02;
         gsl_matrix_set( sigma, i, i, D0 );
     }
 
-    for( i = 1; i < N; ++i) {
+    for (i = 1; i < N; ++i) {
         D0 = (2*(i%2) - 1) * 0.05; //change the sign
         gsl_matrix_set( sigma, i, i-1, D0 );
     }
 
+    for (i = 0; i < N; i++)
+        gsl_vector_set( xg, i, x[i] );
+    
+    gsl_ran_multivariate_gaussian_log_pdf( xg, mu, sigma, &result, work);
+
     gsl_linalg_cholesky_decomp( sigma );
+    gsl_vector_free(xg);
+    gsl_vector_free(work);
+    gsl_vector_free(mu);
+    gsl_matrix_free(sigma);
+
+    return result;
 }
-
-void fitfun_finalize() {
-	gsl_vector_free(mu);
-	gsl_matrix_free(sigma);
-}
-
-double fitfun(double *x, int N, void *output, int *info) {
-	gsl_vector *xg 	= gsl_vector_calloc(N);
-	gsl_vector *work = gsl_vector_calloc(N);
-
-	double result;
-
-	for( int i=0; i<N; i++)
-		gsl_vector_set( xg, i, x[i] );
-
-	gsl_ran_multivariate_gaussian_log_pdf( xg, mu, sigma, &result, work);
-
-	gsl_vector_free(xg);
-	gsl_vector_free(work);
-
-	return result;
-
-}
-
 
 static double f_Ackley(double *x, int N) {
     int i;
