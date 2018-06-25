@@ -30,11 +30,13 @@ typedef struct {
     int restart;
 } Args;
 
+/* shift arguments */
 static int shift(int *c, char ***v) {
     (*c)--; (*v)++;
     return (*c) > 0;
 }
 
+/* parse optional arguments and "eats" them */
 static void parse(int *c, char ***v, Args *a) {
     shift(c, v); // skip executable
     if (*c && (0 == strcmp(**v, "-cr"))) {
@@ -72,7 +74,7 @@ int main(int argc, char **argv) {
     cmaes_ReadSignals(&evo, "cmaes_signals.par");  
 
 
-    dim = cmaes_Get(&evo, "dim");
+    dim =    cmaes_Get(&evo, "dim");
     lambda = cmaes_Get(&evo, "lambda");
     cmaes_utils_read_bounds(VERBOSE, "cmaes_bounds.par", &lower_bound, &upper_bound, dim );
 
@@ -88,7 +90,7 @@ int main(int argc, char **argv) {
     }
 
     // Initialize log-likelihood
-    fitfun_initialize( "multivariate_gaussian" );
+    fitfun_initialize( *argv );
 
     gt1 = get_time();
     while( !cmaes_TestForTermination(&evo) ){

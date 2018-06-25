@@ -8,5 +8,5 @@ cp $EXE $T
 cd $T
 all=allcmaes.dat
 rm -rf $all
-./$EXE
+./$EXE "multivariate_gaussian"
 awk '{if ($1 == "xbestever") {getline; print}}' $all | uscale 10000 > final.out.dat
