@@ -27,22 +27,22 @@
 
 
 #if defined(_USE_TORC_)
-	#include <mpi.h>
-	#ifdef __cplusplus
-		extern "C"
-		{
-	#endif
-	#include <torc.h>
-	#ifdef __cplusplus
-		}
-	#endif
+#include <mpi.h>
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+#include <torc.h>
+#ifdef __cplusplus
+}
+#endif
 #else
 
-	#include <pthread.h>
+#include <pthread.h>
 
-	#if defined(_USE_OPENMP_)
-		#include <omp.h>
-	#endif
+#if defined(_USE_OPENMP_)
+#include <omp.h>
+#endif
 
 #endif
 
@@ -50,48 +50,62 @@
 
 extern Density *priors;
 
+typedef struct {
+    // empty
+} Args;
 
+/* shift arguments */
+static int shift(int *c, char ***v) {
+    (*c)--; (*v)++;
+    return (*c) > 0;
+}
+
+/* parse optional arguments and "eats" them */
+static void parse(int *c, char ***v, Args *a) {
+    shift(c, v); // skip executable
+}
 
 
 int main(int argc, char *argv[])
 {
-
+    Args a;
     int i;
     double t0, gt0, gt1;
     int winfo[4];
     int nchains; 
+    
+#if defined(_USE_TORC_)
+    torc_register_task((void *)initchaintask);
+    torc_register_task((void *)chaintask);
+    torc_register_task((void *)torc_update_full_db_task);
+    torc_register_task((void *)torc_update_curgen_db_task);
+    torc_register_task((void *)torc_update_curres_db_task);
+    torc_register_task((void *)reset_nfc_task);
+    torc_register_task((void *)get_nfc_task);
+    torc_register_task((void *)taskfun);
+    torc_register_task((void *)call_gsl_rand_init);
+    torc_register_task((void *)call_print_matrix_2d);
+    torc_register_task((void *)call_update_gdata);
+#endif
 
-	#if defined(_USE_TORC_)
-    	torc_register_task((void *)initchaintask);
-		torc_register_task((void *)chaintask);
-		torc_register_task((void *)torc_update_full_db_task);
-		torc_register_task((void *)torc_update_curgen_db_task);
-		torc_register_task((void *)torc_update_curres_db_task);
-		torc_register_task((void *)reset_nfc_task);
-		torc_register_task((void *)get_nfc_task);
-		torc_register_task((void *)taskfun);
-		torc_register_task((void *)call_gsl_rand_init);
-		torc_register_task((void *)call_print_matrix_2d);
-		torc_register_task((void *)call_update_gdata);
-	#endif
-
+    parse(&argc, &argv, &a);
+    
     data_init();
 
-	int Npr;
-	read_priors( "priors.par", &priors, &Npr );
-	print_priors( priors, Npr);
-	//XXX: check that Nps==data.Nth
+    int Npr;
+    read_priors( "priors.par", &priors, &Npr );
+    print_priors( priors, Npr);
+    //XXX: check that Nps==data.Nth    
 
+    fitfun_initialize(argc, argv);
 
-        fitfun_initialize(argc, argv);
-
-	#if defined(_USE_TORC_)
-		torc_init(argc, argv, MODE_MS);
-	#endif
+#if defined(_USE_TORC_)
+    torc_init(argc, argv, MODE_MS);
+#endif
 	
-	#if defined(_AFFINITY_)
-		spmd_setaffinity();
-	#endif
+#if defined(_AFFINITY_)
+    spmd_setaffinity();
+#endif
 
 
 
@@ -100,20 +114,20 @@ int main(int argc, char *argv[])
 
     curgen_db.entries = 0; 
 
-	//-----  Restart: load data -------------------------
+    //-----  Restart: load data -------------------------
     int goto_next = 0;
     int res;
     if (data.restart) {
     	res = load_runinfo();
     	if (res == 0) {
-        	load_curgen_db(runinfo.Gen);
-        	nchains = data.Num[0];
-        	printf("nchains = %d\n", nchains);
-        	gt0 = t0 = torc_gettime();
-        	goto_next = 1;
+            load_curgen_db(runinfo.Gen);
+            nchains = data.Num[0];
+            printf("nchains = %d\n", nchains);
+            gt0 = t0 = torc_gettime();
+            goto_next = 1;
     	}
     }
-	//---------------------------------------------------
+    //---------------------------------------------------
 
 
 
@@ -124,79 +138,79 @@ int main(int argc, char *argv[])
     double out_tparam[data.PopSize];    /* nchains*/
 
     
-	// sample from the prior
-	if (goto_next == 0){
+    // sample from the prior
+    if (goto_next == 0){
        
 
-		#if defined(_USE_OPENMP_)
-			#pragma omp parallel
-			{
-				printf("Hello from thread %d of %d\n", omp_get_thread_num(), omp_get_num_threads());
-				#pragma omp for
-			//	{
-		#endif
+#if defined(_USE_OPENMP_)
+#pragma omp parallel
+        {
+            printf("Hello from thread %d of %d\n", omp_get_thread_num(), omp_get_num_threads());
+#pragma omp for
+            //	{
+#endif
 
 
-        for (i = 0; i < nchains; i++){
-            winfo[0] = runinfo.Gen;
-            winfo[1] = i;
-            winfo[2] = -1;
-            winfo[3] = -1;
+            for (i = 0; i < nchains; i++){
+                winfo[0] = runinfo.Gen;
+                winfo[1] = i;
+                winfo[2] = -1;
+                winfo[3] = -1;
 
-            double in_tparam[data.Nth]; // here store the samples
-			for (int d = 0; d < data.Nth; d++)
-				in_tparam[d] = eval_random( priors[d] );
+                double in_tparam[data.Nth]; // here store the samples
+                for (int d = 0; d < data.Nth; d++)
+                    in_tparam[d] = eval_random( priors[d] );
 
-			#if defined(_USE_TORC_)
+#if defined(_USE_TORC_)
                 torc_create(-1, (void (*)())initchaintask, 4,
-                        data.Nth, MPI_DOUBLE, CALL_BY_COP,
-                        1, MPI_INT, CALL_BY_COP,
-                        1, MPI_DOUBLE, CALL_BY_RES,
-                        4, MPI_INT, CALL_BY_COP,
-                        in_tparam, &data.Nth, &out_tparam[i], winfo);
-			#else
+                            data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                            1, MPI_INT, CALL_BY_COP,
+                            1, MPI_DOUBLE, CALL_BY_RES,
+                            4, MPI_INT, CALL_BY_COP,
+                            in_tparam, &data.Nth, &out_tparam[i], winfo);
+#else
 				
 				
-				#if defined(_USE_OPENMP_)
-					//#pragma omp task shared(data, out_tparam) firstprivate(i, in_tparam, winfo)
-              		#pragma omp task firstprivate(i, winfo, in_tparam) shared(data, out_tparam)
-				#endif
-				{
-            		initchaintask(in_tparam, &data.Nth, &out_tparam[i], winfo);
+#if defined(_USE_OPENMP_)
+                //#pragma omp task shared(data, out_tparam) firstprivate(i, in_tparam, winfo)
+#pragma omp task firstprivate(i, winfo, in_tparam) shared(data, out_tparam)
+#endif
+                {
+                    initchaintask(in_tparam, &data.Nth, &out_tparam[i], winfo);
                 }
 			
-			#endif
+#endif
 
-        }
+            }
 
-		#if defined(_USE_OPENMP_)
-			//} // single
-			} 	// parallel
-		#endif
+#if defined(_USE_OPENMP_)
+            //} // single
+        } 	// parallel
+#endif
 
 
-		#if defined(_USE_TORC_)
-        	if (data.stealing)
-	    		torc_enable_stealing();
+#if defined(_USE_TORC_)
+        if (data.stealing)
+            torc_enable_stealing();
 
-        	torc_waitall();
+        torc_waitall();
 
-        	if (data.stealing)
-            	torc_disable_stealing();
-		#endif
+        if (data.stealing)
+            torc_disable_stealing();
+#endif
 
 
         gt1 = torc_gettime();
         int g_nfeval = get_nfc();
         printf("server: Generation %d: total elapsed time = %lf secs, generation elapsed time = %lf secs for function calls = %d\n", 
-																							runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
+               runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
         reset_nfc();
 	
         if( data.icdump ) dump_curgen_db(runinfo.Gen);
         if( data.ifdump ) dump_full_db(runinfo.Gen);
 
-		save_runinfo();
-		if (data.restart)	check_for_exit();
+        save_runinfo();
+        if (data.restart)	check_for_exit();
 
         if (data.MaxStages == 1) goto end;
 
@@ -216,16 +230,16 @@ int main(int argc, char *argv[])
     nchains = prepare_newgen(nchains, leaders);    /* calculate statistics */
 
     spmd_update_gdata();
-	if(data.options.Display)
-		call_print_matrix_2d();
+    if(data.options.Display)
+        call_print_matrix_2d();
 
-    /* this can be moved above */
+/* this can be moved above */
     if (runinfo.p[runinfo.Gen] == 1) {
         printf("p == 1 from previous run, nothing more to do\n");
         goto end;
     }
 
-	printf("----------------------------------------------------------------\n");
+    printf("----------------------------------------------------------------\n");
 
     runinfo.Gen++;
     for (; runinfo.Gen < data.MaxStages; runinfo.Gen++){
@@ -234,95 +248,95 @@ int main(int argc, char *argv[])
         gt0 = torc_gettime();
 
 
-		#if defined(_USE_OPENMP_)
-			#pragma omp parallel
-			{
-			#pragma omp single nowait
-			{
-		#endif
+#if defined(_USE_OPENMP_)
+#pragma omp parallel
+        {
+#pragma omp single nowait
+            {
+#endif
         
-		int winfo[4];
-        double in_tparam[data.Nth];
-        double init_mean[data.Nth];
-        double chain_cov[data.Nth*data.Nth];
+                int winfo[4];
+                double in_tparam[data.Nth];
+                double init_mean[data.Nth];
+                double chain_cov[data.Nth*data.Nth];
 
-        for (i = 0; i < nchains; i++) {
-            winfo[0] = runinfo.Gen;
-            winfo[1] = i;
-            winfo[2] = -1;    /* not used */
-            winfo[3] = -1;    /* not used */
+                for (i = 0; i < nchains; i++) {
+                    winfo[0] = runinfo.Gen;
+                    winfo[1] = i;
+                    winfo[2] = -1;    /* not used */
+                    winfo[3] = -1;    /* not used */
 
-            int p;
-            for (p = 0; p < data.Nth; p++)
-                in_tparam[p] = leaders[i].point[p];
+                    int p;
+                    for (p = 0; p < data.Nth; p++)
+                        in_tparam[p] = leaders[i].point[p];
             
-			nsteps = leaders[i].nsel;
+                    nsteps = leaders[i].nsel;
 
-            if (data.use_local_cov){
-                for (p = 0; p < data.Nth*data.Nth; ++p)
-                    chain_cov[p] = data.local_cov[i][p];
+                    if (data.use_local_cov){
+                        for (p = 0; p < data.Nth*data.Nth; ++p)
+                            chain_cov[p] = data.local_cov[i][p];
 
-                for (p = 0; p < data.Nth; ++p) {
-                    if (data.use_proposal_cma)
-                        init_mean[p] = data.init_mean[i][p];
-                    else
-                        init_mean[p] = leaders[i].point[p];
+                        for (p = 0; p < data.Nth; ++p) {
+                            if (data.use_proposal_cma)
+                                init_mean[p] = data.init_mean[i][p];
+                            else
+                                init_mean[p] = leaders[i].point[p];
+                        }
+                    }
+                    else{
+                        for (p = 0; p < data.Nth; ++p)
+                            for (int j = 0; j < data.Nth; ++j)
+                                chain_cov[p*data.Nth+j]= data.bbeta*runinfo.SS[p][j];
+
+                        for (p = 0; p < data.Nth; ++p)
+                            init_mean[p] = in_tparam[p];
+                    }
+
+                    out_tparam[i] = leaders[i].F;    /* loglik_leader...*/
+
+#if defined(_USE_TORC_)
+                    torc_create(leaders[i].queue, (void (*)())chaintask, 7,
+                                data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                1, MPI_INT, CALL_BY_COP,
+                                1, MPI_INT, CALL_BY_COP,
+                                1, MPI_DOUBLE, CALL_BY_REF,
+                                4, MPI_INT, CALL_BY_COP,
+                                data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                data.Nth*data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                in_tparam, &data.Nth, &nsteps, &out_tparam[i], winfo,
+                                init_mean, chain_cov);
+#else
+
+#if defined(_USE_OPENMP_)
+#pragma omp task shared(data, out_tparam) firstprivate(i, nsteps, in_tparam, winfo, init_mean, chain_cov)
+#endif
+                    chaintask( in_tparam, &data.Nth, &nsteps, &out_tparam[i], winfo, init_mean, chain_cov );
+
+#endif
                 }
-            }
-            else{
-                for (p = 0; p < data.Nth; ++p)
-                    for (int j = 0; j < data.Nth; ++j)
-                        chain_cov[p*data.Nth+j]= data.bbeta*runinfo.SS[p][j];
 
-                for (p = 0; p < data.Nth; ++p)
-                    init_mean[p] = in_tparam[p];
-            }
-
-            out_tparam[i] = leaders[i].F;    /* loglik_leader...*/
-
-			#if defined(_USE_TORC_)
-            	torc_create(leaders[i].queue, (void (*)())chaintask, 7,
-                    				data.Nth, MPI_DOUBLE, CALL_BY_COP,
-                    				1, MPI_INT, CALL_BY_COP,
-                    				1, MPI_INT, CALL_BY_COP,
-                    				1, MPI_DOUBLE, CALL_BY_REF,
-                    				4, MPI_INT, CALL_BY_COP,
-                    				data.Nth, MPI_DOUBLE, CALL_BY_COP,
-                    				data.Nth*data.Nth, MPI_DOUBLE, CALL_BY_COP,
-                    				in_tparam, &data.Nth, &nsteps, &out_tparam[i], winfo,
-                    				init_mean, chain_cov);
-			#else
-
-				#if defined(_USE_OPENMP_)
-	    			#pragma omp task shared(data, out_tparam) firstprivate(i, nsteps, in_tparam, winfo, init_mean, chain_cov)
-				#endif
-            	chaintask( in_tparam, &data.Nth, &nsteps, &out_tparam[i], winfo, init_mean, chain_cov );
-
-			#endif
-        }
-
-        // wait for all chain tasks to finish
-		#if defined(_USE_OPENMP_)
-			} // single
-			} // parallel
-		#endif
+                // wait for all chain tasks to finish
+#if defined(_USE_OPENMP_)
+            } // single
+        } // parallel
+#endif
 
 
-		#if defined(_USE_TORC_)
-			if (data.stealing)
-            	torc_enable_stealing();
+#if defined(_USE_TORC_)
+        if (data.stealing)
+            torc_enable_stealing();
 
-        	torc_waitall();
-        	if (data.stealing)
-            	torc_disable_stealing();
-		#endif
+        torc_waitall();
+        if (data.stealing)
+            torc_disable_stealing();
+#endif
 
 		
 
         gt1 = torc_gettime();
         int g_nfeval = get_nfc();
         printf("server: Generation %d: total elapsed time = %lf secs, generation elapsed time = %lf secs for function calls = %d\n", 
-																	runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
+               runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
         reset_nfc();
 		
 
@@ -331,7 +345,7 @@ int main(int argc, char *argv[])
         if (data.ifdump) dump_full_db(runinfo.Gen);
 
         // save here
-		save_runinfo();
+        save_runinfo();
         if (data.restart) {
             check_for_exit();
         }
@@ -341,12 +355,12 @@ int main(int argc, char *argv[])
 
         spmd_update_gdata();
 
-		if(data.options.Display)
-			call_print_matrix_2d();
+        if(data.options.Display)
+            call_print_matrix_2d();
 
-		printf("Acceptance rate   :  %lf \n",runinfo.acceptance[runinfo.Gen]) ;
-		printf("Annealing exponent:  %lf \n",runinfo.p[runinfo.Gen]) ;
-		printf("----------------------------------------------------------------\n");
+        printf("Acceptance rate   :  %lf \n",runinfo.acceptance[runinfo.Gen]) ;
+        printf("Annealing exponent:  %lf \n",runinfo.p[runinfo.Gen]) ;
+        printf("----------------------------------------------------------------\n");
 
 
         if (runinfo.p[runinfo.Gen] == 1) break;
@@ -358,7 +372,7 @@ int main(int argc, char *argv[])
     if (data.MaxStages == 1) runinfo.Gen = 0;	// small correction for this extreme case
 
 
-	//FIXME move this prints into a file
+//FIXME move this prints into a file
     print_matrix((char *)"runinfo.p", runinfo.p, runinfo.Gen+1);
     print_matrix((char *)"runinfo.CoefVar", runinfo.CoefVar, runinfo.Gen+1);
     print_matrix_i((char *)"runinfo.currentuniques", runinfo.currentuniques, runinfo.Gen+1);
@@ -370,10 +384,10 @@ int main(int argc, char *argv[])
     print_matrix((char *)"logEvidence", logEvidence, 1);
 
 
-	FILE *fp;
-	fp = fopen("log_evidence.txt", "w");
-	fprintf(fp, "%lf\n", logEvidence[0]);
-	fclose(fp);
+    FILE *fp;
+    fp = fopen("log_evidence.txt", "w");
+    fprintf(fp, "%lf\n", logEvidence[0]);
+    fclose(fp);
 
 
     save_runinfo();
@@ -382,7 +396,7 @@ int main(int argc, char *argv[])
 
 
 end:
-    /* making a copy of last curgen_db file */
+/* making a copy of last curgen_db file */
     if (data.icdump){
         printf("lastgen = %d\n", runinfo.Gen);
         char cmd[256];
@@ -391,15 +405,15 @@ end:
     }
 
 
-    /* shutdown */
+/* shutdown */
     fitfun_finalize();
 
     printf("total function calls = %d\n", get_tfc());
-	#if defined(_USE_TORC_)
-    	torc_finalize();
-	#endif
+#if defined(_USE_TORC_)
+    torc_finalize();
+#endif
     
 	
 		
-	return 0;
+    return 0;
 }
