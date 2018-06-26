@@ -1,11 +1,11 @@
 include ../make/common.mk
 
 LIBS = \
-	libftitfun_theta_int.a \
-	libftitfun_theta_ext.a \
-	libftitfun_psi.a       \
-	libftitfun_posterior_theta_int.a \
-	libftitfun_posterior_theta_ext.a \
+	libfitfun_theta_int.a \
+	libfitfun_theta_ext.a \
+	libfitfun_psi.a       \
+	libfitfun_posterior_theta_int.a \
+	libfitfun_posterior_theta_ext.a \
 	libfitfun_tests.a
 
 all: $(LIBS)
@@ -27,13 +27,13 @@ OBJ_POST_THETA_EXT = $(OBJ_POST) loglike_theta.o         spawner.o
 OBJ_TESTS = fitfun_tests.o
 
 
-libftitfun_theta_int.a: $(OBJ_THETA_INT)
-libftitfun_theta_ext.a: $(OBJ_THETA_EXT)
+libfitfun_theta_int.a: $(OBJ_THETA_INT)
+libfitfun_theta_ext.a: $(OBJ_THETA_EXT)
 
-libftitfun_psi.a: $(OBJ_PSI)
+libfitfun_psi.a: $(OBJ_PSI)
 
-libftitfun_posterior_theta_int.a: $(OBJ_POST_THETA_INT)
-libftitfun_posterior_theta_ext.a: $(OBJ_POST_THETA_EXT)
+libfitfun_posterior_theta_int.a: $(OBJ_POST_THETA_INT)
+libfitfun_posterior_theta_ext.a: $(OBJ_POST_THETA_EXT)
 
 libfitfun_tests.a: $(OBJ_TESTS)
 
