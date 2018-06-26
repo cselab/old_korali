@@ -20,10 +20,9 @@ CFLAGS += -I$(DIR_CMAES)
 LDLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
 CFLAGS += -I$(DIR_FITFUN)
 
-
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
-	(cd $(DIR_CMAES); make libcmaes.a)
+	(cd $(DIR_CMAES);  make libcmaes.a)
 	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
 	$(LINK.o) $^ $(LDLIBS)
 
@@ -33,9 +32,8 @@ $(TARGET): engine_cmaes.o
 engine_cmaes.o: engine_cmaes.c
 
 clean:; rm -rf  $(TARGET) *.o
-clear:;	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
 
 test: cma
 	atest `find test -name main`
 
-.PHONY: clear clean all test
+.PHONY: clean all test
