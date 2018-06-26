@@ -38,6 +38,18 @@ libfitfun_posterior_theta_ext.a: $(OBJ_POST_THETA_EXT)
 libfitfun_tests.a: $(OBJ_TESTS)
 
 
+# deps
+fitfun_posterior_theta.o: fitfun_posterior_theta.c fitfun.h loglike_posterior_theta.h
+fitfun_psi.o: fitfun_psi.c fitfun.h loglike_psi.h
+fitfun_tests.o: fitfun_tests.c fitfun.h
+fitfun_theta.o: fitfun_theta.c fitfun.h loglike_theta.h
+fitfun_theta_fast.o: fitfun_theta_fast.c fitfun.h loglike_theta_fast.h
+loglike_posterior_theta.o: loglike_posterior_theta.c loglike_posterior_theta.h fitfun.h loglike_posterior_theta.h
+loglike_psi.o: loglike_psi.c loglike_psi.h
+loglike_theta.o: loglike_theta.c loglike_theta.h fitfun.h
+loglike_theta_fast.o: loglike_theta_fast.c loglike_theta_fast.h fitfun.h
+spawner.o: spawner.c spawner.h
+
 clean:; rm -rf *.o $(LIBS)
 
 .PHONY: clean
