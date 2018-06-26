@@ -36,4 +36,6 @@ LINK.o.xx   = $(LDX) $(LDFLAGS)     -o $@
 %.o: %.cpp
 	$(COMPILE.cxx) $<
 
-%.a:; ar rcs $@ $^
+%.a:
+	ar rcs $@ $^
+	ranlib $@
