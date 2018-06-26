@@ -38,8 +38,6 @@ $(BUILD)/dram_psi:                       fitfun_psi;                 $(link.dram
 
 fitfun%:; (cd $(LIK); make lib$@.a)
 
-# todo deps
-
 clean:; rm -rf $(TARGETS)
 
 cleanall: clean
