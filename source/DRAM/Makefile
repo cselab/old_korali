@@ -6,7 +6,8 @@ TARGET      ?= dram
 
 all: $(TARGET)
 
-DIR_PRIORS=../priors
+L=../lib
+DIR_PRIORS=$L/priors
 LDLIBS += -L$(DIR_PRIORS) -lpriors
 CFLAGS += -I$(FITFUN_DIR)
 

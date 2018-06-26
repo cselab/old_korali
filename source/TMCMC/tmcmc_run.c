@@ -11,20 +11,19 @@
 #include <signal.h>
 #include <stdio.h>
 
-#include "tmcmc_db.h"
-#include "tmcmc_aux.h"
-#include "tmcmc_stats.h"
-#include "tmcmc_engine.h"
-#include "fitfun.h"
-
-
-#include "../priors/priors.h"
-#include "../priors/myrand.h"
-
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_rng.h>
+
+#include "tmcmc_db.h"
+#include "tmcmc_aux.h"
+#include "tmcmc_stats.h"
+#include "tmcmc_engine.h"
+
+#include <fitfun.h>
+#include <priors.h>
+#include <myrand.h>
 
 
 #if defined(_USE_TORC_)

@@ -1,4 +1,4 @@
-include ../make/common.mk
+include ../../make/common.mk
 
 LIB = libpriors.a
 TARGETS := $(LIB) test

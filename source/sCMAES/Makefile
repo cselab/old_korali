@@ -6,8 +6,10 @@ TARGET      ?= scma
 
 all: $(TARGET)
 
-DIR_PRIORS=../priors
-DIR_CMAES=../lib/cmaes
+L=../lib
+
+DIR_PRIORS = $L/priors
+DIR_CMAES  = $L/cmaes
 
 LDLIBS += -L$(DIR_PRIORS) -lpriors
 CFLAGS += -I$(DIR_PRIORS)
