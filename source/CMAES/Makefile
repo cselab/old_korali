@@ -1,8 +1,8 @@
 include ../make/common.mk
 
-FITFUN_OBJS ?= ./fitfun.o
-FITFUN_DIR  ?= ../likelihoods
-TARGET      ?= cma
+LIB_FITFUN ?= fitfun_tests
+DIR_FITFUN ?= ../likelihoods
+TARGET     ?= cma
 
 all: $(TARGET)
 
@@ -17,20 +17,20 @@ CFLAGS += -I$(DIR_PRIORS)
 LDLIBS += -L$(DIR_CMAES) -lcmaes
 CFLAGS += -I$(DIR_CMAES)
 
-CFLAGS += -I$(FITFUN_DIR)
+LDLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
+CFLAGS += -I$(DIR_FITFUN)
+
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
 	(cd $(DIR_CMAES); make libcmaes.a)
+	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
 	$(LINK.o) $^ $(LDLIBS)
 
 # dependencies
 
-$(TARGET): engine_cmaes.o $(FITFUN_OBJS)
+$(TARGET): engine_cmaes.o
 engine_cmaes.o: engine_cmaes.c
-
-# optional: only when FITFUN_OBJS not specified
-fitfun.o: fitfun.c
 
 clean:; rm -rf  $(TARGET) *.o
 clear:;	rm -rf .tags* tags *.txt *.dat actparcmaes.par *.err
