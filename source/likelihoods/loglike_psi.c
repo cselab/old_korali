@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "loglike_psi.h"
-#include "../priors/priors.h"
+#include <priors.h>
 
 #define BUFLEN 1024
 

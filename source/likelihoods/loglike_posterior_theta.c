@@ -7,8 +7,9 @@
 #include <math.h>
 
 #include <fitfun.h>
+#include <priors.h>
 #include "loglike_posterior_theta.h"
-#include "../priors/priors.h"
+
 
 
 #define BLANKS " \t\n="
