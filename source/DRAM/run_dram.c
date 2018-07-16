@@ -12,34 +12,36 @@
 #include <string.h>
 
 #include "dram.h"
-#include "fitfun.h"
+#include <fitfun.h>
 
+typedef struct {
+    // empty for now
+} Args;
 
-void fitfun_init(Params *par){
-	char str[12];
-	sprintf(str, "%d", par->Npar);
-	fitfun_initialize(str);
+/* shift arguments */
+static int shift(int *c, char ***v) {
+    (*c)--; (*v)++;
+    return (*c) > 0;
+}
+
+/* parse optional arguments and "eats" them */
+static void parse(int *c, char ***v, Args *a) {
+    shift(c, v); // skip executable
 }
 
 
-
-
-int main(int argc, char *argv[]){
-
+int main(int argc, char *argv[]) {
+    Args a;
     Params par;
+    dram_init(&par);
 
+    parse(&argc, &argv, &a);
+    fitfun_initialize(argc, argv);
 
-	dram_init(&par);
+    dram(&par);
 
+    dram_finalize(&par);
+    fitfun_finalize();
 
-	fitfun_init(&par);
-
-
-	dram(&par);
-
-
-	dram_finalize();
-	fitfun_finalize();
-
-	return 0;
+    return 0;
 }

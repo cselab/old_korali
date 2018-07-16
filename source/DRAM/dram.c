@@ -18,11 +18,10 @@
 #include <gsl/gsl_linalg.h>
 
 #include "dram.h"
-#include "fitfun.h"
 
-#include "../priors/priors.h"
-#include "../priors/myrand.h"
-
+#include <fitfun.h>
+#include <priors.h>
+#include <myrand.h>
 
 
 #ifndef min
@@ -44,12 +43,6 @@ void print_error(char *var)
 	fprintf(stderr, "Invalid value for `%s'. Check the file dram.par\n", var);
 	exit(EXIT_FAILURE);
 }
-
-
-
-
-
-
 
 void print_params(Params * par)
 {
@@ -79,16 +72,6 @@ void print_params(Params * par)
     //}
     //printf("\n");
 }
-
-
-
-
-
-
-        
-
-
-
 
 void read_par_file( const char * file, Params * par ){
 
@@ -203,14 +186,6 @@ void read_par_file( const char * file, Params * par ){
     free(buffer);
 
 }
-
-
-
-
-
-
-
-
 
 void dram_init(Params * par){
 

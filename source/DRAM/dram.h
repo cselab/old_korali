@@ -9,7 +9,7 @@
 #ifndef _DRAM_H_
 #define _DRAM_H_
 
-#include "../priors/priors.h"
+#include <priors.h>
 
 
 

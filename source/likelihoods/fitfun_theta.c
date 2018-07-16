@@ -2,7 +2,7 @@
 #include "loglike_theta.h"
 
 
-void fitfun_initialize(char *s) {
+void fitfun_initialize(int argc, char **argv) {
 
 }
 

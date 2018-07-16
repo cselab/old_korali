@@ -1,0 +1,12 @@
+### dixon_price 4d
+# nTEST: opt.dixon_price4d
+set -eu
+make
+EXE=cma
+T=test/dixon_price
+cp $EXE $T
+cd $T
+all=allcmaes.dat
+rm -rf $all
+./$EXE "Dixon_Price"
+awk '{if ($1 == "xbestever") {getline; print}}' $all | uscale 1e10 > final.out.dat

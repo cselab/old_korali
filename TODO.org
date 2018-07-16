@@ -1,19 +1,29 @@
 * [0/1] Code structure
 ** TODO isolate torc/openmp
-* [0/3] file organisation
-** TODO no .par inside source dir
+* [1/4] file organisation
+** TODO [1/2] no .par inside source dir
+*** DONE CMAES
+    CLOSED: [2018-06-21 Thu 08:47]
+*** TODO TMCMC
 ** TODO no postprocessing scripts inside source
-** TODO only one fitfun.h
+** DONE only one fitfun.h
+   CLOSED: [2018-06-21 Thu 08:45]
 
-* [2/4] Makefile
+* [4/4] Makefile
 ** DONE use gsl-config --libs and gsl-config --cflags
    CLOSED: [2018-06-13 Wed 14:01]
 ** DONE add .PHONY
    CLOSED: [2018-06-13 Wed 14:01]
-** TODO separate dependencies
-** TODO add separate makefiles
-* [0/2] Add tests
-** TODO CMAES
+** DONE separate dependencies
+   CLOSED: [2018-06-20 Wed 17:14]
+** DONE add separate makefiles
+   CLOSED: [2018-06-20 Wed 17:14]
+* [1/2] Add tests
+** DONE CMAES
+   CLOSED: [2018-06-20 Wed 17:16]
 ** TODO TMCMC
 * [0/1] Features
 ** TODO Surrogate based CMAES
+* [0/1] Others
+** TODO fix priors test
+

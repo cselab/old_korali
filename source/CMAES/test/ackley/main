@@ -1,0 +1,12 @@
+### ackley 4d
+# nTEST: opt.ackley4d
+set -eu
+make
+EXE=cma
+T=test/ackley
+cp $EXE $T
+cd $T
+all=allcmaes.dat
+rm -rf $all
+./$EXE "Ackley"
+awk '{if ($1 == "xbestever") {getline; print}}' $all | uscale 1e10 > final.out.dat

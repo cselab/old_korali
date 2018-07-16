@@ -1,71 +1,33 @@
-SRC := 	run_dram.c \
-		dram.c \
-		fitfun.c \
-		../priors/priors.c \
-		../priors/myrand.c
+include ../make/common.mk
+
+LIB_FITFUN ?= fitfun_tests
+DIR_FITFUN ?= ../likelihoods
+TARGET     ?= dram
+
+all: $(TARGET)
+
+L=../lib
+
+DIR_PRIORS=$L/priors
+
+CFLAGS += -I$(DIR_PRIORS)
+LDLIBS += -L$(DIR_PRIORS) -lpriors
+
+LDLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
+CFLAGS += -I$(DIR_FITFUN)
 
 
-ALL_SRC := $(SRC)
-TARGETS := dram 
-
-OBJDIR = .o
-TMP=$(subst ../,,$(SRC))
-OBJ:= $(patsubst %,$(OBJDIR)/%.o,$(basename  $(TMP)))
-
-#==============================================================================
-#	COMPILERS AND FLAGS
-#==============================================================================
-CC := gcc
-LD := gcc
-
-
-CFLAGS += -O3 -std=c99
-CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
-CFLAGS += -Wall -Wno-unused-function
-CFLAGS += `gsl-config --cflags`
-
-
-LDLIBS += `gsl-config --libs`
-
-
-COMPILE.c = $(CC) $(CFLAGS) -c -o $@
-LINK.o    = $(LD) $(LDFLAGS) -o $@
-
-
-$(shell mkdir -p $(OBJDIR) )
-
-#==============================================================================
-#	RULES
-#==============================================================================
-all: $(TARGETS)
-
-
-dram: $(OBJ)
+$(TARGET):
+	(cd $(DIR_PRIORS); make libpriors.a)
+	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
 	$(LINK.o) $^ $(LDLIBS)
 
+# dependencies
 
-$(OBJDIR)/%.o: %.c
-	@mkdir -p "$(@D)"
-	$(COMPILE.c) $<
+$(TARGET): dram.o run_dram.o
+dram.o: dram.c dram.h
+run_dram.o: run_dram.c dram.h
 
+clean:; rm -rf  $(TARGET) *.o
 
-$(OBJDIR)/priors/%.o: ../priors/%.c
-	@mkdir -p "$(@D)"
-	$(COMPILE.c) $<
-
-
-
-ctags:
-	rm -rf .tags .tags1 tags
-	ctags $(ALL_SRC)
-
-
-print:
-
-
-clean:
-	rm -rf  $(TARGETS) $(OBJDIR)
-
-
-clear:
-	rm -rf .tags* tags *.txt
+.PHONY: clear clean all
