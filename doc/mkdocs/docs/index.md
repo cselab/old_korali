@@ -1,6 +1,6 @@
-# Welcome to Π4U
+# Welcome to korali
 
-Π4U is a high performance framework for optimization, sampling and Bayesian uncertainty quantification of large scale computational models.
+korali is a high performance framework for optimization, sampling and Bayesian uncertainty quantification of large scale computational models.
 
 The framework is based on the [TORC](references.md#anchor_torc) task-parallel library for clusters, which is designed to provide unified programming and runtime support for computing platforms that range from single-core systems to hybrid multicore-GPU clusters and heterogenous Grid based supercomputers.
 
@@ -10,7 +10,7 @@ The framework is based on the [TORC](references.md#anchor_torc) task-parallel li
 <br><br>
 
 
-# What Π4U can do for you
+# What korali can do for you
 
 1. **Optimize**: given a cost function $F(\vartheta)$ find
 	$$
