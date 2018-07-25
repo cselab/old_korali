@@ -4,6 +4,6 @@ The framework is based on the TORC task-parallel library for clusters, which is 
 
 
 
-For the documentation of korali go [here](https://cselab.github.io/pi4u/).
+For the documentation of korali go [here](https://cselab.github.io/korali/).
 
 
