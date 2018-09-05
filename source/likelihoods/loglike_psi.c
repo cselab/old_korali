@@ -193,7 +193,7 @@ void print_theta_file( const char *file ){
 //=============================================================================
 //
 //
-void loglike_psi_initialize( int nn ){
+void loglike_psi_initialize(){
 
     read_priors( "priors_theta.par", &prior_theta, &Npr );
 

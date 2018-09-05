@@ -5,15 +5,9 @@
 
 
 void fitfun_initialize(int argc, char **argv) {
-	int n;        
-        char *s;
-        if (argc != 1) {
-            fprintf(stderr, "expected %d arguments, got %d\n", 1, argc);
-            exit(1);
-        }
-        s = *argv;
-	n = atoi(s);
-	loglike_psi_initialize(n);
+
+	loglike_psi_initialize();
+
 }
 
 void fitfun_finalize() {
