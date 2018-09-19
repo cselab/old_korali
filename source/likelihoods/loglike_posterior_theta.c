@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 
 #include <fitfun.h>
 #include <priors.h>
@@ -42,6 +43,7 @@ static double *denom;
 
 static Density **priors;
 static int Npr;
+
 
 
 //=============================================================================
@@ -198,7 +200,6 @@ void loglike_posterior_theta_initialize( ) {
 
 
 
-
 	read_db_file("db_theta.par");
 	print_db_file("db_theta.par");
 	
@@ -336,32 +337,16 @@ void loglike_posterior_theta_initialize( ) {
             A[j] = prior_pdf( priors[i], Npr, theta[j]);
             sum +=  A[j] / B[j];
 
-			
-			/*
-			if( A[j] < 1e-6 ){			
-			//if( i == 399 ){			
-				
-				printf("\n--->  i=%d, j=%d   <---\n",i,j);
-				printf("%lf  --  %lf\n",A[j], B[j]);
-
-				print_priors( priors[i], Npr);
-            	for( int k=0; k<db.Dtheta; k++) printf("    %lf  ", theta[j][k] );
-            
-				printf("\n %lf \n", prior_pdf( priors[i], Npr, theta[j]) );
-				printf("\n-------------------\n");
-			}
-			*/
-			
         }
 
-		//exit(1);
-
-        //printf(" \n");
 
         denom[i] = ( db.Npsi / db.Ntheta ) * sum;
 
-		if( denom[i]<1. )
+		if( denom[i]<DBL_EPSILON ) {
 			printf("%d  -->  %lf \n",i,denom[i]);
+		    printf("\n\n Error: Denominator is smaller than machince precision %lf. Exit... \n\n", DBL_EPSILON);
+ 		    exit(EXIT_FAILURE);
+        }
 
 
     }
@@ -435,30 +420,13 @@ double loglike_posterior_theta(double *theta, int n, void *output, int *info) {
 		else{
 			sum += pr_hb/denom[i];
 
-			//printf("\n--->  i=%d  <---\n",i );
-			//printf("%d  --> %lf  -->  %lf   --->    %lf \n",i,pr_hb,denom[i], sum);
-
-			//print_priors( priors[i], Npr);
-
-       		//for( int k=0; k<n; k++) printf("    %lf  ", theta[k] );
-			//printf("\n");
-            
-			//printf("\n %lf \n", prior_pdf( priors[i], Npr, theta ) );
-			//printf("\n-------------------\n");
 		}
 		
 	}
 
-	//printf("------->  %lf \n",sum);
-	//exit(1);
-
 
 	
 	if(sum==0)	return -1e12;
-
-  	//for( int k=0; k<n; k++) printf("    %lf  ", theta[k] );
-	//printf("\n");
-	//printf("------->  %lf \n",sum);
 
 
 	double loglike_theta = loglike_(theta, n, output, info);
