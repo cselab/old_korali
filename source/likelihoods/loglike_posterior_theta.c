@@ -344,7 +344,7 @@ void loglike_posterior_theta_initialize( ) {
 
 		if( denom[i]<DBL_EPSILON ) {
 			printf("%d  -->  %lf \n",i,denom[i]);
-		    printf("\n\n Error: Denominator is smaller than machince precision %lf. Exit... \n\n", DBL_EPSILON);
+		    printf("\n\n Error: Denominator is smaller than machine precision, %lf. Exit... \n\n", DBL_EPSILON);
  		    exit(EXIT_FAILURE);
         }
 
