@@ -17,7 +17,7 @@ PSI_DIR="./data/psi"
 PSI_FILE="psi.txt"
 
 
-EXEC_FILE="../../../build/sample_posterior_theta_fast"
+EXEC_FILE="../../../build/tmcmc_posterior_theta_internal"
 
 PAR_FILE="./tmcmc_theta.par"
 PRIOR_THETA_FILE="./priors_theta.par"

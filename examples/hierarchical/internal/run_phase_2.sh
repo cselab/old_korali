@@ -20,9 +20,10 @@ fi
 cd $RUN_DIR
 
 
-mpirun -np 1   ./sample_psi
+mpirun -np 1   ./tmcmc_psi
 #./sample_psi
 
+mkdir -p ../../data/psi
 cp final.txt ../../data/psi/psi.txt
 
 
