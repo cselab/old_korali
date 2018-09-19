@@ -336,9 +336,10 @@ void loglike_posterior_theta_initialize( ) {
             A[j] = prior_pdf( priors[i], Npr, theta[j]);
             sum +=  A[j] / B[j];
 
+			
 			/*
-			//if( A[j] < 1e-6 ){			
-			if( i == 399 ){			
+			if( A[j] < 1e-6 ){			
+			//if( i == 399 ){			
 				
 				printf("\n--->  i=%d, j=%d   <---\n",i,j);
 				printf("%lf  --  %lf\n",A[j], B[j]);
@@ -350,6 +351,7 @@ void loglike_posterior_theta_initialize( ) {
 				printf("\n-------------------\n");
 			}
 			*/
+			
         }
 
 		//exit(1);
@@ -358,8 +360,8 @@ void loglike_posterior_theta_initialize( ) {
 
         denom[i] = ( db.Npsi / db.Ntheta ) * sum;
 
-		//if( denom[i]<1. )
-		//	printf("%d  -->  %lf \n",i,denom[i]);
+		if( denom[i]<1. )
+			printf("%d  -->  %lf \n",i,denom[i]);
 
 
     }
@@ -368,6 +370,8 @@ void loglike_posterior_theta_initialize( ) {
 	printf("\nSuccesfull computation of the denominator.\n\n");
 
 
+	// read data for the likelihood evaluation
+	loglike_initialize_();
 
 
 	free(theta[0]); free(theta);
@@ -393,6 +397,8 @@ void loglike_posterior_theta_finalize(){
 
 
 	free(denom);
+
+	loglike_finalize_();
 }
 
 

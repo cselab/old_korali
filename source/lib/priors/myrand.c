@@ -123,6 +123,7 @@ double normal_rnd( double *p ){
 double uniform_pdf(double x, double *p){
 
 	return gsl_ran_flat_pdf( x, p[0] , p[1] );
+
 }
 
 

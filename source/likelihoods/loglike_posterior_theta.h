@@ -11,5 +11,7 @@ void 	loglike_posterior_theta_finalize();
 double 	loglike_posterior_theta(double *x, int n, void *output, int *info );
 
 double 	loglike_(double *x, int n, void *output, int *info );
+void	loglike_initialize_( void );
+void	loglike_finalize_( void );
 
 #endif

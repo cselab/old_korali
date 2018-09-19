@@ -10,6 +10,10 @@ void loglike_theta_initialize();
 void loglike_theta_finalize();
 double loglike_theta(double *x, int n, void *output, int *winfo);
 
-double loglike_(double *x, int n, void *output, int *winfo);
+double	loglike_(double *x, int n, void *output, int *winfo);
+void 	loglike_initiliaze_( void );
+void 	loglike_finalize_( void );
+
+
 
 #endif

@@ -5,7 +5,7 @@ theta_suffix	.txt
 logev_prefix	evidence_
 logev_suffix	.txt
 
-Nrec		5000
+Nrec		1000
  
 Nind		5
 ind_list	1 2 3 4 5 
