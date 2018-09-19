@@ -50,6 +50,6 @@ loglike_theta.o: loglike_theta.c loglike_theta.h fitfun.h
 loglike_theta_fast.o: loglike_theta_fast.c loglike_theta_fast.h fitfun.h
 spawner.o: spawner.c spawner.h
 
-clean:; rm -rf *.o $(LIBS)
+clean:; rm -rf *.o $(LIBS) *.a
 
 .PHONY: clean

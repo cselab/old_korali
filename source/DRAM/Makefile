@@ -29,5 +29,7 @@ dram.o: dram.c dram.h
 run_dram.o: run_dram.c dram.h
 
 clean:; rm -rf  $(TARGET) *.o
+	(cd $(DIR_PRIORS); make clean)
+
 
 .PHONY: clear clean all

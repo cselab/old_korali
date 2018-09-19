@@ -43,7 +43,8 @@ do
 
         cd $RUN_DIR
 
-        mpirun -np 1	./tmcmc_posterior_theta_internal
+        #mpirun -np 1	./tmcmc_posterior_theta_internal
+        ./tmcmc_posterior_theta_internal
 
         echo "------------------------------------------------------------------------------------------->"
 

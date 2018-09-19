@@ -303,7 +303,7 @@ void loglike_posterior_theta_initialize( ) {
 	// 3b. populate the priors
 	priors = (Density **) malloc( db.Npsi*sizeof(Density*) );
 	
-	read_priors( "priors_theta.par", &priors[0], &Npr );
+	read_priors( "priors_aux.par", &priors[0], &Npr );
 	reassign_prior( priors[0], Npr, psi[0] );
 	
 	for( int i=1; i<db.Ntheta; i++ ){
@@ -328,30 +328,45 @@ void loglike_posterior_theta_initialize( ) {
 
     for( int i = 0; i<db.Npsi ; i++){
         
+
 		double sum=0;
         for( int j=0; j<db.Ntheta; j++){
+			
             
             A[j] = prior_pdf( priors[i], Npr, theta[j]);
             sum +=  A[j] / B[j];
+
+			/*
+			//if( A[j] < 1e-6 ){			
+			if( i == 399 ){			
+				
+				printf("\n--->  i=%d, j=%d   <---\n",i,j);
+				printf("%lf  --  %lf\n",A[j], B[j]);
+
+				print_priors( priors[i], Npr);
+            	for( int k=0; k<db.Dtheta; k++) printf("    %lf  ", theta[j][k] );
             
-            //for( int k=0; k<db.Dpsi; k++)
-            //    printf(" %lf  ", psi[j][k] );
-            //printf("\n");
-            //for( int k=0; k<db.Dtheta; k++)
-            //    printf("    %lf  ", theta[j][k] );
-            //printf("%lf - ", A[j] );
+				printf("\n %lf \n", prior_pdf( priors[i], Npr, theta[j]) );
+				printf("\n-------------------\n");
+			}
+			*/
         }
+
+		//exit(1);
 
         //printf(" \n");
 
         denom[i] = ( db.Npsi / db.Ntheta ) * sum;
 
+		//if( denom[i]<1. )
+		//	printf("%d  -->  %lf \n",i,denom[i]);
+
 
     }
 
+	//exit(1);
 	printf("\nSuccesfull computation of the denominator.\n\n");
 
-    //exit(1);
 
 
 
@@ -393,13 +408,52 @@ double loglike_posterior_theta(double *theta, int n, void *output, int *info) {
 	double out = 0;
 	double sum = 0;
 
+
+
 	for (int i = 0; i < db.Npsi; i++){
 		double pr_hb  = exp( prior_log_pdf( priors[i], Npr, theta) );
-		sum += pr_hb/denom[i];
+
+
+
+
+		if(denom[i]<1e-12){
+			if(pr_hb<1e-12){
+				sum += 0;
+			}
+			else{
+				printf("\n\n?????\n\n");
+				printf("%d  --> %lf  -->  %lf   --->    %lf \n",i,pr_hb,denom[i], sum);
+				exit(1);
+			}
+		}
+		else{
+			sum += pr_hb/denom[i];
+
+			//printf("\n--->  i=%d  <---\n",i );
+			//printf("%d  --> %lf  -->  %lf   --->    %lf \n",i,pr_hb,denom[i], sum);
+
+			//print_priors( priors[i], Npr);
+
+       		//for( int k=0; k<n; k++) printf("    %lf  ", theta[k] );
+			//printf("\n");
+            
+			//printf("\n %lf \n", prior_pdf( priors[i], Npr, theta ) );
+			//printf("\n-------------------\n");
+		}
+		
 	}
 
+	//printf("------->  %lf \n",sum);
+	//exit(1);
 
+
+	
 	if(sum==0)	return -1e12;
+
+  	//for( int k=0; k<n; k++) printf("    %lf  ", theta[k] );
+	//printf("\n");
+	//printf("------->  %lf \n",sum);
+
 
 	double loglike_theta = loglike_(theta, n, output, info);
 	if (loglike_theta == -1e12) {

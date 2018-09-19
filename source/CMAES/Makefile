@@ -31,7 +31,9 @@ $(TARGET):
 $(TARGET): engine_cmaes.o
 engine_cmaes.o: engine_cmaes.c
 
-clean:; rm -rf  $(TARGET) *.o
+clean:; rm -rf  $(TARGET) *.o *.a
+	(cd $(DIR_PRIORS); make clean)
+	(cd $(DIR_CMAES); make clean)
 
 test: cma
 	atest `find test -name main`

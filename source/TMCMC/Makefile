@@ -37,5 +37,6 @@ tmcmc_aux.o: tmcmc_aux.c
 tmcmc_engine.o: tmcmc_engine.c
 
 clean:; rm -rf  $(TARGET) *.o
+	(cd $(DIR_PRIORS); make clean)
 
 .PHONY: clean all

@@ -13,3 +13,6 @@ test: main.o $(OBJS)
 priors.o: priors.c priors.h myrand.h
 myrand.o: myrand.c myrand.h
 main.o: main.c priors.h myrand.h
+
+clean:; rm -rf *.o *.a
+
