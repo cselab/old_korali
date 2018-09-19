@@ -1,5 +1,5 @@
 *.o
-
+*.a
 *.swp
 
 .DS_Store
@@ -11,3 +11,5 @@ tags
 *.txt
 
 doc/mkdocs/site/
+
+lib/torc_lite
