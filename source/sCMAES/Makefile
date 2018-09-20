@@ -11,17 +11,17 @@ L=../lib
 DIR_PRIORS = $L/priors
 DIR_CMAES  = $L/cmaes
 
-LDLIBS += -L$(DIR_PRIORS) -lpriors
-CFLAGS += -I$(DIR_PRIORS)
-
-LDLIBS += -L$(DIR_CMAES) -lcmaes
-CFLAGS += -I$(DIR_CMAES)
-
-LDLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
-CFLAGS += -I$(DIR_FITFUN)
-
 CXXFLAGS += `pkg-config libgp --cflags`
 LDLIBS   += `pkg-config libgp --libs`
+
+LDLIBS := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
+CFLAGS += -I$(DIR_PRIORS)
+
+LDLIBS := -L$(DIR_CMAES) -lcmaes $(LDLIBS)
+CFLAGS += -I$(DIR_CMAES)
+
+LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
+CFLAGS += -I$(DIR_FITFUN)
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)

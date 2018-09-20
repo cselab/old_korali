@@ -11,9 +11,9 @@ L=../lib
 DIR_PRIORS=$L/priors
 
 CFLAGS += -I$(DIR_PRIORS)
-LDLIBS += -L$(DIR_PRIORS) -lpriors
+LDLIBS := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
 
-LDLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
+LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
 CFLAGS += -I$(DIR_FITFUN)
 
 

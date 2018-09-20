@@ -11,13 +11,13 @@ L=../lib
 DIR_PRIORS = $L/priors
 DIR_CMAES  = $L/cmaes
 
-LDLIBS += -L$(DIR_PRIORS) -lpriors
+LDLIBS := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
 CFLAGS += -I$(DIR_PRIORS)
 
-LDLIBS += -L$(DIR_CMAES) -lcmaes
+LDLIBS := -L$(DIR_CMAES) -lcmaes $(LDLIBS)
 CFLAGS += -I$(DIR_CMAES)
 
-LDLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
+LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
 CFLAGS += -I$(DIR_FITFUN)
 
 $(TARGET):
