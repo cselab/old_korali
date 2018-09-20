@@ -37,7 +37,7 @@ void loglike_theta_initialize() {
 
 
 
-void loglike_finalize() {
+void loglike_theta_finalize() {
 }
 
 
@@ -139,3 +139,18 @@ double loglike_theta(double *x, int n, void *output, int *winfo) {
 double loglike_(double *x, int n, void *output, int *winfo){
 	return loglike_theta( x, n, output, winfo );
 }
+
+
+
+
+
+
+void loglike_initialize_( void ){
+	loglike_theta_initialize();
+}
+
+
+void loglike_finalize_( void ){
+	loglike_theta_finalize();
+}
+

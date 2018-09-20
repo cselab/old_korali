@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 
 #include <fitfun.h>
 #include <priors.h>
@@ -42,6 +43,7 @@ static double *denom;
 
 static Density **priors;
 static int Npr;
+
 
 
 //=============================================================================
@@ -198,7 +200,6 @@ void loglike_posterior_theta_initialize( ) {
 
 
 
-
 	read_db_file("db_theta.par");
 	print_db_file("db_theta.par");
 	
@@ -303,7 +304,7 @@ void loglike_posterior_theta_initialize( ) {
 	// 3b. populate the priors
 	priors = (Density **) malloc( db.Npsi*sizeof(Density*) );
 	
-	read_priors( "priors_theta.par", &priors[0], &Npr );
+	read_priors( "priors_aux.par", &priors[0], &Npr );
 	reassign_prior( priors[0], Npr, psi[0] );
 	
 	for( int i=1; i<db.Ntheta; i++ ){
@@ -328,31 +329,34 @@ void loglike_posterior_theta_initialize( ) {
 
     for( int i = 0; i<db.Npsi ; i++){
         
+
 		double sum=0;
         for( int j=0; j<db.Ntheta; j++){
+			
             
             A[j] = prior_pdf( priors[i], Npr, theta[j]);
             sum +=  A[j] / B[j];
-            
-            //for( int k=0; k<db.Dpsi; k++)
-            //    printf(" %lf  ", psi[j][k] );
-            //printf("\n");
-            //for( int k=0; k<db.Dtheta; k++)
-            //    printf("    %lf  ", theta[j][k] );
-            //printf("%lf - ", A[j] );
+
         }
 
-        //printf(" \n");
 
         denom[i] = ( db.Npsi / db.Ntheta ) * sum;
+
+		if( denom[i]<DBL_EPSILON ) {
+			printf("%d  -->  %lf \n",i,denom[i]);
+		    printf("\n\n Error: Denominator is smaller than machine precision, %lf. Exit... \n\n", DBL_EPSILON);
+ 		    exit(EXIT_FAILURE);
+        }
 
 
     }
 
+	//exit(1);
 	printf("\nSuccesfull computation of the denominator.\n\n");
 
-    //exit(1);
 
+	// read data for the likelihood evaluation
+	loglike_initialize_();
 
 
 	free(theta[0]); free(theta);
@@ -378,6 +382,8 @@ void loglike_posterior_theta_finalize(){
 
 
 	free(denom);
+
+	loglike_finalize_();
 }
 
 
@@ -393,13 +399,35 @@ double loglike_posterior_theta(double *theta, int n, void *output, int *info) {
 	double out = 0;
 	double sum = 0;
 
+
+
 	for (int i = 0; i < db.Npsi; i++){
 		double pr_hb  = exp( prior_log_pdf( priors[i], Npr, theta) );
-		sum += pr_hb/denom[i];
+
+
+
+
+		if(denom[i]<1e-12){
+			if(pr_hb<1e-12){
+				sum += 0;
+			}
+			else{
+				printf("\n\n?????\n\n");
+				printf("%d  --> %lf  -->  %lf   --->    %lf \n",i,pr_hb,denom[i], sum);
+				exit(1);
+			}
+		}
+		else{
+			sum += pr_hb/denom[i];
+
+		}
+		
 	}
 
 
+	
 	if(sum==0)	return -1e12;
+
 
 	double loglike_theta = loglike_(theta, n, output, info);
 	if (loglike_theta == -1e12) {

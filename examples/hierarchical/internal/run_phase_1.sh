@@ -35,7 +35,7 @@ do
 
         cd $RUN_DIR
 
-        mpirun -np 1	./sample_theta_fast
+        mpirun -np 1	./tmcmc_theta_internal
        	#./sample_theta_fast
 
 		FNAME="${SAVE_DIR}/theta_${II}.txt"

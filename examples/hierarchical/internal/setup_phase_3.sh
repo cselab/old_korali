@@ -17,11 +17,11 @@ PSI_DIR="./data/psi"
 PSI_FILE="psi.txt"
 
 
-EXEC_FILE="../../../build/sample_posterior_theta_fast"
+EXEC_FILE="../../../build/tmcmc_posterior_theta_internal"
 
 PAR_FILE="./tmcmc_theta.par"
-PRIOR_THETA_FILE="./priors_theta.par"
-PRIOR_FILE="./priors_aux_3.par"
+PRIOR_FILE="./priors_theta.par"
+PRIOR_AUX_FILE="./priors_aux.par"
 
 DB_FILE="./db_theta.par"
 
@@ -66,8 +66,8 @@ do
 
 	cp ${EXEC_FILE}             ${RUN_DIR}
 	cp ${PAR_FILE}              ${RUN_DIR}/tmcmc.par
-	cp ${PRIOR_THETA_FILE}      ${RUN_DIR}/priors_theta.par
-	cp ${PRIOR_FILE}            ${RUN_DIR}/priors.par
+	cp ${PRIOR_FILE}      		${RUN_DIR}/priors.par
+	cp ${PRIOR_AUX_FILE}		${RUN_DIR}/priors_aux.par
 	cp ${DB_FILE}               ${RUN_DIR}/db_theta.par 
 
 

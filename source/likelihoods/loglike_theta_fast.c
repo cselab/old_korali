@@ -94,12 +94,23 @@ double loglike_theta_fast(double *x, int n, void *output ) {
 }
 
 
+
+
+
+
 double loglike_(double *x, int n, void *output, int *info ) {
 	return loglike_theta_fast( x, n, output );
 }
 
 
+void loglike_initialize_( void ){
+	loglike_theta_fast_initialize();
+}
 
+
+void loglike_finalize_( void ){
+	loglike_theta_fast_finalize();
+}
 
 
 

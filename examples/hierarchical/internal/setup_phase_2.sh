@@ -2,7 +2,7 @@
 
 BASE_DIR="runs"
 
-EXEC_FILE="../../../build/sample_psi"
+EXEC_FILE="../../../build/tmcmc_psi"
 PAR_FILE="./tmcmc_psi.par"
 PRIOR_FILE="./priors_psi.par"
 PRIOR_THETA_FILE="./priors_theta.par"

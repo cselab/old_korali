@@ -1,6 +1,6 @@
 # compilers and flags
 
-use_torc?=1
+use_torc?=0
 
 CC := mpicc
 LD := mpicc

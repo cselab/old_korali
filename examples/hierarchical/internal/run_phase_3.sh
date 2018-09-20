@@ -11,8 +11,8 @@ mkdir -p $SAVE_DIR
 export TORC_WORKERS=4
 
 
-# Ilist=(1)
-Ilist=(1 2 3 4 5)
+Ilist=(1)
+#Ilist=(1 2 3 4 5)
 
 
 if [ ! -d "$BASE_DIR" ]; then
@@ -43,7 +43,8 @@ do
 
         cd $RUN_DIR
 
-        mpirun -np 1	./sample_posterior_theta_fast
+        #mpirun -np 1	./tmcmc_posterior_theta_internal
+        ./tmcmc_posterior_theta_internal
 
         echo "------------------------------------------------------------------------------------------->"
 

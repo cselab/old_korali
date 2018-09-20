@@ -44,5 +44,6 @@ cleanall: clean
 	(cd $(CMAES); make clean)
 	(cd $(TMCMC); make clean)
 	(cd $(DRAM);  make clean)
+	(cd $(LIK);   make clean)
 
 .PHONY: clean cleanall
