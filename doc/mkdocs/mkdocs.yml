@@ -10,7 +10,7 @@ pages:
       - Sampling: examples/sampling.md
       - External: examples/external.md
       - Optimizing: examples/optimizing.md
-      - Postprocessing: examples/post.md
+      - Hierarchical: examples/hierarchical.md
   - Developing:
       - Structure: developing/structure.md
       - Conventions: developing/conventions.md

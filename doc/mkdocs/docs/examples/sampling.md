@@ -32,6 +32,7 @@ and the likelihood function in given by,
 
 ## Sampling with TMCMC
 
+In this example we will use the [Transitional Markov Chain Monte Carlo](https://ascelibrary.org/doi/10.1061/%28ASCE%290733-9399%282007%29133%3A7%28816%29) (TMCMC)  algorithm for the sampling of the posterior. 
 ### Compile and run
 
 From the base folder run
