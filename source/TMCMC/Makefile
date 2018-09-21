@@ -3,24 +3,25 @@ include ../make/common.mk
 LIB_FITFUN ?= fitfun_tests
 DIR_FITFUN ?= ../likelihoods
 TARGET     ?= engine_tmcmc
+EXTRA_LIBS ?=
 
 all: $(TARGET)
 
 L=../lib
 
 DIR_PRIORS=$L/priors
-LDLIBS += -L$(DIR_PRIORS) -lpriors
+LDLIBS := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
 
 CFLAGS += -I$(DIR_PRIORS)
 
-LDLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
+LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
 CFLAGS += -I$(DIR_FITFUN)
 
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
 	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
-	$(LINK.o) $^ $(LDLIBS)
+	$(LINK.o.xx) $^ $(LDLIBS) $(EXTRA_LIBS)
 
 # dependencies
 
