@@ -313,9 +313,58 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        Optimizing
+      </label>
+    
     <a href="./" title="Optimizing" class="md-nav__link md-nav__link--active">
       Optimizing
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#optimizing-with-cma-es" title="Optimizing with CMA-ES" class="md-nav__link">
+    Optimizing with CMA-ES
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compile-and-run" title="Compile and run" class="md-nav__link">
+    Compile and run
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#behind-the-scripts" title="Behind the scripts" class="md-nav__link">
+    Behind the scripts
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -326,8 +375,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../post/" title="Postprocessing" class="md-nav__link">
-      Postprocessing
+    <a href="../hierarchical/" title="Hierarchical" class="md-nav__link">
+      Hierarchical
     </a>
   </li>
 
@@ -474,6 +523,42 @@
     
   
   
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#optimizing-with-cma-es" title="Optimizing with CMA-ES" class="md-nav__link">
+    Optimizing with CMA-ES
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compile-and-run" title="Compile and run" class="md-nav__link">
+    Compile and run
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#behind-the-scripts" title="Behind the scripts" class="md-nav__link">
+    Behind the scripts
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -488,6 +573,98 @@
                 
                 
                 <h1 id="optimization">Optimization</h1>
+<p>In this example we will show how to compute the maximum a posteriori estimate of the posterior distribution in an uncertainty quantification problem. First, we will create synthetic data using the model,</p>
+<div>
+<div class="MathJax_Preview">
+f(t;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
+</div>
+<script type="math/tex; mode=display">
+f(t;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
+</script>
+</div>
+<p>We fix <span><span class="MathJax_Preview">\varphi^* = (2,3,1)</span><script type="math/tex">\varphi^* = (2,3,1)</script></span> and create <span><span class="MathJax_Preview">100</span><script type="math/tex">100</script></span> data point using the equation,</p>
+<div>
+<div class="MathJax_Preview">
+d_i = f(x_i,\varphi^{\star}) + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0,1) \, ,
+</div>
+<script type="math/tex; mode=display">
+d_i = f(x_i,\varphi^{\star}) + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0,1) \, ,
+</script>
+</div>
+<p>where <span><span class="MathJax_Preview">x_i = 0.02 i,\; i=1,\ldots,100</span><script type="math/tex">x_i = 0.02 i,\; i=1,\ldots,100</script></span> and <span><span class="MathJax_Preview">\sigma=0.3</span><script type="math/tex">\sigma=0.3</script></span>. We will sample the posterior distribution of <span><span class="MathJax_Preview">\vartheta=(\varphi,\sigma)</span><script type="math/tex">\vartheta=(\varphi,\sigma)</script></span> conditioned on the data <span><span class="MathJax_Preview">d</span><script type="math/tex">d</script></span>. The prior distribution is uniform for each parameter,</p>
+<div>
+<div class="MathJax_Preview">\begin{align}
+    p(\vartheta_1) &amp;= \mathcal{U}( \vartheta_1 | 0,5) \\
+    p(\vartheta_2) &amp;= \mathcal{U}( \vartheta_2 | 0,10) \\
+    p(\vartheta_3) &amp;= \mathcal{U}( \vartheta_3 | -3.14,3.14) \\
+    p(\vartheta_4) &amp;= \mathcal{U}( \vartheta_4 | 0,5)  \, ,
+\end{align}</div>
+<script type="math/tex; mode=display">\begin{align}
+    p(\vartheta_1) &= \mathcal{U}( \vartheta_1 | 0,5) \\
+    p(\vartheta_2) &= \mathcal{U}( \vartheta_2 | 0,10) \\
+    p(\vartheta_3) &= \mathcal{U}( \vartheta_3 | -3.14,3.14) \\
+    p(\vartheta_4) &= \mathcal{U}( \vartheta_4 | 0,5)  \, ,
+\end{align}</script>
+</div>
+<p>and the likelihood function in given by,</p>
+<div>
+<div class="MathJax_Preview">\begin{align}
+    p(d | \vartheta) &amp; = \prod_{i=1}^4 p(d_i | \vartheta) \\
+                     &amp;=  \prod_{i=1}^4 \mathcal{N}( d_i | f(x;\varphi),\sigma ) \, .
+\end{align}</div>
+<script type="math/tex; mode=display">\begin{align}
+    p(d | \vartheta) & = \prod_{i=1}^4 p(d_i | \vartheta) \\
+                     &=  \prod_{i=1}^4 \mathcal{N}( d_i | f(x;\varphi),\sigma ) \, .
+\end{align}</script>
+</div>
+<p>Finally, we want to compute,
+$$
+\vartheta^\star = \mathop{\arg\max}\limits_{\vartheta} \,\, p( \vartheta | d) \,.
+$$</p>
+<h2 id="optimizing-with-cma-es">Optimizing with CMA-ES</h2>
+<p>In this example we will use the <a href="https://arxiv.org/pdf/1604.00772.pdf">Covariance Matrix Adaptation - Evolution Strategy</a> (CMA-ES) algorithm in order to optimize the posterior distribution.</p>
+<h3 id="compile-and-run">Compile and run</h3>
+<p>From the base folder run</p>
+<div class="codehilite"><pre><span></span><span class="nb">cd</span> build
+make cmaes_theta_internal
+</pre></div>
+
+
+<p>Make sure that <code>use_torc=0</code> and <code>use_omp=0</code> in the Makefile since we don't want to run parallel in this example. Go back to the the base folder and run</p>
+<div class="codehilite"><pre><span></span><span class="nb">cd</span> ../examples/optimization/internal/
+./setup_fast_optimize.sh.sh
+<span class="nb">cd</span> runs/run_001/
+</pre></div>
+
+
+<p>Run the CMA-ES optimization algorithm:</p>
+<div class="codehilite"><pre><span></span>./cmaes_theta_internal
+</pre></div>
+
+
+<p>The output in the terminal will look like this:</p>
+<p><img alt="" src="../cmaes-terminal.png" /></p>
+<p>Notice that the algorithm has converged to</p>
+<div class="codehilite"><pre><span></span>2.0392035199474865  2.9457365262310957  1.0625543252360856  0.3022538646514062
+</pre></div>
+
+
+<p>and compare these values to the nominal value <span><span class="MathJax_Preview">\vartheta^* = (2,3,1,0.3)</span><script type="math/tex">\vartheta^* = (2,3,1,0.3)</script></span> that we used to create the synthetic data.</p>
+<p>Finally, visualize the samples:</p>
+<div class="codehilite"><pre><span></span>cp ../../../../../source/tools/postprocessing_tools/cmaes/cmaplt.py .
+python plotmatrix_hist.py final.txt
+</pre></div>
+
+
+<p><img alt="" src="../cmaes.png" /></p>
+<h3 id="behind-the-scripts">Behind the scripts</h3>
+<p>The script <code>./setup_tmcmc.sh</code> makes a new running folder and copies inside the executable and the needed files:</p>
+<ol>
+<li>the data file data.txt,</li>
+<li>the file that contains the prior information, <a href="../../developing/par_files/#priors.par">priors.par</a>,</li>
+<li>the parameter file for tmcmc, <a href="../../developing/par_files/#tmcmc.par">tmcmc.par</a>.</li>
+</ol>
+<p>For this example, TMCMC has been linked to the likelihood function <code>loglike_theta_fast.c</code>. Inside this file the model <span><span class="MathJax_Preview">f</span><script type="math/tex">f</script></span> as well as the likelihood function <span><span class="MathJax_Preview">p(d | \vartheta)</span><script type="math/tex">p(d | \vartheta)</script></span> has beem implemented. More information on the the likelihood implementation and how to write your own likelihood you can find <a href="../../developing/likelihoods/">here</a>.</p>
                 
                   
                 
@@ -523,13 +700,13 @@
           </a>
         
         
-          <a href="../post/" title="Postprocessing" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../hierarchical/" title="Hierarchical" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Postprocessing
+                Hierarchical
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

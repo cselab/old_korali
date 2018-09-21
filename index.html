@@ -324,8 +324,8 @@
 
 
   <li class="md-nav__item">
-    <a href="examples/post/" title="Postprocessing" class="md-nav__link">
-      Postprocessing
+    <a href="examples/hierarchical/" title="Hierarchical" class="md-nav__link">
+      Hierarchical
     </a>
   </li>
 
@@ -494,7 +494,7 @@
 <li>
 <p><strong>Optimize</strong>: given a cost function <span><span class="MathJax_Preview">F(\vartheta)</span><script type="math/tex">F(\vartheta)</script></span> find
     $$
-    \vartheta^\star = \mathop{\arg\min}\limits_{\vartheta} F(\vartheta) \,.
+    \vartheta^\star = \mathop{\arg\min}\limits_{\vartheta}  \,\,\, F(\vartheta) \,.
     $$</p>
 </li>
 <li>
@@ -506,7 +506,7 @@
 <li>
 <p><strong>Uncertainty Quantification</strong>: given a set of data <span><span class="MathJax_Preview">d</span><script type="math/tex">d</script></span>, the output of the model <span><span class="MathJax_Preview">f(x;\vartheta)</span><script type="math/tex">f(x;\vartheta)</script></span> a likelihood function <span><span class="MathJax_Preview">p(d|\vartheta)</span><script type="math/tex">p(d|\vartheta)</script></span> and a prior probablity density <span><span class="MathJax_Preview">p(\vartheta)</span><script type="math/tex">p(\vartheta)</script></span> sample the posterior distribution,
     $$
-    p(\vartheta | d) = \frac{p(d | \vartheta) p(\vartheta)}{p(d)}\, .
+    p(\vartheta | d) = \frac{p(d | \vartheta) \, p(\vartheta)}{p(d)}\, .
     $$
 The model output <span><span class="MathJax_Preview">f</span><script type="math/tex">f</script></span> depends on a set of input parameters <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span>.</p>
 </li>
