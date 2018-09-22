@@ -1,4 +1,4 @@
-# Optimization
+# Optimizing a posterior distribution
 In this example we will show how to compute the maximum a posteriori estimate of the posterior distribution in an uncertainty quantification problem. First, we will create synthetic data using the model,
 
 $$
@@ -61,7 +61,7 @@ Run the CMA-ES optimization algorithm:
 
 The output in the terminal will look like this:
 
-![](cmaes-terminal.png)
+![](images/cmaes-terminal.png)
 
 Notice that the algorithm has converged to
 ```
@@ -76,7 +76,7 @@ cp ../../../../../source/tools/postprocessing_tools/cmaes/cmaplt.py .
 python plotmatrix_hist.py final.txt
 ```
 
-![](cmaes.png)
+![](images/cmaes.png)
 
 
 
