@@ -1,17 +1,17 @@
 # Optimizing a posterior distribution
-In this example we will show how to compute the maximum a posteriori estimate of the posterior distribution in an uncertainty quantification problem. First, we will create synthetic data using the model,
+In this example we will show how to compute the maximum a posteriori (MAP) estimate of the posterior distribution in an uncertainty quantification problem. First, we will create synthetic data using the model,
 
 $$
-f(t;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
+f(x;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
 $$
 
-We fix $\varphi^* = (2,3,1)$ and create $100$ data point using the equation,
+We fix $\varphi^{\star} = (2,3,1)$ and create $100$ data point using the equation,
 
 $$
 d_i = f(x_i,\varphi^{\star}) + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0,1) \, ,
 $$
 
-where $x_i = 0.02 i,\; i=1,\ldots,100$ and $\sigma=0.3$. We will sample the posterior distribution of $\vartheta=(\varphi,\sigma)$ conditioned on the data $d$. The prior distribution is uniform for each parameter,
+where $x_i = 0.02 i,\; i=1,\ldots,100$ and $\sigma=0.3$. We want to optimize the the posterior distribution of $\vartheta=(\varphi,\sigma)$ conditioned on the data $d$. The prior distribution is uniform for each parameter,
 
 \begin{align}
     p(\vartheta_1) &= \mathcal{U}( \vartheta_1 | 0,5) \\
@@ -67,7 +67,7 @@ Notice that the algorithm has converged to
 ```
 2.0392035199474865  2.9457365262310957  1.0625543252360856  0.3022538646514062
 ```
-and compare these values to the nominal value $\vartheta^* = (2,3,1,0.3)$ that we used to create the synthetic data.
+and compare these values to the nominal value $\vartheta^{\star} = (2,3,1,0.3)$ that we used to create the synthetic data.
 
 
 Finally, visualize the samples:

@@ -3,10 +3,10 @@
 In this example we will show how to sample the posterior distribution in an uncertainty quantification problem. First, we will create synthetic data using the model,
 
 $$
-f(t;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
+f(x;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
 $$
 
-We fix $\varphi^* = (2,3,1)$ and create $100$ data point using the equation,
+We fix $\varphi^{\star} = (2,3,1)$ and create $100$ data point using the equation,
 
 $$
 d_i = f(x_i,\varphi^{\star}) + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0,1) \, ,

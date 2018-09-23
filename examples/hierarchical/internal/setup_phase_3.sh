@@ -27,8 +27,8 @@ DB_FILE="./db_theta.par"
 
 
 
-# Ilist=(1)
-Ilist=(1 2 3 4 5)
+Ilist=(1)
+#Ilist=(1 2 3 4 5)
 
 
 
