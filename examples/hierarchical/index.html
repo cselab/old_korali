@@ -325,9 +325,59 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        Hierarchical
+      </label>
+    
     <a href="./" title="Hierarchical" class="md-nav__link md-nav__link--active">
       Hierarchical
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#synthetic-data" title="Synthetic Data" class="md-nav__link">
+    Synthetic Data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-sample-from-the-instrumental-distribution" title="Phase 1: sample from the instrumental distribution" class="md-nav__link">
+    Phase 1: sample from the instrumental distribution
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-sample-hyper-parameters" title="Phase 2: sample hyper-parameters" class="md-nav__link">
+    Phase 2: sample hyper-parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-sample-posterior-parameters" title="Phase 3: sample posterior parameters" class="md-nav__link">
+    Phase 3: sample posterior parameters
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -474,6 +524,43 @@
     
   
   
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#synthetic-data" title="Synthetic Data" class="md-nav__link">
+    Synthetic Data
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-sample-from-the-instrumental-distribution" title="Phase 1: sample from the instrumental distribution" class="md-nav__link">
+    Phase 1: sample from the instrumental distribution
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-sample-hyper-parameters" title="Phase 2: sample hyper-parameters" class="md-nav__link">
+    Phase 2: sample hyper-parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-sample-posterior-parameters" title="Phase 3: sample posterior parameters" class="md-nav__link">
+    Phase 3: sample posterior parameters
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -488,7 +575,60 @@
                 
                 
                 <h1 id="hierarchical-bayesian-model">Hierarchical Bayesian Model</h1>
-<p><img alt="text" src="../Fig_DAG_HB_plate.png" /></p>
+<h2 id="synthetic-data">Synthetic Data</h2>
+<p>In this example we will show how to sample the posterior distribution in an uncertainty quantification problem. First, we will create 5 sets of synthetic data using the model,</p>
+<div>
+<div class="MathJax_Preview">
+f(x;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 ).
+</div>
+<script type="math/tex; mode=display">
+f(x;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 ).
+</script>
+</div>
+<p>For each set we fix <span><span class="MathJax_Preview">\varphi_i^{\star}</span><script type="math/tex">\varphi_i^{\star}</script></span> and create <span><span class="MathJax_Preview">20</span><script type="math/tex">20</script></span> data points using the equation,</p>
+<div>
+<div class="MathJax_Preview">
+d_{i,j} = f(x_j,\varphi_i^{\star}) + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0,1) \, ,
+</div>
+<script type="math/tex; mode=display">
+d_{i,j} = f(x_j,\varphi_i^{\star}) + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0,1) \, ,
+</script>
+</div>
+<p>where <span><span class="MathJax_Preview">x_j = 0.1 j,\; j=1,\ldots,20</span><script type="math/tex">x_j = 0.1 j,\; j=1,\ldots,20</script></span> and <span><span class="MathJax_Preview">\sigma=0.3</span><script type="math/tex">\sigma=0.3</script></span>. The index <span><span class="MathJax_Preview">i</span><script type="math/tex">i</script></span> runs over the 5 different sets. The parameters for each set were chosen randomly according to</p>
+<div>
+<div class="MathJax_Preview">
+\varphi_i^{\star} = (2,3,1) + 0.4\zeta, \quad \zeta \sim \mathcal{N}(0,1).
+</div>
+<script type="math/tex; mode=display">
+\varphi_i^{\star} = (2,3,1) + 0.4\zeta, \quad \zeta \sim \mathcal{N}(0,1).
+</script>
+</div>
+<p>These are the 5 data sets.</p>
+<p><img src="../images/data.pdf" width="50%" height="50%"/></p>
+<p>We want to sample the posterior distribution of each <span><span class="MathJax_Preview">\vartheta_i=(\varphi_i,\sigma)</span><script type="math/tex">\vartheta_i=(\varphi_i,\sigma)</script></span> conditioned on all the data <span><span class="MathJax_Preview">d=\{d_1,\ldots,d_5\}</span><script type="math/tex">d=\{d_1,\ldots,d_5\}</script></span>.</p>
+<p><img src="../images/Fig_DAG_HB_plate.pdf" width="40%" height="40%"/></p>
+<p><a href="../predictions.pdf">Notes on HB</a></p>
+<h2 id="phase-1-sample-from-the-instrumental-distribution">Phase 1: sample from the instrumental distribution</h2>
+<p>The prior distribution is uniform for each parameter,</p>
+<div>
+<div class="MathJax_Preview">\begin{align}
+   p(\vartheta_1) &amp;= \mathcal{U}( \vartheta_1 | 0,5) \\
+   p(\vartheta_2) &amp;= \mathcal{U}( \vartheta_2 | 0,10) \\
+   p(\vartheta_3) &amp;= \mathcal{U}( \vartheta_3 | -3.14,3.14) \\
+   p(\vartheta_4) &amp;= \mathcal{U}( \vartheta_4 | 0,5)  \, ,
+\end{align}</div>
+<script type="math/tex; mode=display">\begin{align}
+   p(\vartheta_1) &= \mathcal{U}( \vartheta_1 | 0,5) \\
+   p(\vartheta_2) &= \mathcal{U}( \vartheta_2 | 0,10) \\
+   p(\vartheta_3) &= \mathcal{U}( \vartheta_3 | -3.14,3.14) \\
+   p(\vartheta_4) &= \mathcal{U}( \vartheta_4 | 0,5)  \, ,
+\end{align}</script>
+</div>
+<p><img src="../images/theta.pdf" width="100%" height="100%"/></p>
+<h2 id="phase-2-sample-hyper-parameters">Phase 2: sample hyper-parameters</h2>
+<p><img src="../images/psi.pdf" width="80%" height="80%"/></p>
+<h2 id="phase-3-sample-posterior-parameters">Phase 3: sample posterior parameters</h2>
+<p><img src="../images/posterior_theta_001.pdf" width="80%" height="80%"/></p>
                 
                   
                 
