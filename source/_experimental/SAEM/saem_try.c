@@ -1,4 +1,4 @@
-#define NORMAL	// comment out to enable NORMAL
+#define LOGISTIC	// comment out to enable NORMAL
 #define DEBUG 0
 
 #include <stdio.h>
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
 	load_logistic( &model, &data, &par );
 
-	int Ngen = 1000;
+	int Ngen = 100;
 
 	init_saem( &par, &data, &model, &z, &stats );
 
