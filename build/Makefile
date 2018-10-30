@@ -10,31 +10,31 @@ include $(SRC)/make/common.mk
 CFLAGS += -I$(LIK)
 
 TARGETS = \
-	$(BUILD)/cmaes_theta_external           \
-	$(BUILD)/cmaes_theta_internal           \
-	$(BUILD)/tmcmc_theta_external           \
-	$(BUILD)/tmcmc_theta_internal           \
-	$(BUILD)/tmcmc_psi                      \
-	$(BUILD)/tmcmc_posterior_theta_external \
-	$(BUILD)/tmcmc_posterior_theta_internal \
-	$(BUILD)/dram_theta_internal            \
-	$(BUILD)/dram_psi
+	cmaes_theta_external           \
+	cmaes_theta_internal           \
+	tmcmc_theta_external           \
+	tmcmc_theta_internal           \
+	tmcmc_psi                      \
+	tmcmc_posterior_theta_external \
+	tmcmc_posterior_theta_internal \
+	dram_theta_internal            \
+	dram_psi
 
 all: $(TARGETS)
 
-link.cmaes = ( cd $(CMAES); make LIB_FITFUN="$<" TARGET="$@"; )
-link.tmcmc = ( cd $(TMCMC); make LIB_FITFUN="$<" TARGET="$@"; )
-link.dram  = ( cd $(DRAM);  make LIB_FITFUN="$<" TARGET="$@"; )
+link.cmaes = ( cd $(CMAES); make LIB_FITFUN="$<" TARGET="$(BUILD)/$@"; )
+link.tmcmc = ( cd $(TMCMC); make LIB_FITFUN="$<" TARGET="$(BUILD)/$@"; )
+link.dram  = ( cd $(DRAM);  make LIB_FITFUN="$<" TARGET="$(BUILD)/$@"; )
 
-$(BUILD)/cmaes_theta_external:           fitfun_theta_ext;           $(link.cmaes)
-$(BUILD)/cmaes_theta_internal:           fitfun_theta_int;           $(link.cmaes)
-$(BUILD)/tmcmc_theta_external:           fitfun_theta_ext;           $(link.tmcmc)
-$(BUILD)/tmcmc_theta_internal:           fitfun_theta_int;           $(link.tmcmc)
-$(BUILD)/tmcmc_psi:                      fitfun_psi;                 $(link.tmcmc)
-$(BUILD)/tmcmc_posterior_theta_external: fitfun_posterior_theta_ext; $(link.tmcmc)
-$(BUILD)/tmcmc_posterior_theta_internal: fitfun_posterior_theta_int; $(link.tmcmc)
-$(BUILD)/dram_theta_internal:            fitfun_theta_int;           $(link.dram)
-$(BUILD)/dram_psi:                       fitfun_psi;                 $(link.dram)
+cmaes_theta_external:           fitfun_theta_ext;           $(link.cmaes)
+cmaes_theta_internal:           fitfun_theta_int;           $(link.cmaes)
+tmcmc_theta_external:           fitfun_theta_ext;           $(link.tmcmc)
+tmcmc_theta_internal:           fitfun_theta_int;           $(link.tmcmc)
+tmcmc_psi:                      fitfun_psi;                 $(link.tmcmc)
+tmcmc_posterior_theta_external: fitfun_posterior_theta_ext; $(link.tmcmc)
+tmcmc_posterior_theta_internal: fitfun_posterior_theta_int; $(link.tmcmc)
+dram_theta_internal:            fitfun_theta_int;           $(link.dram)
+dram_psi:                       fitfun_psi;                 $(link.dram)
 
 fitfun%:; (cd $(LIK); make lib$@.a)
 

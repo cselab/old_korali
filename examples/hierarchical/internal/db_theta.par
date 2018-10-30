@@ -9,7 +9,7 @@ Dtheta  4
 psi_folder .
 psi_file   psi.txt
 
-Npsi  1000
+Npsi  5000
 Dpsi  8
 
 

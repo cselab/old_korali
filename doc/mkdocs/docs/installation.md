@@ -63,8 +63,7 @@ Enter the `build` directory:
 
 Before compiling, the following need to be checked:
 
-- Path to GSL-2.4 inside the `Makefile`.  
-- Name for the MPI compiler in the `Makefile`, since this can be named differently on different platforms (e.g. CC=cc on Piz Daint).  
+- Name for the MPI compiler in the `source/make/common.mk`, since this can be named differently on different platforms (e.g. CC=cc on Piz Daint).  
 
 **Compilation options:**  
 
@@ -97,5 +96,4 @@ coming soon
 
 Please send your questions to:
 
-- chatzidp AT ethz.ch
 - garampat AT ethz.ch

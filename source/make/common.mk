@@ -1,6 +1,7 @@
 # compilers and flags
 
 use_torc?=0
+use_omp?=0
 
 CC := mpicc
 LD := mpicc
@@ -11,6 +12,12 @@ ifeq ($(use_torc),1)
 	CFLAGS += -D_USE_TORC_=1 `torc_cflags`
 	LDLIBS += `torc_libs`
 endif
+
+ifeq ($(use_omp),1)
+    CFLAGS += -D_USE_OPENMP_=1 -fopenmp
+    LDLIBS += -fopenmp
+endif
+
 
 CFLAGS += -O3 -std=c99
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE

@@ -216,7 +216,7 @@ void loglike_posterior_theta_initialize( ) {
 
 	double *theta_logprior = (double *) malloc( db.Ntheta * sizeof(double) );
 	
-	denom          = (double *) malloc( db.Npsi   * sizeof(double) );
+	denom = (double *) malloc( db.Npsi   * sizeof(double) );
 
 
 
@@ -304,10 +304,10 @@ void loglike_posterior_theta_initialize( ) {
 	// 3b. populate the priors
 	priors = (Density **) malloc( db.Npsi*sizeof(Density*) );
 	
-	read_priors( "priors_aux.par", &priors[0], &Npr );
+	read_priors( "priors_theta.par", &priors[0], &Npr );
 	reassign_prior( priors[0], Npr, psi[0] );
 	
-	for( int i=1; i<db.Ntheta; i++ ){
+	for( int i=1; i<db.Npsi; i++ ){
 		new_prior_from_prior( &priors[i], priors[0], Npr );
 		reassign_prior( priors[i], Npr, psi[i] );
 	}
@@ -327,9 +327,11 @@ void loglike_posterior_theta_initialize( ) {
 
     for( int i=0; i<db.Ntheta; i++)	B[i] = exp( theta_logprior[i] );
 
+
+
     for( int i = 0; i<db.Npsi ; i++){
         
-
+	
 		double sum=0;
         for( int j=0; j<db.Ntheta; j++){
 			
@@ -340,7 +342,9 @@ void loglike_posterior_theta_initialize( ) {
         }
 
 
-        denom[i] = ( db.Npsi / db.Ntheta ) * sum;
+        
+		denom[i] = ( db.Npsi / db.Ntheta ) * sum;
+
 
 		if( denom[i]<DBL_EPSILON ) {
 			printf("%d  -->  %lf \n",i,denom[i]);
@@ -348,10 +352,8 @@ void loglike_posterior_theta_initialize( ) {
  		    exit(EXIT_FAILURE);
         }
 
-
     }
 
-	//exit(1);
 	printf("\nSuccesfull computation of the denominator.\n\n");
 
 
@@ -404,28 +406,16 @@ double loglike_posterior_theta(double *theta, int n, void *output, int *info) {
 	for (int i = 0; i < db.Npsi; i++){
 		double pr_hb  = exp( prior_log_pdf( priors[i], Npr, theta) );
 
+		//print_priors( priors[i], Npr);
+		//for(int k=0; k<n; k++) printf(" %lf -  ", theta[k]); printf("\n");
+		//printf("%d  --> %lf  -->  %lf   --->    %lf \n",i,pr_hb,denom[i], sum);
 
-
-
-		if(denom[i]<1e-12){
-			if(pr_hb<1e-12){
-				sum += 0;
-			}
-			else{
-				printf("\n\n?????\n\n");
-				printf("%d  --> %lf  -->  %lf   --->    %lf \n",i,pr_hb,denom[i], sum);
-				exit(1);
-			}
-		}
-		else{
-			sum += pr_hb/denom[i];
-
-		}
+		sum += pr_hb/denom[i];
 		
 	}
 
 
-	
+//	printf("----> %lf \n", sum);	
 	if(sum==0)	return -1e12;
 
 

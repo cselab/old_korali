@@ -20,15 +20,15 @@ PSI_FILE="psi.txt"
 EXEC_FILE="../../../build/tmcmc_posterior_theta_internal"
 
 PAR_FILE="./tmcmc_theta.par"
-PRIOR_FILE="./priors_theta.par"
-PRIOR_AUX_FILE="./priors_aux.par"
+PRIOR_AUX_FILE="./priors_aux.par"		# prior on theta of phase 1
+PRIOR_FILE="./priors_theta.par"			# prior on theta given psi
 
 DB_FILE="./db_theta.par"
 
 
 
-# Ilist=(1)
-Ilist=(1 2 3 4 5)
+Ilist=(1)
+#Ilist=(1 2 3 4 5)
 
 
 
@@ -66,8 +66,8 @@ do
 
 	cp ${EXEC_FILE}             ${RUN_DIR}
 	cp ${PAR_FILE}              ${RUN_DIR}/tmcmc.par
-	cp ${PRIOR_FILE}      		${RUN_DIR}/priors.par
-	cp ${PRIOR_AUX_FILE}		${RUN_DIR}/priors_aux.par
+	cp ${PRIOR_FILE}      		${RUN_DIR}/priors_theta.par
+	cp ${PRIOR_AUX_FILE}		${RUN_DIR}/priors.par
 	cp ${DB_FILE}               ${RUN_DIR}/db_theta.par 
 
 

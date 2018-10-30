@@ -17,15 +17,15 @@ This version creates intermediate folders of the form `tmpdir.*.*.*.*` where the
 
 **Contents of `runs/run_001`:**  
 
-- The Π4U executable: `tmcmc_theta_external`  
+- The korali executable: `tmcmc_theta_external`  
 - The files `priors.par` and `tmcmc.par`. These files contain information about the choice of the prior distributions and the TMCMC parameters respectively.  
 
-- A directory named `model`. Inside this directory, Π4U expects to find:  
+- A directory named `model`. Inside this directory, korali expects to find:  
     - a file with the experimental data named `data.txt`
-    - a user-provided script named `doall.sh`, which (i) runs the external simulation, (ii) compares the output with the experimental data, and (iii) saves the log-likelihood inside a file called `loglike.txt`. The value inside `loglike.txt` is then read from Π4U.
+    - a user-provided script named `doall.sh`, which (i) runs the external simulation, (ii) compares the output with the experimental data, and (iii) saves the log-likelihood inside a file called `loglike.txt`. The value inside `loglike.txt` is then read from korali.
 
 
-**To run the example:** 
+**To run the example:**
 ```sh
 	mpirun -np 4 ./tmcmc_theta_external
 ```

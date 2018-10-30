@@ -3,10 +3,10 @@
 In this example we will show how to sample the posterior distribution in an uncertainty quantification problem. First, we will create synthetic data using the model,
 
 $$
-f(t;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
+f(x;\varphi) = \varphi_1 \sin(\varphi_2  x + \varphi_3 )
 $$
 
-We fix $\varphi^* = (2,3,1)$ and create $100$ data point using the equation,
+We fix $\varphi^{\star} = (2,3,1)$ and create $100$ data point using the equation,
 
 $$
 d_i = f(x_i,\varphi^{\star}) + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0,1) \, ,
@@ -32,6 +32,7 @@ and the likelihood function in given by,
 
 ## Sampling with TMCMC
 
+In this example we will use the [Transitional Markov Chain Monte Carlo](https://ascelibrary.org/doi/10.1061/%28ASCE%290733-9399%282007%29133%3A7%28816%29) (TMCMC)  algorithm for the sampling of the posterior.
 ### Compile and run
 
 From the base folder run
@@ -59,7 +60,7 @@ cp ../../../../../../source/tools/display/plotmatrix_hist.py .
 python plotmatrix_hist.py final.txt
 ```
 
-![](fig_tmcmc.png)
+![](images/fig_tmcmc.png)
 
 
 
@@ -108,7 +109,7 @@ tail -n +1000 chain.txt > tmp
 ```
 With this command `tail -n +1000 chain.txt` we discard the first $1000$ samples which we consider as the burn-in period.
 
-![](fig_dram.png)
+![](images/fig_dram.png)
 
 
 

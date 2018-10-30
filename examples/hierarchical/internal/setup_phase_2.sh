@@ -5,7 +5,7 @@ BASE_DIR="runs"
 EXEC_FILE="../../../build/tmcmc_psi"
 PAR_FILE="./tmcmc_psi.par"
 PRIOR_FILE="./priors_psi.par"
-PRIOR_THETA_FILE="./priors_theta.par"
+PRIOR_THETA_FILE="./priors_theta.par"	# prior of theta given psi
 
 DB_FILE="./db_psi.par"
 

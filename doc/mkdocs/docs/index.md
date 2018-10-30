@@ -14,7 +14,7 @@ The framework is based on the [TORC](references.md#anchor_torc) task-parallel li
 
 1. **Optimize**: given a cost function $F(\vartheta)$ find
 	$$
-	\vartheta^\star = \mathop{\arg\min}\limits_{\vartheta} F(\vartheta) \,.
+	\vartheta^\star = \mathop{\arg\min}\limits_{\vartheta}  \,\,\, F(\vartheta) \,.
 	$$
 
 2. **Sample**: given the density of a probability distribution $p_{\vartheta}$ draw samples,
@@ -24,7 +24,7 @@ The framework is based on the [TORC](references.md#anchor_torc) task-parallel li
 
 3. **Uncertainty Quantification**: given a set of data $d$, the output of the model $f(x;\vartheta)$ a likelihood function $p(d|\vartheta)$ and a prior probablity density $p(\vartheta)$ sample the posterior distribution,
 	$$
-	p(\vartheta | d) = \frac{p(d | \vartheta) p(\vartheta)}{p(d)}\, .
+	p(\vartheta | d) = \frac{p(d | \vartheta) \, p(\vartheta)}{p(d)}\, .
 	$$
 The model output $f$ depends on a set of input parameters $x$.
 

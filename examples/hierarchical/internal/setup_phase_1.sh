@@ -7,7 +7,7 @@ DATA_FILE_PREFIX=
 EXEC_FILE="../../../build/tmcmc_theta_internal"
 PAR_FILE="./tmcmc_aux.par"
 
-PRIOR_FILE="./priors_aux.par"
+PRIOR_FILE="./priors_aux.par"	# prior on theta of phase 1 (part of the algorithm, not theory)
 
 # Ilist=(1)
 Ilist=(1 2 3 4 5)

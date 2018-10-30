@@ -2,10 +2,10 @@ N	8
 
 uniform		1.   2.
 uniform		2.   3.
-uniform		2.   3.
+uniform		1.   3.
 uniform		3.	 4.
-uniform		0.	 1.
-uniform		1.   2.
-uniform		0.	 0.1
-uniform		0.1	 0.4
+uniform		0.	 0.5
+uniform		0.5   2.
+uniform		0.	 0.25
+uniform		0.25	 0.5
 
