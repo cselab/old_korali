@@ -99,7 +99,8 @@ int main(int argc, char **argv) {
 
         if (checkpoint_restart) {
             dt = cmaes_utils_load_pop_from_file(VERBOSE, step, pop, arFunvals, dim, lambda, &checkpoint_restart);
-    	} else {
+    	}
+        if (!checkpoint_restart) {
             cmaes_utils_make_all_points_feasible( &evo, pop, lower_bound, upper_bound );
             dt = evaluate_population( &evo, arFunvals, pop, priors, step );
         }
