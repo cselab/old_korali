@@ -32,7 +32,7 @@ The GNU Scientific Library (GSL) is a numerical library for C and C++ programmer
 
 - Download the latest version of GSL. In a terminal write
 ```sh
-	wget http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-latest.tar.gz
+	wget http://mirror.easyname.at/gnu/gsl/gsl-latest.tar.gz  
 	tar -xvzf gsl-latest.tar.gz
 ```
 
