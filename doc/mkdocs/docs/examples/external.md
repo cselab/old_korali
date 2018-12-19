@@ -1,16 +1,17 @@
 #Coupling with external code
 
+In this example we run the sampling with two external parallel libraries, namely MPI and TORC. 
+
+**To build the example:**
+
 ```sh
   cd build
   make tmcmc_theta_external use_torc=1
 ```
 
-This version creates intermediate folders of the form `tmpdir.*.*.*.*` where the external code is running on a set of parameters saved in `params.txt`. After the execution the directory is deleted. If you want to keep the directories set `REMOVEDIRS  0` in `source/likelihoods/loglike_theta.c`.
-
-
 **To setup the example:**
 ```sh
-	cd examples/sampling/external/tmcmc
+	cd ../examples/sampling/external/tmcmc
 	./setup_tmcmc.sh
 	cd runs/run_001
 ```
@@ -26,6 +27,9 @@ This version creates intermediate folders of the form `tmpdir.*.*.*.*` where the
 
 
 **To run the example:**
+
+This example creates intermediate folders of the form `tmpdir.*.*.*.*` whilst running on a set of parameters saved in `params.txt`. After the execution the directory is deleted. If you want to keep the directories set `REMOVEDIRS  0` in `source/likelihoods/loglike_theta.c`.
+
 ```sh
 	mpirun -np 4 ./tmcmc_theta_external
 ```

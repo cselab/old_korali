@@ -69,10 +69,10 @@ python plotmatrix_hist.py final.txt
 The script `./setup_tmcmc.sh` creates new folders and copies the executable and the required files to target directory:
 
 1. the data file data.txt containing $d_i$,
-2. the file [priors.par](../developing/par_files.md#priors.par) that contains the prior information $p(\vartheta_1)$ (i.e number of prior distributions, distribution functions, function parameters),
+2. the file [priors.par](../developing/par_files.md#priors.par) that contains the prior information $p(\vartheta_i)$ (i.e number of prior distributions, distribution functions, function parameters),
 3. the parameter file [tmcmc.par](../developing/par_files.md#tmcmc.par) for tmcmc (e.g. number of samples, max iterations, seed).
 
-For this example, TMCMC has been linked to the file `loglike_theta_fast.c`. Inside this file you can find the model $f$ as well as the likelihood function $p(d | \vartheta)$. More information on the implementation of a likelihood can be found [here](../developing/likelihoods.md).
+In this example, Korali has been linked to the file `loglike_theta_fast.c`. Inside this file you can find the model $f$ as well as the likelihood function $p(d | \vartheta)$. More information on the implementation of a likelihood can be found [here](../developing/likelihoods.md).
 
 
 
