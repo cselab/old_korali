@@ -1,7 +1,6 @@
 # Hierarchical Bayesian Model
 
 
-
 ## Synthetic Data
 
 In this example we will show how to sample the posterior distribution in an uncertainty quantification problem. First, we will create 5 sets of synthetic data using the model,
@@ -24,24 +23,14 @@ $$
 
 These are the 5 data sets.
 
-<img src="../images/data.pdf" width="50%" height="50%"/>
-
+<img src="../images/data.png" width="50%" height="50%"/>
 
  We want to sample the posterior distribution of each $\vartheta_i=(\varphi_i,\sigma)$ conditioned on all the data $d=\{d_1,\ldots,d_5\}$.
 
+<img src="../images/Fig_DAG_HB_plate.png" width="40%" height="40%"/>
 
 
-<img src="../images/Fig_DAG_HB_plate.pdf" width="40%" height="40%"/>
-
-
-
-
-<a href="../predictions.pdf">Notes on HB</a>
-
-
-
-
-
+<a href="../predictions.png">Notes on HB</a>
 
 
 
@@ -57,24 +46,16 @@ The prior distribution is uniform for each parameter,
 \end{align}
 
 
-<img src="../images/theta.pdf" width="100%" height="100%"/>
-
-
-
-
+<img src="../images/theta.png" width="100%" height="100%"/>
 
 
 
 ## Phase 2: sample hyper-parameters
 
-<img src="../images/psi.pdf" width="80%" height="80%"/>
-
-
-
-
+<img src="../images/psi.png" width="80%" height="80%"/>
 
 
 
 ## Phase 3: sample posterior parameters
 
-<img src="../images/posterior_theta_001.pdf" width="80%" height="80%"/>
+<img src="../images/posterior_theta_001.png" width="80%" height="80%"/>
