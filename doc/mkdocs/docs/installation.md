@@ -8,8 +8,13 @@
 ## Installation steps
 
 
-### 1. Torc library
-A tasking library that allows to write platform-independent code. We assume that the MPI compiler is named mpicc:
+### 0. Download
+Download the Korali project from [GitHub](https://github.com/cselab/korali).
+
+
+
+### 1. Torc Library
+The Torc library is shipped with the Korali code. Torc is tasking library that enables platform-independent code. In this example we assume that the MPI compiler is named mpicc:
 ```sh
 	cd lib/torc_lite  
 	autoreconf  
@@ -23,42 +28,42 @@ After installing torc, the following flags are available:
 
 
 
+### 2. GSL Library
 
+The [GNU Scientific Library (GSL)](https://www.gnu.org/software/gsl/) is a numerical library for C and C++ programmers.
 
-
-### 2. GSL library
-
-The GNU Scientific Library (GSL) is a numerical library for C and C++ programmers.
-
-- Download the latest version of GSL. In a terminal write
+- Download and unpack the latest version of GSL (outside of korali). Execute following commands in your terminal:
 ```sh
 	wget http://mirror.easyname.at/gnu/gsl/gsl-latest.tar.gz  
 	tar -xvzf gsl-latest.tar.gz
 ```
 
-- Configure. Set the install folder to be `/$HOME/usr`. If you want to install in the default diretcory, `/usr/local`, delete the  `--prefix=/$HOME/usr`.
+- Configure GSL. Set the install folder to be `/$HOME/usr`. If you want to install in the default diretcory, `/usr/local`, delete the  `--prefix=/$HOME/usr`.
 ```sh
 	./configure   --prefix=/$HOME/usr
 ```
 
-- Compile and install
+- Compile and install GSL.
 ```sh
 	make -j2
 	make install
 ```
-This step will take some time. If you have more available cores, change the 2 in the -j2 to a bigger number.
+This step will take some time. If your machine has more than two cores, set the 2 in the -j2 to that number number.
+
+#### GSL Installation Hints
+
+- Read the INSTALL notes of GSL.
+- Update the path variable of your terminal with the location of the binaries (gsl-config, gsl-histogram and gsl-randist).
+- Set the LD_LIBRARY_PATH variable of your terminal to the newly installed lib folder.
+ 
 
 
-
-
-### 3. Sampling and Optimization Algorithms
+### 3. Korali Installation
 
 Enter the `build` directory:  
 ```sh
 	cd build  
 ```
-
-
 
 
 Before compiling, the following need to be checked:
@@ -67,22 +72,22 @@ Before compiling, the following need to be checked:
 
 **Compilation options:**  
 
-build the default option (uses use_torc=0):
+Build the default option (uses use_torc=0):
 ```sh
 	make
 ```
 
-build the OpenMP version:
+Build the OpenMP version:
 ```sh
 	make use_omp=1
 ```
 
-build the TORC-based version:
+Build the TORC-based version:
 ```sh
 	make use_torc=1
 ```
 
-build the serial version:
+Build the serial version:
 ```sh
 	make  use_omp=0  use_torc=0
 ```

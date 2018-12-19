@@ -1,16 +1,13 @@
-# Welcome to korali
+# Welcome to Korali
 
-korali is a high performance framework for optimization, sampling and Bayesian uncertainty quantification of large scale computational models.
+Korali is a high performance computing framework for optimization, sampling and Bayesian uncertainty quantification of large scale computational models.
 
-The framework is based on the [TORC](references.md#anchor_torc) task-parallel library for clusters, which is designed to provide unified programming and runtime support for computing platforms that range from single-core systems to hybrid multicore-GPU clusters and heterogenous Grid based supercomputers.
-
-
-
+Korali is based on the [TORC](references.md#anchor_torc) task-parallel library for clusters, which is designed to provide unified programming and runtime support for computing platforms that range from single-core systems to hybrid multicore-GPU clusters and heterogenous grid based supercomputers.
 
 <br><br>
 
 
-# What korali can do for you
+# What Korali does for you
 
 1. **Optimize**: given a cost function $F(\vartheta)$ find
 	$$
@@ -28,12 +25,7 @@ The framework is based on the [TORC](references.md#anchor_torc) task-parallel li
 	$$
 The model output $f$ depends on a set of input parameters $x$.
 
-After [installing](installation.md) the software have a look at the [examples](./examples/sampling.md) and learn how you can run your cases.
-
-
-
-
-
+After [installing](installation.md) the software, please have a look at the [examples](./examples/sampling.md) and learn how to run your own code.
 
 
 <br><br><br><br><br><br>
