@@ -24,15 +24,15 @@ where $x_i = 0.02 i,\; i=1,\ldots,100$ and $\sigma=0.3$. We will sample the post
 and the likelihood function in given by,
 
 \begin{align}
-    p(d | \vartheta) & = \prod_{i=1}^4 p(d_i | \vartheta) \\
-					 &=  \prod_{i=1}^4 \mathcal{N}( d_i | f(x;\varphi),\sigma ) \, .
+    p(d | \vartheta) & = \prod_{i=1}^{100} p(d_i | \vartheta) \\
+					 &=  \prod_{i=1}^{100} \mathcal{N}( d_i | f(x;\varphi),\sigma ) \, .
 \end{align}
 
 
 
 ## Sampling with TMCMC
 
-In this example we will use the [Transitional Markov Chain Monte Carlo](https://ascelibrary.org/doi/10.1061/%28ASCE%290733-9399%282007%29133%3A7%28816%29) (TMCMC)  algorithm for the sampling of the posterior.
+Second, we will use the [Transitional Markov Chain Monte Carlo](https://ascelibrary.org/doi/10.1061/%28ASCE%290733-9399%282007%29133%3A7%28816%29) (TMCMC)  algorithm for the sampling of the posterior distribution of $\vartheta$.
 ### Compile and run
 
 From the base folder run
@@ -41,7 +41,8 @@ cd build
 make tmcmc_theta_internal
 ```
 
-Make sure that `use_torc=0` and `use_omp=0` in the Makefile since we don't want to run parallel in this example. Go back to the the base folder and run
+Make sure that we set `use_torc=0` and `use_omp=0` in the Makefile since we don't want to run the code in parallel.
+In the build folder execute following commands in order to setup the example:
 
 ```sh
 cd ../examples/sampling/internal/tmcmc/
@@ -65,16 +66,13 @@ python plotmatrix_hist.py final.txt
 
 
 ### Behind the scripts
-The script `./setup_tmcmc.sh` makes a new running folder and copies inside the executable and the needed files:
+The script `./setup_tmcmc.sh` creates new folders and copies the executable and the required files to target directory:
 
-1. the data file data.txt,
-1. the file that contains the prior information, [priors.par](../developing/par_files.md#priors.par),
-1. the parameter file for tmcmc, [tmcmc.par](../developing/par_files.md#tmcmc.par).
+1. the data file data.txt containing $d_i$,
+2. the file [priors.par](../developing/par_files.md#priors.par) that contains the prior information $p(\vartheta_i)$ (i.e number of prior distributions, distribution functions, function parameters),
+3. the parameter file [tmcmc.par](../developing/par_files.md#tmcmc.par) for tmcmc (e.g. number of samples, max iterations, seed).
 
-For this example, TMCMC has been linked to the likelihood function `loglike_theta_fast.c`. Inside this file the model $f$ as well as the likelihood function $p(d | \vartheta)$ has beem implemented. More information on the the likelihood implementation and how to write your own likelihood you can find [here](../developing/likelihoods.md).
-
-
-
+In this example, Korali has been linked to the file `loglike_theta_fast.c`. Inside this file you can find the model $f$ as well as the likelihood function $p(d | \vartheta)$. More information on the implementation of a likelihood can be found [here](../developing/likelihoods.md).
 
 
 
@@ -88,7 +86,8 @@ cd build
 make dram_theta_internal
 ```
 
-Make sure that `use_torc=0` and `use_omp=0` in the Makefile since we don't want to run parallel in this example. Go back to the the base folder and run
+Make sure that we set `use_torc=0` and `use_omp=0` in the Makefile since we don't want to run the code in parallel.
+In the build folder execute following commands in order to setup the example:
 
 ```sh
 cd ../examples/sampling/internal/dram/
@@ -96,9 +95,9 @@ cd ../examples/sampling/internal/dram/
 cd runs/run_001/
 ```
 
-Run the TMCMC sampling algorithm:
+Run the DRAM sampling algorithm:
 ```sh
-./tmcmc_dram_internal
+./dram_theta_internal
 ```
 
 Finally, visualize the samples:
@@ -107,11 +106,11 @@ cp ../../../../../../source/tools/display/plotmatrix_hist.py .
 tail -n +1000 chain.txt > tmp
 ./plotmatrix_hist.py tmp
 ```
-With this command `tail -n +1000 chain.txt` we discard the first $1000$ samples which we consider as the burn-in period.
+With the command `tail -n +1000 chain.txt` we discard the first $1000$ samples which we consider as the burn-in period.
 
 ![](images/fig_dram.png)
 
 
 
 ### Behind the scripts
-Same as in the TMCMC example. The only difference is that instead of the tmcmc.par is substituted by [dram.par](../developing/par_files.md#dram.par).
+Similar to the TMCMC example above. The only difference is that instead of the tmcmc.par we use [dram.par](../developing/par_files.md#dram.par).

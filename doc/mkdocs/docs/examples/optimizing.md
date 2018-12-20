@@ -23,8 +23,8 @@ where $x_i = 0.02 i,\; i=1,\ldots,100$ and $\sigma=0.3$. We want to optimize the
 and the likelihood function in given by,
 
 \begin{align}
-    p(d | \vartheta) & = \prod_{i=1}^4 p(d_i | \vartheta) \\
-					 &=  \prod_{i=1}^4 \mathcal{N}( d_i | f(x;\varphi),\sigma ) \, .
+    p(d | \vartheta) & = \prod_{i=1}^{100} p(d_i | \vartheta) \\
+					 &=  \prod_{i=1}^{100} \mathcal{N}( d_i | f(x;\varphi),\sigma ) \, .
 \end{align}
 
 
@@ -36,7 +36,7 @@ $$
 
 
 ## Optimizing with CMA-ES
-In this example we will use the [Covariance Matrix Adaptation - Evolution Strategy](https://arxiv.org/pdf/1604.00772.pdf) (CMA-ES) algorithm in order to optimize the posterior distribution.
+Here we use the [Covariance Matrix Adaptation - Evolution Strategy](https://arxiv.org/pdf/1604.00772.pdf) (CMA-ES) algorithm in order to optimize the posterior distribution $p(d | \vartheta)$.
 
 ### Compile and run
 
@@ -46,11 +46,11 @@ cd build
 make cmaes_theta_internal
 ```
 
-Make sure that `use_torc=0` and `use_omp=0` in the Makefile since we don't want to run parallel in this example. Go back to the the base folder and run
+Make sure that we set use_torc=0 and use_omp=0 in the Makefile since we don't want to run the code in parallel. In the build folder execute following commands in order to setup the example:
 
 ```sh
 cd ../examples/optimization/internal/
-./setup_fast_optimize.sh.sh
+./setup_fast_optimize.sh
 cd runs/run_001/
 ```
 
@@ -63,11 +63,12 @@ The output in the terminal will look like this:
 
 ![](images/cmaes-terminal.png)
 
-Notice that the algorithm has converged to
+The algorithm has converged to
 ```
 2.0392035199474865  2.9457365262310957  1.0625543252360856  0.3022538646514062
 ```
-and compare these values to the nominal value $\vartheta^{\star} = (2,3,1,0.3)$ that we used to create the synthetic data.
+
+Note that the values $\vartheta^{\star} = (2,3,1,0.3)$ have been used to create the synthetic data.
 
 
 Finally, visualize the samples:
@@ -84,10 +85,11 @@ python plotmatrix_hist.py final.txt
 
 
 ### Behind the scripts
-The script `./setup_tmcmc.sh` makes a new running folder and copies inside the executable and the needed files:
 
-1. the data file data.txt,
-1. the file that contains the prior information, [priors.par](../developing/par_files.md#priors.par),
-1. the parameter file for tmcmc, [tmcmc.par](../developing/par_files.md#tmcmc.par).
+The script `./setup_tmcmc.sh` creates new folders and copies the executable and the required files to target directory:
 
-For this example, TMCMC has been linked to the likelihood function `loglike_theta_fast.c`. Inside this file the model $f$ as well as the likelihood function $p(d | \vartheta)$ has beem implemented. More information on the the likelihood implementation and how to write your own likelihood you can find [here](../developing/likelihoods.md).
+1. the data file `data.txt` containing $d_i$,
+2. the file [priors.par](../developing/par_files.md#priors.par) that contains the prior information $p(\vartheta_i)$ (i.e number of prior distributions, distribution functions, function parameters),
+3. the parameter file for cmaes, [cmaes_bounds.par](../developing/par_files.md#cmaes_bounds.par), [cmaes_initials.par](../developing/par_files.md#cmaes_initials.par), [cmaes_signals.par](../developing/par_files.md#cmaes_signals.par).
+
+In this example, Korali has been linked to the file `loglike_theta_fast.c`. Inside this file you can find the model $f$ as well as the likelihood function $p(d | \vartheta)$. More information on the implementation of a likelihood can be found [here](../developing/likelihoods.md).

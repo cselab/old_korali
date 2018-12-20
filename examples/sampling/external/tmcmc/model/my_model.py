@@ -1,18 +1,23 @@
 import numpy as np
+import os.path
 import sys
 
-p = np.loadtxt( sys.argv[1] )
+rfile = 'result.txt'
 
-data = np.loadtxt( sys.argv[2] )
+if not os.path.isfile(rfile):
+	
+	p = np.loadtxt( sys.argv[1] )
 
-A     = p[0]
-omega = p[1]
-phi   = p[2]
+	data = np.loadtxt( sys.argv[2] )
 
-t = data[:,0]
+	A     = p[0]
+	omega = p[1]
+	phi   = p[2]
 
-y = A*np.sin(omega*t+phi)
+	t = data[:,0]
 
-res = np.column_stack((t,y))
+	y = A*np.sin(omega*t+phi)
 
-np.savetxt('result.txt', res )
+	res = np.column_stack((t,y))
+
+	np.savetxt(rfile, res )
