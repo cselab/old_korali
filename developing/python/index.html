@@ -1,0 +1,790 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-3.1.0">
+    
+    
+      
+        <title>Python interface of TMCMC - korali</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.11e41852.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.22915126.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#03a9f4">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.20ef595d.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,400i,700|Ubuntu+Mono">
+        <style>body,input{font-family:"Ubuntu","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Ubuntu Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="light-blue" data-md-color-accent="blue">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448"
+    viewBox="0 0 416 448" id="__github">
+  <path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19-18.125
+        8.5-18.125-8.5-10.75-19-3.125-20.5 3.125-20.5 10.75-19 18.125-8.5
+        18.125 8.5 10.75 19 3.125 20.5zM320 304q0 10-3.125 20.5t-10.75
+        19-18.125 8.5-18.125-8.5-10.75-19-3.125-20.5 3.125-20.5 10.75-19
+        18.125-8.5 18.125 8.5 10.75 19 3.125 20.5zM360
+        304q0-30-17.25-51t-46.75-21q-10.25 0-48.75 5.25-17.75 2.75-39.25
+        2.75t-39.25-2.75q-38-5.25-48.75-5.25-29.5 0-46.75 21t-17.25 51q0 22 8
+        38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0
+        37.25-1.75t35-7.375 30.5-15 20.25-25.75 8-38.375zM416 260q0 51.75-15.25
+        82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5-41.75
+        1.125q-19.5 0-35.5-0.75t-36.875-3.125-38.125-7.5-34.25-12.875-30.25-20.25-21.5-28.75q-15.5-30.75-15.5-82.75
+        0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25
+        30.875q36.75-8.75 77.25-8.75 37 0 70 8 26.25-20.5
+        46.75-30.25t47.25-9.75q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34
+        99.5z" />
+</svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#python-interface-of-tmcmc" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="korali" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon">pie_chart</i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            
+              <span class="md-header-nav__topic">
+                korali
+              </span>
+              <span class="md-header-nav__topic">
+                Python interface of TMCMC
+              </span>
+            
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          
+            <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+            
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+          
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+
+  <a href="https://github.com/cselab/korali/" title="Go to repository" class="md-source" data-md-source="github">
+    
+      <div class="md-source__icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <use xlink:href="#__github" width="24" height="24"></use>
+        </svg>
+      </div>
+    
+    <div class="md-source__repository">
+      cselab/korali
+    </div>
+  </a>
+
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="korali" class="md-nav__button md-logo">
+      
+        <i class="md-icon">pie_chart</i>
+      
+    </a>
+    korali
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+
+  <a href="https://github.com/cselab/korali/" title="Go to repository" class="md-source" data-md-source="github">
+    
+      <div class="md-source__icon">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <use xlink:href="#__github" width="24" height="24"></use>
+        </svg>
+      </div>
+    
+    <div class="md-source__repository">
+      cselab/korali
+    </div>
+  </a>
+
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../installation/" title="Installation" class="md-nav__link">
+      Installation
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3">
+    
+    <label class="md-nav__link" for="nav-3">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-3">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/sampling/" title="Sampling" class="md-nav__link">
+      Sampling
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/external/" title="External" class="md-nav__link">
+      External
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/optimizing/" title="Optimizing" class="md-nav__link">
+      Optimizing
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/hierarchical/" title="Hierarchical" class="md-nav__link">
+      Hierarchical
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+    
+    <label class="md-nav__link" for="nav-4">
+      Developing
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-4">
+        Developing
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../structure/" title="Structure" class="md-nav__link">
+      Structure
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../conventions/" title="Conventions" class="md-nav__link">
+      Conventions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../par_files/" title="Par files" class="md-nav__link">
+      Par files
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../likelihoods/" title="Likelihoods" class="md-nav__link">
+      Likelihoods
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../upcoming/" title="Upcoming" class="md-nav__link">
+      Upcoming
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../beta/" title="Beta" class="md-nav__link">
+      Beta
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../hpc/" title="Performance" class="md-nav__link">
+      Performance
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../references/" title="References" class="md-nav__link">
+      References
+    </a>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tmcmc" title="TMCMC" class="md-nav__link">
+    TMCMC
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fitness-function" title="Fitness function" class="md-nav__link">
+    Fitness function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plotting" title="Plotting" class="md-nav__link">
+    Plotting
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" title="Example" class="md-nav__link">
+    Example
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#demo3py" title="demo3.py" class="md-nav__link">
+    demo3.py
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fitfun3py" title="fitfun3.py" class="md-nav__link">
+    fitfun3.py
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-and-testing" title="Installation and testing" class="md-nav__link">
+    Installation and testing
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" title="Prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#installation-steps" title="Installation steps" class="md-nav__link">
+    Installation steps
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-running-the-demo" title="Testing - Running the demo" class="md-nav__link">
+    Testing - Running the demo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-and-additional-options" title="Troubleshooting and additional options" class="md-nav__link">
+    Troubleshooting and additional options
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-build-the-software-using-a-local-copy-of-the-gsl-library" title="How to build the software using a local copy of the GSL library" class="md-nav__link">
+    How to build the software using a local copy of the GSL library
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-to-build-the-software-using-python3" title="How to build the software using python3" class="md-nav__link">
+    How to build the software using python3
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/cselab/korali/edit/master/docs/developing/python.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="python-interface-of-tmcmc">Python interface of TMCMC</h1>
+<p>Module tmcmc implements the TMCMC (Transitional Markov-Chain Monte Carlo) algorithm.</p>
+<p>We use the C implementation of the algorithm and the <em>ctypes wrapper</em> module for calling it from Python.
+Since the function we are sampling from is also written in Python, we use <em>embedded Python</em> to call the
+function from the C code and <em>numpy</em> to pass arguments between the two environments.</p>
+<h2 id="tmcmc">TMCMC</h2>
+<p>The Python interface of TMCMC is defined as follows:</p>
+<p><strong>def tmcmc(fitfun, dim=2, maxstages=20, popsize=1024, lowerbound=[-6,-6], upperbound=[6,6], id=0):</strong></p>
+<p>Inputs:</p>
+<ul>
+<li><strong>fitfun</strong>: python script name (without the .py extension) that implements the log-likelihood function.
+The prototype is: fitfun(x, dim), where <em>x</em> is a vector of parameter values and <em>dim</em> the number of parameters.</li>
+<li><strong>dim</strong>: number of parameters</li>
+<li><strong>maxstages</strong>: maximum number of stages that can be performed by the TMCMC algorithm</li>
+<li><strong>popsize</strong>: number of samples per stage</li>
+<li><strong>lowerbound</strong>: lower bound for each parameter</li>
+<li><strong>upperbound</strong>: uppoer bound for each parameter</li>
+<li><strong>id</strong>: integer identifier for the specific <em>tmcmc()</em> call. The value is appended to the output files generated by the algorithm.</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>The tmcmc function returns the log-evidence of the model.</li>
+<li>In addition, for each stage of the algorithm, the evaluation points and their log-likelihood are stored in text files
+named as <em>curgen_db_xxx_yyy.txt</em>, where <strong>xxx</strong>: <em>id</em> of the <em>tmcmc()</em> call, and <strong>yyy</strong>: stage of the algorithm.</li>
+</ul>
+<h2 id="fitness-function">Fitness function</h2>
+<p>The fitness function typically computes the model output and <strong>returns</strong> the log-likelihood of the data.</p>
+<p><strong>def fitfun(theta, dim):</strong></p>
+<ul>
+<li><strong>theta</strong>: parameters of the model</li>
+<li><strong>dim</strong>: number of parameters</li>
+</ul>
+<h2 id="plotting">Plotting</h2>
+<p>2D scatter plots of the samples stored in the output text files, colored according to their log-likelihood values,
+can be produced by means of the <strong>plot_gen()</strong> function.</p>
+<p><strong>def plot_gen(filename, dim=2, i=1, j=2, show=1, save=0):</strong></p>
+<ul>
+<li><strong>filename</strong>: curgen_db_xxx_yyy.txt file</li>
+<li><strong>dim</strong>: number of parameters</li>
+<li><strong>i</strong>: i-th parameter</li>
+<li><strong>j</strong>: j-th parameter</li>
+<li><strong>namei</strong>: label for the i-th parameter</li>
+<li><strong>namej</strong>: label for the j-th parameter</li>
+<li><strong>show</strong>: depict the plot on the screen</li>
+<li><strong>save</strong>: save the plot in a png file (filename.png)</li>
+</ul>
+<h2 id="example">Example</h2>
+<h3 id="demo3py">demo3.py</h3>
+<div class="codehilite"><pre><span></span><span class="c1"># Import necessary modules</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;../lib_python&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">tmcmc</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">plot_gen</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">logEv</span><span class="o">=</span><span class="n">tmcmc</span><span class="p">(</span><span class="s2">&quot;fitfun3&quot;</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">maxstages</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">popsize</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span><span class="n">lowerbound</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="o">-</span><span class="mi">10</span><span class="p">],</span><span class="n">upperbound</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span><span class="nb">id</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;logEv=&quot;</span><span class="p">,</span><span class="n">logEv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">plot_gen</span><span class="p">(</span><span class="s1">&#39;curgen_db_003_009.txt&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">namei</span><span class="o">=</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="n">namej</span><span class="o">=</span><span class="s1">&#39;sigma^2&#39;</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+
+<h3 id="fitfun3py">fitfun3.py</h3>
+<div class="codehilite"><pre><span></span><span class="c1"># data-driven inference</span>
+<span class="c1"># underlying data model: y = ax + e, where</span>
+<span class="c1"># a=0.3 and e=N(0,sigma^2), sigma=0.1</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="k">def</span> <span class="nf">fitfun3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">loadtxt</span><span class="p">(</span><span class="s1">&#39;data3.txt&#39;</span><span class="p">)</span>
+    <span class="n">N</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="kp">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="p">;</span>
+
+    <span class="n">SSE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="kp">sum</span><span class="p">((</span><span class="n">y</span><span class="o">-</span><span class="n">dy</span><span class="p">)</span>\<span class="o">*</span>\<span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">sy</span><span class="o">=</span><span class="n">sigma</span><span class="p">;</span>
+    <span class="n">logn</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">N</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="kp">log</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">N</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="kp">log</span><span class="p">(</span><span class="n">sy</span><span class="o">*</span><span class="n">sy</span><span class="p">)</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">SSE</span><span class="o">/</span><span class="p">(</span><span class="n">sy</span><span class="o">*</span><span class="n">sy</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">logn</span>
+</pre></div>
+
+
+<h2 id="installation-and-testing">Installation and testing</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>Make sure that the following required software has been installed.</p>
+<ul>
+<li>GCC compiler</li>
+<li>Python 2.7 (or higher)</li>
+<li>Python-devel package<ul>
+<li><code>python2-config</code> or <code>python3-config</code> must be available</li>
+<li>MacOS: automatically available if python has been installed with brew</li>
+</ul>
+</li>
+<li>Python numpy package<ul>
+<li>MacOS: <code>pip2 install numpy</code> or <code>pip3 install numpy</code></li>
+</ul>
+</li>
+<li>Python matplotlib package<ul>
+<li>MacOS: <code>pip2 install matplotlib</code> or <code>pip3 install matplotlib</code></li>
+</ul>
+</li>
+<li>GNU GSL library<ul>
+<li>MacOS: <code>brew install gsl</code></li>
+<li>We also provide the option to download and use a local copy of the GSL library</li>
+</ul>
+</li>
+</ul>
+<h3 id="installation-steps">Installation steps</h3>
+<p>1. Download from GitHub:</p>
+<p><code>git clone https://github.com/cselab/pi4u.git pi4u-tmcmc -b tmcmc</code></p>
+<p>If you do not have git, download <em>pi4u-tmcmc.zip</em> from here: <a href="https://github.com/cselab/pi4u/archive/tmcmc.zip">GitHub download link</a></p>
+<p>2. Go to pi4u-tmcmc/src and build the TMCMC library:</p>
+<p><code>cd pi4u-tmcmc/src; make</code></p>
+<p><code>cd ..</code>  (<em>go back to the pi4u-tmcmc directory</em>)</p>
+<h3 id="testing-running-the-demo">Testing - Running the demo</h3>
+<p>1. Go to pi4u-tmcmc/demo_python and run demo3.py</p>
+<p><code>cd demo_python; python2 demo3.py</code>  </p>
+<p>2. The scatter plot of samples for our example should be as follows:</p>
+<p><img alt="Screenshot" src="../img/curgen_db_003_009.txt.png" /></p>
+<h2 id="troubleshooting-and-additional-options">Troubleshooting and additional options</h2>
+<h3 id="how-to-build-the-software-using-a-local-copy-of-the-gsl-library">How to build the software using a local copy of the GSL library</h3>
+<p>1. Go to pi4u-tmcmc/gsl and run build.sh:</p>
+<p><code>cd pi4u-tmcmc/gsl; ./build.sh</code></p>
+<p><code>cd ..</code>  (<em>go back to the pi4u-tmcmc directory</em>)</p>
+<p>2. Go to pi4u-tmcmc/src and build the TMCMC library:</p>
+<p><code>cd src; make -B mygsl=1</code></p>
+<h3 id="how-to-build-the-software-using-python3">How to build the software using python3</h3>
+<p>1. Go to pi4u-tmcmc/src and (re)-build the TMCMC library:</p>
+<p><code>make -B python3=1</code></p>
+<p><code>cd ..</code>  (<em>go back to the pi4u-tmcmc directory</em>)</p>
+<p>2. Go to demo_python and run demo3.py using python3</p>
+<p><code>cd demo_python; python3 demo3.py</code></p>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+        
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.9e1f3b71.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      
+    
+    
+      
+    
+  </body>
+</html>
