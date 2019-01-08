@@ -15,4 +15,11 @@ runs/
 
 doc/mkdocs/site/
 
+# CMA test relevant files
+cma
+source/CMAES/test/*/*.par
+source/CMAES/test/*/*.dat
+source/CMAES/test/*/*.err
+
+# Torc libs
 lib/torc_lite
