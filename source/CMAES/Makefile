@@ -38,4 +38,8 @@ clean:; rm -rf  $(TARGET) *.o *.a
 test: cma
 	atest `find test -name main`
 
+testpp: test/trial.cpp engine_cmaes.cpp engine_cmaes.hpp
+	g++ -c -Wall -I../lib/priors -I../lib/cmaes -I../likelihoods $(LDLIBS) engine_cmaes.cpp 
+	g++ -o trial -Wall test/trial.cpp -std=c++17 -I../../lib/catch2/ -I../../lib/torc_lite/include/ -I../lib/priors -I../lib/cmaes -I../likelihoods $(LDLIBS) engine_cmaes.cpp  
+
 .PHONY: clean all test

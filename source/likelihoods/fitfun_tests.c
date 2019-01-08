@@ -9,27 +9,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <fitfun.h>
-
-static double f_multivariate_gaussian(double *x, int N);
-static double f_Ackley(double *x, int N);
-static double f_Dixon_Price(double *x, int N);
-static double f_Griewank(double *x, int N);
-static double f_Levy(double *x, int N);
-static double f_Perm(double *x, int N);
-static double f_Perm0(double *x, int N);
-static double f_Rastrigin(double *x, int N); 
-static double f_Rosenbrock(double *x, int N);
-static double f_Rotated_Hyper_Ellipsoid(double *x, int N);
-static double f_Schwefel(double *x, int N);
-static double f_Sphere(double *x, int N);
-static double f_Styblinski_Tang(double *x, int N);
-static double f_Sum_Of_Power(double *x, int N);
-static double f_Sum_Of_Squares(double *x, int N);
-static double f_Zakharov(double *x, int N);
-
-typedef double (*fitfun_t)(double*, int);
-
-static fitfun_t my_fitfun;
+#include <fitfun_tests.h>
 
 
 static int same_str(const char *a, const char *b) {
@@ -82,6 +62,10 @@ void fitfun_initialize(int argc, char **argv) {
 
 double fitfun(double *x, int N, void *output, int *info) {
     return -my_fitfun(x, N);
+}
+
+void fitfun_initialize_simple(char *func) {
+    fitfun_initialize(1, &func);
 }
 
 void fitfun_finalize() {}

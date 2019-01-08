@@ -197,7 +197,7 @@ double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop
 #endif
   	
 
-    // subtruct the log-prior from the log-likelohood
+    // subtract the log-prior from the log-likelohood
     for( int i=0; i<lambda; i++){
         arFunvals[i] -= prior_log_pdf(d, dim, pop[i]);
     }

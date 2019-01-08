@@ -1,6 +1,7 @@
 *.o
 *.a
 *.swp
+*.out
 
 .DS_Store
 
@@ -9,6 +10,7 @@ tags
 .tags1
 
 *.txt
+*.err
 
 build/
 runs/
