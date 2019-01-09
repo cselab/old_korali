@@ -16,6 +16,10 @@ static int same_str(const char *a, const char *b) {
     return strcmp(a, b) == 0;
 }
 
+double fitfun(double *x, int N, void *output, int *info) {
+    return -my_fitfun(x, N);
+}
+
 void fitfun_initialize(int argc, char **argv) {
     if (argc != 1) {
         fprintf(stderr, "expected exactly one argument in fitfun_initialize, %d given\n", argc);
@@ -55,13 +59,9 @@ void fitfun_initialize(int argc, char **argv) {
     else if (same_str(s, "Zakharov"))
         my_fitfun = &f_Zakharov;
     else {
-        fprintf(stderr, "unknown funciotn <%s>\nexiting...\n", s);
+        fprintf(stderr, "unknown function <%s>\nexiting...\n", s);
         exit(1);
     }
-}
-
-double fitfun(double *x, int N, void *output, int *info) {
-    return -my_fitfun(x, N);
 }
 
 void fitfun_initialize_simple(char *func) {
@@ -69,7 +69,6 @@ void fitfun_initialize_simple(char *func) {
 }
 
 void fitfun_finalize() {}
-
 
 static double f_multivariate_gaussian(double *x, int N) {
     gsl_vector *mu, *xg, *work;

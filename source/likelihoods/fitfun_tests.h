@@ -1,6 +1,12 @@
 #ifndef FITFUN_TESTS_H
 #define FITFUN_TESTS_H
 
+typedef double (*fitfun_t)(double*, int);
+
+static fitfun_t my_fitfun;
+
+void fitfun_initialize_simple(char *func);
+
 static double f_multivariate_gaussian(double *x, int N);
 static double f_Ackley(double *x, int N);
 static double f_Dixon_Price(double *x, int N);
@@ -17,11 +23,5 @@ static double f_Styblinski_Tang(double *x, int N);
 static double f_Sum_Of_Power(double *x, int N);
 static double f_Sum_Of_Squares(double *x, int N);
 static double f_Zakharov(double *x, int N);
-
-typedef double (*fitfun_t)(double*, int);
-
-static fitfun_t my_fitfun;
-
-void fitfun_initialize_simple(char *func);
 
 #endif // FITFUN_TESTS_H 

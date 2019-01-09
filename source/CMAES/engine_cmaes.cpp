@@ -4,12 +4,31 @@ CmaesEngine::CmaesEngine(double (*fitfun) (double*, int),
 	std::string cmaes_par, std::string cmaes_bounds_par, 
 	std::string priors_par, int restart) 
 		: cmaes_par_(cmaes_par),
+		  cmaes_bounds_par_(cmaes_bounds_par),
 		  priors_par_(priors_par),
 		  restart_(restart),
 		  step_(0), 
 		  stt_(0.0),
 		  fitfun_(fitfun) {
-		
+	
+		if ( !cmaes_utils_file_exists(cmaes_par.c_str()) ) { 
+			printf("Cmaes param file '%s' does not exist. \
+				Exit with exit(1)...\n", cmaes_par.c_str());
+			exit(1);
+		}
+		if ( !cmaes_utils_file_exists(cmaes_bounds_par.c_str()) ) {
+			printf("Cmaes bounds param file '%s' does not exist. \
+				Exit with exit(1)...\n", cmaes_bounds_par.c_str());
+			exit(1);
+		}
+		if ( !cmaes_utils_file_exists(priors_par.c_str()) ) { 
+			printf("Prios param file '%s' does not exist. \
+				Exit with exit(1)...\n", priors_par.c_str());
+			exit(1);
+		}
+
+		fitfun_ = fitfun;
+
 		gt0_ = get_time();
 		
 		arFunvals_ = cmaes_init(&evo_, 0, NULL, NULL, 0, 0,
@@ -29,7 +48,7 @@ CmaesEngine::CmaesEngine(double (*fitfun) (double*, int),
 	
 		if( Nprior != dim_ ){
 		printf("The dimension of the prior is different from the dimension of \
-				the problem. Exit with exit(1)...");
+				the problem. Exit with exit(1)...\n");
 			exit(1);
 		}
 
@@ -94,17 +113,17 @@ double CmaesEngine::run() {
 	while( !cmaes_TestForTermination(&evo_) ){
 
         pop_ = cmaes_SamplePopulation(&evo_); 
-
+		
         if (restart_) {
             dt = cmaes_utils_load_pop_from_file(VERBOSE, step_, pop_, 
 					arFunvals_, dim_, lambda_, &restart_);
     	} else {
-            cmaes_utils_make_all_points_feasible( &evo_, pop_
+			cmaes_utils_make_all_points_feasible( &evo_, pop_
 				, lower_bound_, upper_bound_);
             dt = evaluate_population( &evo_, arFunvals_, pop_, priors_, step_);
         }
         stt_ += dt;
-
+	
         cmaes_UpdateDistribution(1, &evo_, arFunvals_);
 
         cmaes_ReadSignals(&evo_, cmaes_par_.c_str()); fflush(stdout);
