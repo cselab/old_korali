@@ -58,8 +58,8 @@ private:
 	char exeDir_[FILENAME_MAX];
 	std::string workdir_, cmaes_par_, cmaes_bounds_par_, priors_par_;
 
-	int restart_;
 	cmaes_t evo_;
+	int restart_;
 	int lambda_;
 	int step_;
 	
