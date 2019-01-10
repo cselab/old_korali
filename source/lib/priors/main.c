@@ -11,15 +11,13 @@ void test_suite( Density *priors, int N);
 double mean_std( double *data, int N, double *mean, double *std );
 
 
-
-
 int main ()
 {
 
 	int N;
 	Density *priors;
 
-	read_priors( &priors, &N );
+	read_priors("todo", &priors, &N );
 
 	gsl_rand_init( 123456 );
 
@@ -29,15 +27,6 @@ int main ()
   
 	return 0;
 }
-
-
-
-
-
-
-
-
-
 
 
 void test_suite( Density *p, int N){

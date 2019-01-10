@@ -64,7 +64,7 @@ void fitfun_initialize(int argc, char **argv) {
     }
 }
 
-void fitfun_initialize_simple(char *func) {
+void fitfun_initialize_simple(const char *func) {
     fitfun_initialize(1, &func);
 }
 

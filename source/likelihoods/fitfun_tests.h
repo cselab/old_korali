@@ -5,7 +5,9 @@ typedef double (*fitfun_t)(double*, int);
 
 static fitfun_t my_fitfun;
 
-void fitfun_initialize_simple(char *func);
+double fitfun(double *x, int N, void *output, int *info);
+
+void fitfun_initialize_simple(const char *func);
 
 static double f_multivariate_gaussian(double *x, int N);
 static double f_Ackley(double *x, int N);

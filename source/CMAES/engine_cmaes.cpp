@@ -1,21 +1,35 @@
 #include "engine_cmaes.hpp"
+#include "engine_cmaes_utils.hpp"
 
-CmaesEngine::CmaesEngine(double (*fitfun) (double*, int), 
-	std::string cmaes_par, std::string cmaes_bounds_par, 
-	std::string priors_par, int restart) 
-		: cmaes_par_(cmaes_par),
+CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*), 
+	std::string workdir, std::string cmaes_par, 
+	std::string cmaes_bounds_par, std::string priors_par, 
+	int restart) 
+		: workdir_(workdir), 
+		  cmaes_par_(cmaes_par),
 		  cmaes_bounds_par_(cmaes_bounds_par),
 		  priors_par_(priors_par),
 		  restart_(restart),
 		  step_(0), 
 		  stt_(0.0),
-		  fitfun_(fitfun) {
-	
+		  fitfun_(fun) {
+
+		if (!GetCurrentDir(exeDir_, sizeof(exeDir_))) {
+			printf("Warning: Current directory could not be localized.\n");
+		}
+
+		if (ChangeDir(workdir_.c_str()) != 0) {
+			printf("Working directory '%s' does not exist. \
+				Exit with exit(1)...\n", workdir_.c_str());
+			exit(1);
+		}
+
 		if ( !cmaes_utils_file_exists(cmaes_par.c_str()) ) { 
 			printf("Cmaes param file '%s' does not exist. \
 				Exit with exit(1)...\n", cmaes_par.c_str());
 			exit(1);
 		}
+
 		if ( !cmaes_utils_file_exists(cmaes_bounds_par.c_str()) ) {
 			printf("Cmaes bounds param file '%s' does not exist. \
 				Exit with exit(1)...\n", cmaes_bounds_par.c_str());
@@ -26,8 +40,6 @@ CmaesEngine::CmaesEngine(double (*fitfun) (double*, int),
 				Exit with exit(1)...\n", priors_par.c_str());
 			exit(1);
 		}
-
-		fitfun_ = fitfun;
 
 		gt0_ = get_time();
 		
@@ -57,8 +69,29 @@ CmaesEngine::CmaesEngine(double (*fitfun) (double*, int),
 		//torc_init(argc, argv, MODE_MS); 
 #endif
 
+		if (ChangeDir(exeDir_) != 0) {
+			printf("Could not return to exe dir '%s'. \
+				Exit with exit(1)...\n", exeDir_);
+			exit(1);
+		}
+
 }
 
+CmaesEngine::~CmaesEngine(){
+    cmaes_exit(&evo_); /* release memory */
+}
+
+cmaes_t* CmaesEngine::getEvo() {
+	return &evo_;
+}
+
+double* CmaesEngine::getBestEver() {
+	return evo_.rgxbestever;
+}
+
+double CmaesEngine::getBestFunVal() {
+	return cmaes_Get(&evo_,"fbestever");
+}
 
 double CmaesEngine::evaluate_population( cmaes_t *evo, double *arFunvals, 
 	double *const* pop, Density *d, int step ) {
@@ -108,6 +141,12 @@ double CmaesEngine::run() {
 
 	gt1_ = get_time();
 
+	if (ChangeDir(workdir_.c_str()) != 0) {
+		printf("Working directory '%s' does not exist. \
+			Exit with exit(1)...\n", workdir_.c_str());
+		exit(1);
+	}
+
 	double dt;
 
 	while( !cmaes_TestForTermination(&evo_) ){
@@ -150,7 +189,6 @@ double CmaesEngine::run() {
 
     printf("Stop:\n %s \n",  cmaes_TestForTermination(&evo_)); /* print termination reason */
     cmaes_WriteToFile( &evo_, "all", "allcmaes.dat" );         /* write final results */
-    cmaes_exit(&evo_); /* release memory */
 
     gt3_ = get_time();
     
@@ -164,13 +202,18 @@ double CmaesEngine::run() {
     torc_finalize();
 #endif
    
+	if (ChangeDir(exeDir_) != 0) {
+		printf("Could not return to exe dir '%s'. \
+			Exit with exit(1)...\n", exeDir_);
+		exit(1);
+	}
 	return 0.0;
 }
 
 void CmaesEngine::taskfun_(double *x, int *n, double *res, 
 	int /* deprecated */ *info) {
 	
-    (*res) = - fitfun_(x, *n);    // minus for minimization
+    (*res) = - fitfun_(x, *n, (void*)NULL, info);    // minus for minimization
 	
 	return;
 }

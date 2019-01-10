@@ -1,8 +1,8 @@
-/* --------------------------------------------------------- */
-/* --- File: engine_cmaes.cpp--- Author: Daniel Waelchli --- */
-/* ---------------------- last modified: Jan 2019        --- */
-/* --------------------------------- by: Daniel Waelchli --- */
-/* --------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* --- File: engine_cmaes.cpp--- Author: Daniel Waelchli -------------------- */
+/* ---------------------- last modified: Jan 2019        -------------------- */
+/* --------------------------------- by: Daniel Waelchli -------------------- */
+/* -------------------------------------------------------------------------- */
 /*   
      Cpp Wrapper for parallel CMA-ES for non-linear function minimization. 
 	
@@ -12,6 +12,7 @@
 */
 
 #include <string>
+#include <stdio.h>
 
 extern "C" {
 
@@ -29,23 +30,33 @@ extern "C" {
 
 #endif
 
-#define VERBOSE 1
+#define VERBOSE 0
 #define JOBMAXTIME 0
 #define _IODUMP_ 1
 
 class CmaesEngine {
 
 public:
-	CmaesEngine(double (*fitfun) (double*, int), 
-		std::string cmaes_par, std::string cmaes_bounds_par, 
-		std::string prios_par, int restart = 0); 
-	
+	CmaesEngine(double (*fun) (double*, int, void*, int*), 
+		std::string workdir = ".", 
+		std::string cmaes_par = "cmaes_initials.par", 
+		std::string cmaes_bounds_par = "cmaes_bounds.par", 
+		std::string prios_par = "priors.par", 
+		int restart = 0); 
+
+	~CmaesEngine();
+
 	double run();
-	double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
+
+	cmaes_t* getEvo();
+	double   getBestFunVal();
+	double*  getBestEver();
+	
 
 private:
 
-	std::string cmaes_par_, cmaes_bounds_par_, priors_par_;
+	char exeDir_[FILENAME_MAX];
+	std::string workdir_, cmaes_par_, cmaes_bounds_par_, priors_par_;
 
 	int restart_;
 	cmaes_t evo_;
@@ -63,9 +74,9 @@ private:
 	double *const*pop_;
     double *arFunvals_; 
 
-	double (*fitfun_) (double*, int);
+	double (*fitfun_) (double*, int, void*, int*);
 	void taskfun_(double *x, int *no, double* res, int *info);
-
+	double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
 };
 
 
