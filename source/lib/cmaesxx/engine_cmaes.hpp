@@ -4,7 +4,8 @@
 /* --------------------------------- by: Daniel Waelchli -------------------- */
 /* -------------------------------------------------------------------------- */
 /*   
-     Cpp Wrapper for parallel CMA-ES for non-linear function minimization. 
+     Cpp Wrapper for parallel CMA-ES for gradient free non-linear 
+     	function minimization. 
 	
 	 Implementation based on work of Panagiotis Hadjidoukas (see engine_cmaes.c) 
 		and Nikolaus Hansen (see cmaes.c)
@@ -36,6 +37,7 @@ extern "C" {
 
 class CmaesEngine {
 
+
 public:
 	CmaesEngine(double (*fun) (double*, int, void*, int*), 
 		std::string workdir = ".", 
@@ -51,7 +53,7 @@ public:
 	cmaes_t* getEvo();
 	double   getBestFunVal();
 	double*  getBestEver();
-	
+
 
 private:
 
