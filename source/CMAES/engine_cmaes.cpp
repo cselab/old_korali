@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "engine_cmaes.hpp"
 #include "engine_cmaes_utils.hpp"
 
@@ -15,30 +17,22 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 		  fitfun_(fun) {
 
 		if (!GetCurrentDir(exeDir_, sizeof(exeDir_))) {
-			printf("Warning: Current directory could not be localized.\n");
+			throw std::runtime_error("Current directory could not be localized.");
 		}
 
 		if (ChangeDir(workdir_.c_str()) != 0) {
-			printf("Working directory '%s' does not exist. \
-				Exit with exit(1)...\n", workdir_.c_str());
-			exit(1);
+			throw std::runtime_error("Working directory '" + workdir_ + "' does not exist.");
 		}
 
 		if ( !cmaes_utils_file_exists(cmaes_par.c_str()) ) { 
-			printf("Cmaes param file '%s' does not exist. \
-				Exit with exit(1)...\n", cmaes_par.c_str());
-			exit(1);
+			throw std::runtime_error("Cmaes param file '" + cmaes_par_ + "' does not exist.");
 		}
 
 		if ( !cmaes_utils_file_exists(cmaes_bounds_par.c_str()) ) {
-			printf("Cmaes bounds param file '%s' does not exist. \
-				Exit with exit(1)...\n", cmaes_bounds_par.c_str());
-			exit(1);
+			throw std::runtime_error("Cmaes bounds param file '" + cmaes_bounds_par_ + "' does not exist.");
 		}
 		if ( !cmaes_utils_file_exists(priors_par.c_str()) ) { 
-			printf("Prios param file '%s' does not exist. \
-				Exit with exit(1)...\n", priors_par.c_str());
-			exit(1);
+			throw std::runtime_error("Priors param file '" + priors_par_ + "' does not exist.");
 		}
 
 		gt0_ = get_time();
@@ -59,9 +53,7 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 		read_priors( priors_par_.c_str(), &priors_, &Nprior );
 	
 		if( Nprior != dim_ ){
-		printf("The dimension of the prior is different from the dimension of \
-				the problem. Exit with exit(1)...\n");
-			exit(1);
+			throw std::runtime_error("The dimension of the prior is different from the dimension of the fitfun.");
 		}
 
 #if defined(_USE_TORC_)
@@ -70,9 +62,7 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 #endif
 
 		if (ChangeDir(exeDir_) != 0) {
-			printf("Could not return to exe dir '%s'. \
-				Exit with exit(1)...\n", exeDir_);
-			exit(1);
+			std::runtime_error("Could not return to exe dir.");
 		}
 
 }
