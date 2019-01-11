@@ -25,11 +25,9 @@ void delete_density( Density *d ){
 
 void delete_prior( Density *d, int N){
     
-    if( d==NULL )
-        return;
+    if( d==NULL ) return;
 
-	for( int i=0; i<N; i++ )
-		delete_density( &d[i] );
+	for( int i=0; i<N; i++ ) delete_density( &d[i] );
 	
 	free(d);
 }

@@ -33,7 +33,6 @@ testxx.o: testxx.cpp
 testxx: testxx.o
 	$(LINK.o.xx) $< $(LDXLIBS)
 
-
 clean:; rm -rf $(TARGET) *.o
 
 .PHONY: clean all

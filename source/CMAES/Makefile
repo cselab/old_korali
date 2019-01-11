@@ -33,7 +33,6 @@ $(TARGET):
 	(cd $(DIR_CMAES);  make libcmaes.a)
 	(cd $(DIR_CMAESXX);  make libcmaesxx.a)
 	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
-	(cd $(DIR_TESTS); make testxx.o)
 	$(LINK.o) engine_cmaes.o $(LDLIBS)
 
 # dependencies
@@ -50,10 +49,7 @@ clean:; rm -rf  $(TARGET) *.o *.a
 test: cma
 	atest `find test -name main`
 
-testxx.o: testxx.cpp
-	$(COMPILE.cxx) $(TFLAGS) $<
+testxx:
+	(cd $(DIR_TESTS); make testxx)
 
-testxx: testxx.o
-	
-
-.PHONY: clean all test testxx
+.PHONY: clean all test
