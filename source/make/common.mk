@@ -9,7 +9,6 @@ CXX := g++
 LDX := g++
 
 ifeq ($(use_torc),1)
-	CC     := mpicc -fopenmp
 	CFLAGS += -D_USE_TORC_=1 `torc_cflags`
 	LDLIBS += `torc_libs`
 endif
