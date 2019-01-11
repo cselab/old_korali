@@ -19,7 +19,7 @@ TEST_CASE( "Ackley", "[engine cmaes cpp]") {
     
     fitfun_initialize_simple("Ackley");
     
-    auto engine = CmaesEngine(&fitfun, "./test/ackley/");
+    auto engine = CmaesEngine(&fitfun, "./ackley/");
     engine.run();
 
     compare_best_with_ref( &engine, 
@@ -33,7 +33,7 @@ TEST_CASE( "Dixon Price", "[engine cmaes cpp]") {
     
     fitfun_initialize_simple("Dixon_Price");
     
-    auto engine = CmaesEngine( &fitfun, "./test/dixon_price/");
+    auto engine = CmaesEngine( &fitfun, "./dixon_price/");
     engine.run();
 
     compare_best_with_ref( &engine, 
@@ -47,7 +47,7 @@ TEST_CASE( "Griewank", "[engine cmaes cpp]") {
     
     fitfun_initialize_simple("Griewank");
     
-    auto engine = CmaesEngine( &fitfun, "./test/griewank/");
+    auto engine = CmaesEngine( &fitfun, "./griewank/");
     engine.run();
 
     compare_best_with_ref( &engine, 
@@ -61,7 +61,7 @@ TEST_CASE( "Levy", "[engine cmaes cpp]") {
     
     fitfun_initialize_simple("Levy");
     
-    auto engine = CmaesEngine( &fitfun, "./test/levy/");
+    auto engine = CmaesEngine( &fitfun, "./levy/");
     engine.run();
 
     compare_best_with_ref( &engine, 
@@ -75,7 +75,7 @@ TEST_CASE( "Multivariate Gaussian", "[engine cmaes cpp]") {
     
     fitfun_initialize_simple("multivariate_gaussian");
     
-    auto engine = CmaesEngine( &fitfun, "./test/multivariate_G/");
+    auto engine = CmaesEngine( &fitfun, "./multivariate_G/");
     engine.run();
 
     compare_best_with_ref( &engine, 
@@ -89,7 +89,7 @@ TEST_CASE( "Rastrigin", "[engine cmaes cpp]") {
     
     fitfun_initialize_simple("Rastrigin");
     
-    auto engine = CmaesEngine( &fitfun, "./test/rastrigin/");
+    auto engine = CmaesEngine( &fitfun, "./rastrigin/");
     engine.run();
 
     compare_best_with_ref( &engine,
@@ -103,7 +103,7 @@ TEST_CASE( "Rosenbrock", "[engine cmaes cpp]") {
     
     fitfun_initialize_simple("Rosenbrock");
     
-    auto engine = CmaesEngine( &fitfun, "./test/rosenbrock/");
+    auto engine = CmaesEngine( &fitfun, "./rosenbrock/");
     engine.run();
 
     compare_best_with_ref( &engine, 

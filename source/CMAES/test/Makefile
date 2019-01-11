@@ -2,7 +2,7 @@
 
 include ../../make/common.mk
 
-TARGET=testxx
+TARGET ?= testxx
 
 all: $(TARGET)
 
@@ -10,11 +10,12 @@ L=../../lib
 
 LIB_FITFUN ?= fitfun_tests
 
-DIR_PRIORS  = $L/priors
 DIR_FITFUN  = ../../likelihoods
+DIR_CATCH2  = ../../../lib/catch2
+DIR_PRIORS  = $L/priors
 DIR_CMAES   = $L/cmaes
 DIR_CMAESXX = $L/cmaesxx
-DIR_CATCH2  = ../../../lib/catch2
+
 
 LDLIBS := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
 LDLIBS := -L$(DIR_CMAES) -lcmaes $(LDLIBS)
@@ -30,8 +31,12 @@ CXXFLAGS += -I$(DIR_CATCH2)
 
 testxx.o: testxx.cpp
 
-testxx: testxx.o
-	$(LINK.o.xx) $< $(LDXLIBS)
+$(TARGET): testxx.o
+	(cd ..; make cma)
+	$(LINK.o.xx) testxx.o $(LDXLIBS)
+
+test: $(TARGET)
+	./$(TARGET)
 
 clean:; rm -rf $(TARGET) *.o
 

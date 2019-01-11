@@ -26,8 +26,6 @@ CFLAGS   += -I$(DIR_FITFUN)
 
 LDXLIBS := $(LDLIBS) -L$(DIR_CMAESXX) -lcmaesxx
 
-TFLAGS := -I../../lib/catch2
-
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
 	(cd $(DIR_CMAES);  make libcmaes.a)
@@ -37,7 +35,7 @@ $(TARGET):
 
 # dependencies
 
-$(TARGET): engine_cmaes.o 
+$(TARGET): engine_cmaes.o
 engine_cmaes.o: engine_cmaes.c 
 
 clean:; rm -rf  $(TARGET) *.o *.a
@@ -49,7 +47,7 @@ clean:; rm -rf  $(TARGET) *.o *.a
 test: cma
 	atest `find test -name main`
 
-testxx:
-	(cd $(DIR_TESTS); make testxx)
+testxx: cma
+	(cd $(DIR_TESTS); make test)
 
-.PHONY: clean all test
+.PHONY: clean all test testxx
