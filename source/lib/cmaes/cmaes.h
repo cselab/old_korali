@@ -13,6 +13,10 @@
      
      License: see file cmaes.c
 */
+
+#ifndef CMAES_H
+#define CMAES_H
+
 #include "cmaes_types.h"
 
 /* --------------------------------------------------------- */
@@ -69,3 +73,5 @@ void cmaes_get_distr(cmaes_t *t, cmaes_distr_t *d);
 #ifdef __cplusplus
 } // end extern "C"
 #endif
+
+#endif // CMAES_H

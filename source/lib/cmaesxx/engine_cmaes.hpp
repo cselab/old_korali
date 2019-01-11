@@ -12,6 +12,9 @@
       
 */
 
+#ifndef ENGINE_CMAES_HPP
+#define ENGINE_CMAES_HPP
+
 #include <string>
 #include <stdio.h>
 
@@ -81,5 +84,6 @@ private:
 	double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
 };
 
+#endif //ENGINE_CMAES_HPP
 
 
