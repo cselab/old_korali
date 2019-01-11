@@ -31,7 +31,7 @@ testxx.o: testxx.cpp
 
 $(TARGET): testxx.o
 	(cd ..; make cma)
-	$(LINK.o.xx) testxx.o $(LDXLIBS)
+	$(LINK.o.xx) $^ $(LDXLIBS)
 
 test: $(TARGET)
 	./$(TARGET)

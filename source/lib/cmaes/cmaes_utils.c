@@ -25,6 +25,7 @@ double get_time() {
 #endif
 
 #include <sys/stat.h>
+
 int cmaes_utils_file_exists(const char *fname) {
 	struct stat buffer;
 	return (stat (fname, &buffer) == 0);

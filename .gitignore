@@ -19,7 +19,6 @@ doc/mkdocs/site/
 
 # CMA test relevant files
 cma
-source/CMAES/test/*/*.par
 source/CMAES/test/*/*.dat
 source/CMAES/test/*/*.err
 
