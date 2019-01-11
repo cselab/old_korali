@@ -1,3 +1,5 @@
+# source/lib/priors/Makefile
+
 include ../../make/common.mk
 
 LIB = libpriors.a
