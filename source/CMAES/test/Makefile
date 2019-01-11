@@ -16,12 +16,10 @@ DIR_PRIORS  = $L/priors
 DIR_CMAES   = $L/cmaes
 DIR_CMAESXX = $L/cmaesxx
 
-
-LDLIBS := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
-LDLIBS := -L$(DIR_CMAES) -lcmaes $(LDLIBS)
-LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
-
-LDXLIBS := $(LDLIBS) -L$(DIR_CMAESXX) -lcmaesxx
+LDXLIBS += -L$(DIR_CMAESXX) -lcmaesxx  
+LDXLIBS += -L$(DIR_CMAES) -lcmaes
+LDXLIBS += -L$(DIR_PRIORS) -lpriors
+LDXLIBS += -L$(DIR_FITFUN) -l$(LIB_FITFUN)
 
 CXXFLAGS += -I$(DIR_CMAES)
 CXXFLAGS += -I$(DIR_CMAESXX)

@@ -40,7 +40,6 @@ extern "C" {
 
 class CmaesEngine {
 
-
 public:
 	CmaesEngine(double (*fun) (double*, int, void*, int*), 
 		std::string workdir = ".", 
@@ -56,7 +55,6 @@ public:
 	cmaes_t* getEvo();
 	double   getBestFunVal();
 	double*  getBestEver();
-
 
 private:
 

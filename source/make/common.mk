@@ -29,13 +29,12 @@ CXXFLAGS += -O3 -std=c++11
 CXXFLAGS += -Wall -Wno-unused-function
 
 LDLIBS += `gsl-config --libs`  -lm -lpthread
-
+LDXLIBS += `gsl-config --libs`  -lm -lpthread
 
 COMPILE.c   = $(CC)  $(CFLAGS)   -c -o $@
 COMPILE.cxx = $(CXX) $(CXXFLAGS) -c -o $@
 LINK.o      = $(LD)  $(LDFLAGS)     -o $@
 LINK.o.xx   = $(LDX) $(LDFLAGS)     -o $@
-
 
 # rules
 
