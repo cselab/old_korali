@@ -25,8 +25,7 @@ source/CMAES/test/*/actparcmaes.par
 source/CMAES/test/**/actparcmaes.par
 
 # Torc libs
-lib/torc_lite
-lib/torc_lite/*
+lib/torc_lite/
 
 # Executables
 source/CMAES/cma

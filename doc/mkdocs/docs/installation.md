@@ -68,7 +68,7 @@ Enter the `build` directory:
 
 Before compiling, the following needs to be checked:
 
-- Name for the MPI compiler in the `source/make/common.mk`, since this can be named differently on different platforms.  
+- Name for the MPI compiler in the `source/make/common.mk`, since this can be named differently on different platforms and different compilation options (e.g. mpicc vs gcc) .  
 
 **Compilation options:**  
 
@@ -102,3 +102,4 @@ coming soon
 Please send your questions to:
 
 - garampat AT ethz.ch
+- wadaniel AT ethz.ch
