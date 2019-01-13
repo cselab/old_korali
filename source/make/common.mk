@@ -3,13 +3,13 @@
 use_torc?=0
 use_omp?=0
 
-CC  := gcc
-LD  := gcc
-CXX := g++
-LDX := g++
+CC  := mpicc
+LD  := mpicc
+CXX := mpic++
+LDX := mpic++
 
 ifeq ($(use_torc),1)
-	CFLAGS += -D_USE_TORC_=1 `torc_cflags`
+	CFLAGS += -D_USE_TORC_=1 `torc_cflags` 
 	LDLIBS += `torc_libs`
 endif
 
