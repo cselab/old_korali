@@ -10,7 +10,9 @@ LDX := mpic++
 
 ifeq ($(use_torc),1)
 	CFLAGS += -D_USE_TORC_=1 `torc_cflags` 
+	CXXFLAGS += -D_USE_TORC_=1 `torc_cflags` 
 	LDLIBS += `torc_libs`
+	LDXLIBS += `torc_libs`
 endif
 
 ifeq ($(use_omp),1)
