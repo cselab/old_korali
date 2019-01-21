@@ -24,6 +24,13 @@ double get_time() {
 
 #endif
 
+#include <sys/stat.h>
+
+int cmaes_utils_file_exists(const char *fname) {
+	struct stat buffer;
+	return (stat (fname, &buffer) == 0);
+}
+
 void cmaes_utils_read_bounds(int verbose, const char *fname, double **p_lower_bound, double **p_upper_bound, int dim) {
     double *lower_bound = malloc(dim*sizeof(double));
     double *upper_bound = malloc(dim*sizeof(double));
@@ -132,10 +139,11 @@ static int is_feasible(double *pop, double *lower_bound, double *upper_bound, in
 }
 
 void cmaes_utils_make_all_points_feasible( cmaes_t *evo, double* const *pop, double * lower_bound, double * upper_bound ){
-    int lambda = cmaes_Get( evo, "lambda");
+
+	int lambda = cmaes_Get( evo, "lambda");
     int dim    = cmaes_Get( evo, "dim");
 
-    for( int i=0; i<lambda; ++i)
+	for( int i=0; i<lambda; ++i)
     	while( !is_feasible( pop[i],lower_bound,upper_bound,dim ) )
             cmaes_ReSampleSingle( evo, i );
 
