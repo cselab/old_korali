@@ -17,6 +17,8 @@ runs/
 
 doc/mkdocs/site/
 
+source/CMAES/trial.dSYM/
+
 # CMA test relevant files
 source/CMAES/test/*/*.dat
 source/CMAES/test/*/*.err
