@@ -1,9 +1,13 @@
 include ../make/common.mk
 
-LIB_FITFUN ?= fitfun_tests
-DIR_FITFUN ?= ../likelihoods
-TARGET     ?= engine_tmcmc
-EXTRA_LIBS ?=
+LIB_FITFUN   ?= fitfun_tests
+DIR_FITFUN   ?= ../likelihoods
+TARGET       ?= engine_tmcmc
+
+DIR_STAN     ?= ../../lib/stan
+DIR_EIGEN    ?= ../../lib/stan/lib/eigen_3.3.3
+DIR_BOOST    ?= ../../lib/stan/lib/boost_1.66.0
+DIR_SUNDIALS ?= ../../lib/stan/lib/sundials_3.1.0/include
 
 all: $(TARGET)
 
@@ -17,11 +21,16 @@ CFLAGS += -I$(DIR_PRIORS)
 LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
 CFLAGS += -I$(DIR_FITFUN)
 
+CFLAGS += -I$(DIR_STAN)
+CFLAGS += -I$(DIR_EIGEN)
+CFLAGS += -I$(DIR_BOOST)
+CFLAGS += -I$(DIR_SUNDIALS)
+
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
 	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
-	$(LINK.o.xx) $^ $(LDLIBS) $(EXTRA_LIBS)
+	$(LINK.o.xx) $^ $(LDLIBS)
 
 # dependencies
 
