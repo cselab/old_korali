@@ -72,6 +72,12 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 
 CmaesEngine::~CmaesEngine(){
     cmaes_exit(&evo_); /* release memory */
+
+/* (TODO: do we still need this?)
+#if defined(_USE_TORC_)
+    torc_finalize();
+#endif
+*/
 }
 
 cmaes_t* CmaesEngine::getEvo() {
@@ -197,11 +203,7 @@ double CmaesEngine::run() {
     printf("Funtion Evaluation time = %.3lf  seconds\n", stt_);
     printf("Finalization time       = %.3lf  seconds\n", gt3_-gt2_);
 
-#if defined(_USE_TORC_)
-    torc_finalize();
-#endif
-   
-	if (ChangeDir(exeDir_) != 0) {
+    if (ChangeDir(exeDir_) != 0) {
 		printf("Could not return to exe dir '%s'. \
 			Exit with exit(1)...\n", exeDir_);
 		exit(1);

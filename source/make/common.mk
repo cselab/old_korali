@@ -18,16 +18,16 @@ endif
 ifeq ($(use_omp),1)
     CFLAGS += -D_USE_OPENMP_=1 -fopenmp
     LDLIBS += -fopenmp
-	// what about c++? (TODO)
+	// (TODO: what about c++?)
 endif
 
 
-CFLAGS += -std=c99
+CFLAGS += -std=c99 -O3
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
 CFLAGS += `gsl-config --cflags`
 
-CXXFLAGS += -std=c++11 -g
+CXXFLAGS += -std=c++11 -O3
 CXXFLAGS += -Wall -Wno-unused-function
 
 LDLIBS += `gsl-config --libs`  -lm -lpthread

@@ -16,8 +16,6 @@ DIR_PRIORS  = $L/priors
 DIR_CMAES   = $L/cmaes
 DIR_CMAESXX = $L/cmaesxx
 
-
-
 LDXLIBS := -L$(DIR_PRIORS) -lpriors $(LDXLIBS)
 LDXLIBS := -L$(DIR_CMAES) -lcmaes $(LDXLIBS)
 LDXLIBS := -L$(DIR_CMAESXX) -lcmaesxx $(LDXLIBS)  
@@ -29,11 +27,10 @@ CXXFLAGS += -I$(DIR_PRIORS)
 CXXFLAGS += -I$(DIR_FITFUN)
 CXXFLAGS += -I$(DIR_CATCH2)
 
-testxx.o: testxx.cpp
-
 $(TARGET): testxx.o
-	(cd ..; make cma)
 	$(LINK.o.xx) $^ $(LDXLIBS)
+
+testxx.o: testxx.cpp
 
 test: $(TARGET)
 	./$(TARGET)
