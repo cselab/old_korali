@@ -9,24 +9,25 @@ CXX := mpic++
 LDX := mpic++
 
 ifeq ($(use_torc),1)
-	CFLAGS += -D_USE_TORC_=1 `torc_cflags` 
-	CXXFLAGS += -D_USE_TORC_=1 `torc_cflags` 
-	LDLIBS += `torc_libs`
-	LDXLIBS += `torc_libs`
+	CFLAGS   += -D_USE_TORC_=1 `torc_cflags` 
+	CXXFLAGS += -D_USE_TORC_=1 `torc_cflags` -fpermissive 
+	LDLIBS   += `torc_libs`
+	LDXLIBS  += `torc_libs` -ltorc
 endif
 
 ifeq ($(use_omp),1)
     CFLAGS += -D_USE_OPENMP_=1 -fopenmp
     LDLIBS += -fopenmp
+	// what about c++? (TODO)
 endif
 
 
-CFLAGS += -O3 -std=c99
+CFLAGS += -std=c99
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
 CFLAGS += `gsl-config --cflags`
 
-CXXFLAGS += -O3 -std=c++11
+CXXFLAGS += -std=c++11 -g
 CXXFLAGS += -Wall -Wno-unused-function
 
 LDLIBS += `gsl-config --libs`  -lm -lpthread

@@ -5,7 +5,6 @@
 #include "engine_cmaes.hpp"
 
 extern "C" {
-//    #include "torc.h"
     #include "fitfun_tests.h"
 }
 

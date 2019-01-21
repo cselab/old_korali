@@ -29,8 +29,9 @@ extern "C" {
 
 #if defined(_USE_TORC_)
 
-#include <mpi.h>
-#include <torc.h>
+extern "C" {
+    #include <torc.h>
+}
 
 #endif
 
@@ -77,9 +78,9 @@ private:
 	double *const*pop_;
     double *arFunvals_; 
 
-	double (*fitfun_) (double*, int, void*, int*);
-	void taskfun_(double *x, int *no, double* res, int *info);
-	double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
+	static double (*fitfun_) (double*, int, void*, int*);
+	static void taskfun_(double *x, int *no, double* res, int *info);
+    double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
 };
 
 #endif //ENGINE_CMAES_HPP
