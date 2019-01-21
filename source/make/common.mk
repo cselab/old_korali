@@ -22,16 +22,16 @@ ifeq ($(use_omp),1)
 endif
 
 
-CFLAGS += -std=c99 -O3
+CFLAGS += -O3 -std=c99
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
 CFLAGS += `gsl-config --cflags`
 
-CXXFLAGS += -std=c++11 -O3
+CXXFLAGS += -O3 -std=c++11
 CXXFLAGS += -Wall -Wno-unused-function
 
-LDLIBS += `gsl-config --libs`  -lm -lpthread
-LDXLIBS += `gsl-config --libs`  -lm -lpthread
+LDLIBS += `gsl-config --libs` -lm -lpthread
+LDXLIBS += `gsl-config --libs` -lm -lpthread
 
 COMPILE.c   = $(CC)  $(CFLAGS)   -c -o $@
 COMPILE.cxx = $(CXX) $(CXXFLAGS) -c -o $@
