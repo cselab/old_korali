@@ -33,6 +33,9 @@ $(TARGET): testxx.o
 testxx.o: testxx.cpp
 
 test: $(TARGET)
+ifeq ($(use_torc),1)
+	$(warning Testing while Torc activated  may result in unexpected behavior)
+endif
 	./$(TARGET)
 
 clean:; rm -rf $(TARGET) *.o
