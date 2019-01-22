@@ -27,6 +27,11 @@ CXXFLAGS += -I$(DIR_PRIORS)
 CXXFLAGS += -I$(DIR_FITFUN)
 CXXFLAGS += -I$(DIR_CATCH2)
 
+play: play.o	
+	$(LINK.o.xx) $^ $(LDXLIBS)
+
+play.o: play.cpp
+
 $(TARGET): testxx.o
 	$(LINK.o.xx) $^ $(LDXLIBS)
 

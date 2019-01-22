@@ -59,9 +59,8 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 
 #if defined(_USE_TORC_)
 	    torc_register_task(CmaesEngine::taskfun_);
-        int argc = 0; //dummy (TODO)
-        char **argv;  //dummy (TODO)
-		torc_init(argc, argv, MODE_MS); 
+        char **argv;  // (TODO: fix, maybe move outside)
+		torc_init( 0 /* argc */, argv, MODE_MS); 
 #endif
 
 		if (ChangeDir(exeDir_) != 0) {
@@ -74,7 +73,7 @@ CmaesEngine::~CmaesEngine(){
     cmaes_exit(&evo_); /* release memory */
 
 #if defined(_USE_TORC_)
-    torc_finalize();
+    torc_finalize(); // (TODO: maybe move outside)
 #endif
 }
 
@@ -214,7 +213,7 @@ double (*CmaesEngine::fitfun_) (double*, int, void*, int*);
 void CmaesEngine::taskfun_(double *x, int *n, double *res, 
 	int /* deprecated */ *info) {
 	
-    (*res) = - CmaesEngine::fitfun_(x, *n, (void*)NULL, info);    // minus for minimization
-	
+    (*res) = CmaesEngine::fitfun_(x, *n, (void*)NULL, info); 
+
 	return;
 }

@@ -1,13 +1,13 @@
 #ifndef FITFUN_TESTS_H
 #define FITFUN_TESTS_H
 
-typedef double (*fitfun_t)(double*, int);
+#include <fitfun.h>
 
 static fitfun_t my_fitfun;
 
-double fitfun(double *x, int N, void *output, int *info);
-
 void fitfun_initialize_simple(const char *func);
+
+void fitfun_initialize(int argc, const  char **argv);
 
 static double f_multivariate_gaussian(double *x, int N);
 static double f_Ackley(double *x, int N);
