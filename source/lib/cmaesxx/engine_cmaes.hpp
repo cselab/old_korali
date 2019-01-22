@@ -28,11 +28,7 @@ extern "C" {
 
 
 #if defined(_USE_TORC_)
-
-extern "C" {
-    #include <torc.h>
-}
-
+#include <torc.h>
 #endif
 
 #define VERBOSE 0

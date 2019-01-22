@@ -73,11 +73,9 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 CmaesEngine::~CmaesEngine(){
     cmaes_exit(&evo_); /* release memory */
 
-/* (TODO: do we still need this?)
 #if defined(_USE_TORC_)
     torc_finalize();
 #endif
-*/
 }
 
 cmaes_t* CmaesEngine::getEvo() {
