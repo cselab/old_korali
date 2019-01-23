@@ -13,23 +13,28 @@ all: $(TARGET)
 
 L=../lib
 
-DIR_PRIORS=$L/priors
-LDLIBS := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
+DIR_PRIORS = $L/priors
+LDLIBS    := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
+
+DIR_TMCMCXX =$L/tmcmcxx
+LDXXLIBS   := -L$(DIR_TMCMCXX) -ltmcmcxx $(LDXXLIBS)
 
 CFLAGS += -I$(DIR_PRIORS)
 
 LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
 CFLAGS += -I$(DIR_FITFUN)
 
-CFLAGS += -I$(DIR_STAN)
-CFLAGS += -I$(DIR_EIGEN)
-CFLAGS += -I$(DIR_BOOST)
-CFLAGS += -I$(DIR_SUNDIALS)
+CXXFLAGS += -I$(DIR_TMCMCXX)
 
+STANINCLUDES := -I$(DIR_STAN)
+STANINCLUDES += -I$(DIR_EIGEN)
+STANINCLUDES += -I$(DIR_BOOST)
+STANINCLUDES += -I$(DIR_SUNDIALS)
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
 	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
+	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDLIBS)
 
 # dependencies

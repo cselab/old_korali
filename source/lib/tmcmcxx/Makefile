@@ -2,21 +2,27 @@
 
 include ../../make/common.mk
 
-TARGET=libcmaesxx.a
-
-all: $(TARGET)
+TARGET=libtmcmcxx.a
 
 L=..
 
-DIR_CMAES  = $L/cmaes
+DIR_LIKELIHOOD = ../../likelihoodsxx
 DIR_PRIORS = $L/priors
 
-CXXFLAGS += -I$(DIR_CMAES)
 CXXFLAGS += -I$(DIR_PRIORS)
+CXXFLAGS += -I$(DIR_LIKELIHOOD)
 
-engine_cmaes.o: engine_cmaes.cpp engine_cmaes.hpp engine_cmaes_utils.hpp
+all: $(TARGET)
 
-libcmaesxx.a: engine_cmaes.o 
+OBJS=priors.o myrand.o
+
+libtmcmcxx.a: engine_tmcmc.o tmcmc_stats.o tmcmc_utils.o
+
+engine_tmcmc.o: engine_tmcmc.cpp
+
+tmcmc_stats.o: tmcmc_stats.cpp
+
+tmcmc_utils.o: tmcmc_utils.cpp
 
 clean:; rm -rf $(TARGET) *.o *.a
 
