@@ -1,3 +1,5 @@
+# source/make/common.mk
+
 # compilers and flags
 
 use_torc?=0
@@ -30,7 +32,7 @@ CFLAGS += `gsl-config --cflags`
 CXXFLAGS += -O3 -std=c++11
 CXXFLAGS += -Wall -Wno-unused-function
 
-LDLIBS += `gsl-config --libs` -lm -lpthread
+LDLIBS  += `gsl-config --libs` -lm -lpthread
 LDXLIBS += `gsl-config --libs` -lm -lpthread
 
 COMPILE.c   = $(CC)  $(CFLAGS)   -c -o $@

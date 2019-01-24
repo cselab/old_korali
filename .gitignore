@@ -32,3 +32,5 @@ source/CMAES/cma
 source/CMAES/test/*/cma
 source/CMAES/test/testxx
 
+source/TMCMC/engine_tmcmc
+source/TMCMC/tmcmcxx

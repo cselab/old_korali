@@ -1,60 +1,68 @@
 #ifndef TMCMC_UTILS_HPP
 #define TMCMC_UTILS_HPP
 
-#include <gsl/gsl_rng.h>
+namespace tmcmc {
 
-#include "tmcmc_types.hpp"
-
-// TODO: where to go with this (singleton?) (DW)
-extern gsl_rng   				**r;
-extern int   					*local_seed;
-
-int mvnrnd(double *mean, double *sigma, double *out, int N);
-
-double uniformrand(double a, double b);
-
-void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[]);
-
-typedef struct sort_s {
-    int idx;
-    int nsel;
-    double F;
-} sort_t;
-
-int compar_desc(const void *p1, const void *p2);
-
+    #include <gsl/gsl_rng.h>
 
 //TODO: align with cmaes (cmaes_utils) (DW)
 #ifdef _USE_TORC_
 
-	#include <mpi.h>
+    #include <mpi.h>
     #include <torc.h>
 
 #else
 
     #include <pthread.h>
-	int torc_node_id();
-	int torc_num_nodes();
+	#include <sys/time.h>
+ 
 
-	#ifdef _USE_OPENMP_
-		int torc_i_worker_id();
-		int torc_i_num_workers();
-		int torc_worker_id();
-	#else
-		int torc_i_worker_id();
-		int torc_i_num_workers();
-		int torc_worker_id();
-	#endif
-
-	double torc_gettime();
+    inline double torc_gettime(){
+    	struct timeval t;
+    	gettimeofday(&t, NULL);
+    	return (double)t.tv_sec + (double)t.tv_usec*1.0E-6;
+	}   
+    
+    inline int torc_node_id() { return 0; }
+	inline int torc_num_nodes() { return 1; }
+    
+#ifdef _USE_OPENMP_
+    #include <omp.h>
+    inline int torc_i_worker_id() { return omp_get_thread_num(); }
+    inline int torc_i_num_workers() { return omp_get_max_threads(); }
+    inline int torc_worker_id() { return omp_get_thread_num(); }
+#else
+    inline int torc_i_worker_id() { return 0; }
+    inline int torc_i_num_workers() { return 1; }
+    inline int torc_worker_id() { return 0; }
+#endif 
 
 #endif
 
+    // TODO: where to go with this (singleton?) (DW)
+    static gsl_rng   				**r;
+    static int   					*local_seed;
+
+    int mvnrnd(double *mean, double *sigma, double *out, int N);
+
+    double uniformrand(double a, double b);
+
+    void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[]);
+
+    typedef struct sort_s {
+        int idx;
+        int nsel;
+        double F;
+    } sort_t;
+
+    int compar_desc(const void *p1, const void *p2);
+
     int in_rect(double *v1, double *v2, double *diam, double sc, int D);
-    
+
     void print_matrix(const char *name, double *x, int n);
     //void print_matrix_i(char *name, int *x, int n);
     void print_matrix_2d(const char *name, double **x, int n1, int n2);
 
+} // namespace tmcmc
 
 #endif //TMCMC_UTILS_HPP
