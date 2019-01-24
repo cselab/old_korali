@@ -184,12 +184,12 @@ namespace tmcmc {
     }
 
 
-    int runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fname) {
+    bool runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fname) {
         char header[256];
 
         /* allocate and initialize runinfo */
         FILE *f = fopen("runinfo.txt", "r");
-        if (f == NULL) return 1;
+        if (f == NULL) return false;
 
         fscanf(f, "%s", header);
         fscanf(f, "%d", &runinfo.Gen);
@@ -221,7 +221,7 @@ namespace tmcmc {
 
         fclose(f);
 
-        return 0;
+        return true;
     }
 
 

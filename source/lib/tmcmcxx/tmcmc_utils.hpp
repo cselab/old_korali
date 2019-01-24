@@ -40,9 +40,21 @@ namespace tmcmc {
 #endif
 
     // TODO: where to go with this (singleton?) (DW)
-    static gsl_rng   				**r;
-    static int   					*local_seed;
+    static const gsl_rng_type *gsl_rng_t;
+    static gsl_rng            **r;
+    static int   	          *local_seed;
 
+    static int g_nfeval;
+    static int l_nfeval = 0;
+    static int t_nfeval = 0;
+
+    int  get_nfc();
+    void reset_nfc();
+
+    void gsl_rand_init(int seed);
+    void call_gsl_rand_init(int seed);
+    void spmd_gsl_rand_init(int seed);
+    
     int mvnrnd(double *mean, double *sigma, double *out, int N);
 
     double uniformrand(double a, double b);

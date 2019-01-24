@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-//#include "tmcmc_utils.hpp"
-//#include "tmcmc_aux.hpp"
 
 #ifdef _USE_TORC_
     #include <mpi.h>
@@ -77,7 +75,7 @@ namespace tmcmc {
         static void init(runinfo_t& runinfo, int nth, int maxstages);
         static void save(const runinfo_t& runinfo, int nth, int maxstages, 
                         const char * fname = "runinfo.txt");
-        static int load(runinfo_t& runinfo, int nth, int maxstages, 
+        static bool load(runinfo_t& runinfo, int nth, int maxstages, 
                         const char * fname = "runinfo.txt");
         int    Gen;
         double *CoefVar;        /*[MAXGENS];*/
@@ -139,6 +137,14 @@ namespace tmcmc {
         resdbp_t *entry; /*[MAX_DB_ENTRIES];*/
         pthread_mutex_t m;
     } resdb_t;
+
+    
+    typedef struct fparam_s {
+        const double *fj;
+        int           fn;
+        double        pj;
+        double        tol;
+    } fparam_t;
 
 } //namespace tmcmc
 

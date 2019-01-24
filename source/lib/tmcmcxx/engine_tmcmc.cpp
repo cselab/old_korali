@@ -8,12 +8,14 @@
 extern "C" {
 #include "fitfun.hpp"
 }
+
+#include "tmcmc_obj_fmin.hpp"
 #include "engine_tmcmc.hpp"
 
 
 namespace tmcmc {
 
-    TmcmcEngine::TmcmcEngine() {
+    TmcmcEngine::TmcmcEngine() : data(data_t()), nchains(data.Num[0]) {
         // TODO (DW)
     }
 
@@ -21,11 +23,16 @@ namespace tmcmc {
         // TODO (DW)
     }
 
+    void TmcmcEngine::run() {
+        // TODO (DW) 
+        init();
+    }
 
 
     void TmcmcEngine::init() {
         
-        data = data_t(); // TODO: in constructor? (DW)
+        gt0 = t0 = torc_gettime();
+
         init_curgen_db();
         init_curres_db();
         init_full_db();
@@ -37,6 +44,98 @@ namespace tmcmc {
             printf("runinfo.p  = %p\n", runinfo.p);
             printf("runinfo.SS = %p\n", runinfo.SS);
         }
+
+        spmd_gsl_rand_init(data.seed);
+
+        int num_priors; //not needed
+        read_priors( "priors.par", &priors, &num_priors);
+        print_priors( priors, num_priors );
+
+        curgen_db.entries = 0;
+        
+        bool loaded = false;
+        if (data.restart) loaded = load_data();
+        if (loaded == false) sample_from_prior();
+        
+        if (data.MaxStages == 1) { /*gotoend*/ }
+    }
+    
+    bool TmcmcEngine::load_data() {
+        bool res = runinfo_t::load(runinfo, data.Nth, data.MaxStages);
+    	if (res == 0) {
+            load_curgen_db();
+            printf("nchains = %d\n", data.Num[0]);
+    	}
+        return res;
+    }
+
+    void TmcmcEngine::sample_from_prior() {
+
+#ifdef _USE_OPENMP_
+        #pragma omp parallel
+        {
+            printf("Hello from thread %d of %d\n", omp_get_thread_num(), omp_get_num_threads());
+            #pragma omp for
+#endif
+            int winfo[4];
+            double out_tparam[data.PopSize];
+            for (int i = 0; i < nchains; ++i){
+                winfo[0] = runinfo.Gen;
+                winfo[1] = i;
+                winfo[2] = -1;
+                winfo[3] = -1;
+
+                double in_tparam[data.Nth]; // here store the samples
+                for (int d = 0; d < data.Nth; ++d)
+                    in_tparam[d] = eval_random( priors[d] );
+
+#ifdef _USE_TORC_
+                torc_create(-1, (void (*)())initchaintask, 4,
+                            data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                            1, MPI_INT, CALL_BY_COP,
+                            1, MPI_DOUBLE, CALL_BY_RES,
+                            4, MPI_INT, CALL_BY_COP,
+                            in_tparam, &data.Nth, &out_tparam[i], winfo);
+#else
+#ifdef _USE_OPENMP_
+                //#pragma omp task shared(data, out_tparam) firstprivate(i, in_tparam, winfo)
+                #pragma omp task firstprivate(i, winfo, in_tparam) shared(data, out_tparam)
+#endif
+                {
+                    initchaintask(in_tparam, &data.Nth, &out_tparam[i], winfo);
+                }
+#endif
+            }
+
+#if defined(_USE_OPENMP_)
+        } 
+#endif
+
+
+#if defined(_USE_TORC_)
+        if (data.stealing) torc_enable_stealing();
+
+        torc_waitall();
+
+        if (data.stealing) torc_disable_stealing();
+#endif
+
+        gt1 = torc_gettime();
+        
+        int g_nfeval = get_nfc();
+        
+        printf("server: Generation %d: total elapsed time = %lf secs, generation elapsed time = %lf secs for function calls = %d\n", 
+               runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
+        
+        reset_nfc();
+	
+        if( data.icdump ) dump_curgen_db();
+        if( data.ifdump ) dump_full_db();
+
+        runinfo_t::save(runinfo, data.Nth, data.MaxStages);
+        if (data.restart) check_for_exit();
+        
+        return;
     }
 
     void TmcmcEngine::init_full_db() {
@@ -70,7 +169,7 @@ namespace tmcmc {
             return;
         }
 
-    #if defined(_USE_TORC_)
+#ifdef _USE_TORC_
             if (n == 0)
                 torc_create_direct( 0, (void (*)())torc_update_full_db_task, 3,
                                         /* message to the database manager (separate process?) or direct execution by server thread */
@@ -88,7 +187,7 @@ namespace tmcmc {
                                         point, &F, G, &n, &surrogate);
 
                 torc_waitall3();
-    #endif
+#endif
     }
 
 
@@ -160,7 +259,7 @@ namespace tmcmc {
             return;
         }
 
-    #if defined(_USE_TORC_)
+#ifdef _USE_TORC_
             torc_create_direct(0, (void (*)())torc_update_curgen_db_task, 3,
                             /* message to the database manager (separate process?) or direct execution by server thread */
                 data.Nth, MPI_DOUBLE, CALL_BY_COP,
@@ -169,17 +268,17 @@ namespace tmcmc {
                 point, &F,&prior);
 
                 torc_waitall3();    /* wait without releasing the worker */
-    #endif
+#endif
 
     }
 
 
-    void TmcmcEngine::dump_curgen_db(int gen) {
+    void TmcmcEngine::dump_curgen_db() {
 
         FILE *fp;
         char fname[256];
 
-        sprintf(fname, "curgen_db_%03d.txt", gen);
+        sprintf(fname, "curgen_db_%03d.txt", runinfo.Gen);
         fp = fopen(fname, "w");
         for (int pos = 0; pos < curgen_db.entries; pos++) {
 
@@ -194,11 +293,11 @@ namespace tmcmc {
     }
 
 
-    int TmcmcEngine::load_curgen_db(int gen) {
+    int TmcmcEngine::load_curgen_db() {
 
         FILE *fp;
         char fname[256];
-        sprintf(fname, "curgen_db_%03d.txt", gen);
+        sprintf(fname, "curgen_db_%03d.txt", runinfo.Gen);
         fp = fopen(fname, "r");
         if (fp == NULL) {
             printf("DB file: %s not found!!!\n", fname);
@@ -240,9 +339,9 @@ namespace tmcmc {
     // TODO: is this needed (DW)?
     void TmcmcEngine::update_curres_db(double point[/* EXPERIMENTAL_RESULTS */], double F) {
         
-    #if (EXPERIMENTAL_RESULTS <=0)
+#if (EXPERIMENTAL_RESULTS <=0)
         return; 
-    #endif
+#endif
         pthread_mutex_lock(&curres_db.m);
         int pos = curres_db.entries;
         curres_db.entries++;
@@ -265,7 +364,7 @@ namespace tmcmc {
         //inc_nfc();  (TODO: include this again, use singleton or so (DW))   /* increment function call counter*/
 
         f = fitfun(x, N, (void *)NULL, winfo);
-    #if (EXPERIMENTAL_RESULTS > 0)    /* peh: decide about this (results should be passed as argument to fitfun) */
+#if (EXPERIMENTAL_RESULTS > 0)    /* peh: decide about this (results should be passed as argument to fitfun) */
             double results[EXPERIMENTAL_RESULTS];
             for (int i = 0; i < EXPERIMENTAL_RESULTS; ++i) {
                 if (i < data.Nth)
@@ -274,7 +373,7 @@ namespace tmcmc {
                     results[i] = 0.0;
             }
             torc_update_curres_db(results, f);
-    #endif
+#endif
 
         *res = f;
         return;
@@ -292,9 +391,9 @@ namespace tmcmc {
         winfo[2] = step_id;
         winfo[3] = 0;
 
-    #if VERBOSE
+#if VERBOSE
             printf("running on worker %d\n", worker_id);
-    #endif
+#endif
 
         taskfun(point, &dim, &F, winfo);
 
@@ -338,24 +437,27 @@ namespace tmcmc {
         double fmin = 0, xmin = 0;
         bool conv = 0;
 
-        #if defined(_USE_FMINCON_)
-            conv = fmincon(flc, n, p[gen], data.tolCOV, &xmin, &fmin);
+#ifdef _USE_FMINCON_
+            conv = fmincon(flc, n, p[gen], data.TolCOV, &xmin, &fmin,
+                    data.options);
             if (display) printf("fmincon: conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
-        #endif
+#endif
 
-        #if defined(_USE_FMINSEARCH_)
+#ifdef _USE_FMINSEARCH_
             if (!conv){
-                conv = fminsearch(flc, n, p[gen], data.tolCOV, &xmin, &fmin);
+                conv = fminsearch(flc, n, p[gen], data.TolCOV, &xmin, &fmin, 
+                        data.options);
                 if (display) printf("fminsearch: conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
             }
-        #endif
+#endif
 
-        #if defined(_USE_FZEROFIND_)
+#ifdef _USE_FZEROFIND_
             if (!conv) {
-                conv = fzerofind(flc, n, p[gen], data.tolCOV, &xmin, &fmin);
+                conv = fzerofind(flc, n, p[gen], data.TolCOV, &xmin, &fmin,
+                        data.options);
                 if (display) printf("fzerofind: conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
             }
-        #endif
+#endif
 
 
         /* gen: next generation number */
@@ -457,12 +559,12 @@ namespace tmcmc {
             }
         }
 
-    #ifdef CHECK_POSDEF
+#ifdef CHECK_POSDEF
         int fixed = make_posdef(runinfo.SS[0], PROBDIM, 2);
         if (fixed) {
             printf("WARNING: runinfo.SS was forced to become positive definite\n");
         }
-    #endif
+#endif
 
         if (display) print_matrix_2d((char *)"runinfo.SS", runinfo.SS, PROBDIM, PROBDIM);
 
@@ -484,9 +586,9 @@ namespace tmcmc {
         if (exitgen == runinfo.Gen) {
             printf("Read Exit Envrironment Variable!!!\n");
 
-    #if defined(_USE_TORC_)
+#if defined(_USE_TORC_)
                 torc_finalize();
-    #endif
+#endif
             exit(1); // TODO: can we do this smoother? (DW)
         }
 
@@ -495,9 +597,9 @@ namespace tmcmc {
         if (fp != NULL) {
             printf("Found Exit File!!!\n");
             //unlink("exit.txt"); TODO: reinsert? (DW)
-    #if defined(_USE_TORC_)
+#if defined(_USE_TORC_)
             torc_finalize();
-    #endif
+#endif
             exit(1); // TODO: can we do this smoother? (DW)
         }
     }
@@ -928,15 +1030,15 @@ namespace tmcmc {
 
         for (i = 0; i < newchains; ++i) leaders[i].queue = -1;    /* rr*/
 
-    #if VERBOSE
+#if VERBOSE
         printf("Leaders before\n");
         for (i = 0; i < newchains; ++i) {
             printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
         }
-    #endif
+#endif
 
 
-    #if defined(_USE_TORC_)
+#if defined(_USE_TORC_)
         /* cool and greedy partitioning ala Panos-- ;-) */
 
         int nworkers  = torc_num_workers();
@@ -950,14 +1052,14 @@ namespace tmcmc {
 
         print_matrix_i("initial workload", workload, nworkers);
         delete[] workload;
-    #endif
+#endif
 
-    #if VERBOSE
+#if VERBOSE
         printf("Leaders after\n");
         for (i = 0; i < newchains; ++i) {
             printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
         }
-    #endif
+#endif
 
         if (1)
         {

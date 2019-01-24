@@ -18,7 +18,7 @@ seed		982323
 #---------------------------- Internal options --------------------------------
 opt.MaxIter	1000
 opt.Tol		1e-12
-opt.Display	0
+opt.Display	1
 opt.Step	1e-4
 
 icdump		1

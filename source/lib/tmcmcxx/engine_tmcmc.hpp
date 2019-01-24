@@ -34,15 +34,23 @@ namespace tmcmc {
         data_t    data;
         runinfo_t runinfo;
 
+        int nchains;
+
         db_t    full_db;
         cgdb_t  curgen_db;
         resdb_t curres_db;
+
+        double t0;
+        double gt0;
+        double gt1;
 
         Density *priors;
 
         int EXPERIMENTAL_RESULTS = 0; //TODO: where does this belong? (DW)
 
         void init(); // TODO: called data_init (reminder)
+        bool load_data();
+        void sample_from_prior();
 
         void init_full_db();
         //void update_full_db();
@@ -59,9 +67,9 @@ namespace tmcmc {
         void torc_update_curgen_db_task(double point[], double *pF, double *pprior);
         void torc_update_curgen_db(double point[], double F, double prior);
         //void print_curgen_db();  
-        void dump_curgen_db(int gen);
+        void dump_curgen_db();
         //void display_curgen_db(int gen);
-        int load_curgen_db(int gen);
+        int load_curgen_db();
 
         void init_curres_db();
     //    void update_curres_db();
