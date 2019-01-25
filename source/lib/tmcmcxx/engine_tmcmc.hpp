@@ -14,9 +14,12 @@
 #ifndef ENGINE_TMCMC_HPP
 #define ENGINE_TMCMC_HPP
 
+
 extern "C" {
 #include "priors.h"
+#include "myrand.h"
 }
+
 #include "tmcmc_types.hpp"
 #include "tmcmc_utils.hpp"
 
@@ -44,6 +47,9 @@ namespace tmcmc {
         double gt0;
         double gt1;
 
+        double *out_tparam;
+        cgdbp_t *leaders;
+        
         Density *priors;
 
         int EXPERIMENTAL_RESULTS = 0; //TODO: where does this belong? (DW)
@@ -83,7 +89,7 @@ namespace tmcmc {
         void taskfun(const double *x, int *pN, double *res, int winfo[4]);
         void evaluate_F(double point[], double *Fval, int worker_id, int gen_id, 
                             int chain_id, int step_id, int ntasks);
-        void initchaintask(double in_tparam[], int *pdim, double *out_tparam, int winfo[4]);
+        void initchaintask(double in_tparam[], double *out_tparam, int winfo[4]);
         void check_for_exit();
 
         void precompute_chain_covariances(const cgdbp_t* leader,double** init_mean, 
@@ -91,9 +97,14 @@ namespace tmcmc {
 
         int compute_candidate(double candidate[], double chain_mean[], double var);
         int compute_candidate_cov(double candidate[], double chain_mean[], double chain_cov[]);
-        void chaintask(double in_tparam[], int *pdim, int *pnsteps, double *out_tparam, int winfo[4],
+        void chaintask(double in_tparam[], int *pnsteps, double *out_tparam, int winfo[4],
                         double *init_mean, double *chain_cov);
         int prepare_newgen(int nchains, cgdbp_t *leaders);
+
+
+        void print_runinfo();
+        void update_runinfo();
+        void spmd_update_runinfo();
     };
 
 } //namespace tmcmc

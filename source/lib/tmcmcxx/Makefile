@@ -6,11 +6,15 @@ TARGET=libtmcmcxx.a
 
 L=..
 
+
 DIR_LIKELIHOOD = ../../likelihoodsxx
 DIR_PRIORS = $L/priors
 
+LIB_FITFUNXX = fitfunxx
+
 CXXFLAGS += -I$(DIR_PRIORS)
 CXXFLAGS += -I$(DIR_LIKELIHOOD)
+LDXLIBS  := -L$(DIR_LIKELIHOOD) -l$(LIB_FITFUNXX) $(LDXLIBS)
 
 # tmcmc objective minimizers (can be combined)
 
@@ -28,8 +32,7 @@ tmcmc_stats.o: tmcmc_obj_fmin.cpp tmcmc_obj_fmin.hpp
 
 tmcmc_utils.o: tmcmc_utils.cpp tmcmc_utils.hpp
 
-tmcmc_types.o : tmcmc_types.cpp tmcmc_types.hpp
-
+tmcmc_types.o: tmcmc_types.cpp tmcmc_types.hpp
 
 clean:; rm -rf $(TARGET) *.o *.a
 

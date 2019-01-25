@@ -1,10 +1,16 @@
 #ifndef FITFUN_HPP
 #define FITFUN_HPP
 
-typedef double (*fitfun_t)(const double*, int);
+namespace fitfun {
 
-void fitfun_finalize();
+	typedef double (*fitfun_t)(const double*, int);
 
-double fitfun(const double *x, int N, void *output, int *info);
+    void fitfun_initialize(int argc, const  char **argv);
+	
+	double fitfun(const double *x, int N, void *output, int *info);
+    
+    void fitfun_finalize();
+
+}
 
 #endif //FITFUN_HPP

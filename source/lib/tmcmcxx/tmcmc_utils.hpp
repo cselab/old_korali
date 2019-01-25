@@ -1,6 +1,8 @@
 #ifndef TMCMC_UTILS_HPP
 #define TMCMC_UTILS_HPP
 
+#include "priors.h"
+
 namespace tmcmc {
 
     #include <gsl/gsl_rng.h>
@@ -48,18 +50,15 @@ namespace tmcmc {
     static int l_nfeval = 0;
     static int t_nfeval = 0;
 
+    static pthread_mutex_t feval_m = PTHREAD_MUTEX_INITIALIZER;
+
     int  get_nfc();
+    void inc_nfc();
     void reset_nfc();
 
     void gsl_rand_init(int seed);
     void call_gsl_rand_init(int seed);
     void spmd_gsl_rand_init(int seed);
-    
-    int mvnrnd(double *mean, double *sigma, double *out, int N);
-
-    double uniformrand(double a, double b);
-
-    void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[]);
 
     typedef struct sort_s {
         int idx;
@@ -74,7 +73,17 @@ namespace tmcmc {
     void print_matrix(const char *name, double *x, int n);
     //void print_matrix_i(char *name, int *x, int n);
     void print_matrix_2d(const char *name, double **x, int n1, int n2);
-
+ 
+    void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[]);
+    
+    int mvnrnd(double *mean, double *sigma, double *out, int N);
+   
+   
+   /*
+    double eval_random( Density d );
+    double uniformrand(double a, double b);
+    */
+ 
 } // namespace tmcmc
 
 #endif //TMCMC_UTILS_HPP

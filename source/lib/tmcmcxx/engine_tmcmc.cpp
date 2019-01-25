@@ -5,18 +5,22 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_statistics.h>
 
-extern "C" {
 #include "fitfun.hpp"
-}
-
 #include "tmcmc_obj_fmin.hpp"
 #include "engine_tmcmc.hpp"
 
 
 namespace tmcmc {
 
-    TmcmcEngine::TmcmcEngine() : data(data_t()), nchains(data.Num[0]) {
+    TmcmcEngine::TmcmcEngine() : data(data_t()), 
+                                 nchains(data.Num[0]),
+                                 out_tparam(new double[data.PopSize]),
+                                 leaders(new cgdbp_t[data.PopSize]) {
         // TODO (DW)
+        for (int i = 0; i< data.PopSize; ++i) 
+            leaders[i].point = new double[data.Nth];
+
+        curres_db.entries = 0;
     }
 
     TmcmcEngine::~TmcmcEngine() {
@@ -50,14 +54,40 @@ namespace tmcmc {
         int num_priors; //not needed
         read_priors( "priors.par", &priors, &num_priors);
         print_priors( priors, num_priors );
-
+        
+        double test[2] = {-6.0, 6.0};
+        printf("start: %d\n", priors->npar);
+        priors[0].r(test);
+        printf("done\n");
+        
+        
         curgen_db.entries = 0;
         
         bool loaded = false;
         if (data.restart) loaded = load_data();
-        if (loaded == false) sample_from_prior();
+        if (loaded == false) {
+            sample_from_prior();
+            if( data.icdump ) dump_curgen_db();
+            if( data.ifdump ) dump_full_db();
+        }
         
-        if (data.MaxStages == 1) { /*gotoend*/ }
+        runinfo_t::save(runinfo, data.Nth, data.MaxStages);
+        if (data.restart) check_for_exit();
+     
+        if (data.MaxStages == 1) {
+            printf("Maxstages == 1, nothing to do\n");
+            return; 
+        } else if (runinfo.p[runinfo.Gen] == 1.0) {
+            printf("p == 1 from previous run, nothing more to do\n");
+            return;
+        }
+
+        nchains = prepare_newgen(nchains, leaders);
+        return; //remove
+        spmd_update_runinfo();
+        if (data.options.Display) print_runinfo();
+
+        printf("----------------------------------------------------------------\n");
     }
     
     bool TmcmcEngine::load_data() {
@@ -78,16 +108,17 @@ namespace tmcmc {
             #pragma omp for
 #endif
             int winfo[4];
-            double out_tparam[data.PopSize];
             for (int i = 0; i < nchains; ++i){
                 winfo[0] = runinfo.Gen;
                 winfo[1] = i;
                 winfo[2] = -1;
                 winfo[3] = -1;
 
-                double in_tparam[data.Nth]; // here store the samples
+                //store draw from prior
+                double in_tparam[data.Nth]; 
                 for (int d = 0; d < data.Nth; ++d)
-                    in_tparam[d] = eval_random( priors[d] );
+                    //(TODO) resolve namespace, conflict with priots.h (DW)
+                    in_tparam[d] = eval_random( priors[d] ); 
 
 #ifdef _USE_TORC_
                 torc_create(-1, (void (*)())initchaintask, 4,
@@ -102,7 +133,7 @@ namespace tmcmc {
                 #pragma omp task firstprivate(i, winfo, in_tparam) shared(data, out_tparam)
 #endif
                 {
-                    initchaintask(in_tparam, &data.Nth, &out_tparam[i], winfo);
+                    initchaintask(in_tparam, &out_tparam[i], winfo);
                 }
 #endif
             }
@@ -128,15 +159,10 @@ namespace tmcmc {
                runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
         
         reset_nfc();
-	
-        if( data.icdump ) dump_curgen_db();
-        if( data.ifdump ) dump_full_db();
-
-        runinfo_t::save(runinfo, data.Nth, data.MaxStages);
-        if (data.restart) check_for_exit();
-        
+	       
         return;
     }
+
 
     void TmcmcEngine::init_full_db() {
         pthread_mutex_init(&full_db.m, NULL);
@@ -335,7 +361,6 @@ namespace tmcmc {
         curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize]; 
     }
 
-
     // TODO: is this needed (DW)?
     void TmcmcEngine::update_curres_db(double point[/* EXPERIMENTAL_RESULTS */], double F) {
         
@@ -361,9 +386,9 @@ namespace tmcmc {
         double f;
         int N = *pN;
 
-        //inc_nfc();  (TODO: include this again, use singleton or so (DW))   /* increment function call counter*/
+        inc_nfc(); // (TODO: include this again, use singleton or so (DW))   /* increment function call counter*/
 
-        f = fitfun(x, N, (void *)NULL, winfo);
+        f = fitfun::fitfun(x, N, (void *)NULL, winfo);
 #if (EXPERIMENTAL_RESULTS > 0)    /* peh: decide about this (results should be passed as argument to fitfun) */
             double results[EXPERIMENTAL_RESULTS];
             for (int i = 0; i < EXPERIMENTAL_RESULTS; ++i) {
@@ -400,7 +425,7 @@ namespace tmcmc {
         *Fval = F;
     }
 
-    void TmcmcEngine::initchaintask(double in_tparam[], int *pdim, double *out_tparam, int winfo[4]) {
+    void TmcmcEngine::initchaintask(double in_tparam[], double *out_tparam, int winfo[4]) {
         int gen_id   = winfo[0];
         int chain_id = winfo[1];
 
@@ -745,7 +770,7 @@ namespace tmcmc {
     }
 
 
-    void TmcmcEngine::chaintask(double in_tparam[], int *pdim, int *pnsteps, double *out_tparam, int winfo[4],
+    void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam, int winfo[4],
             double *init_mean, double *chain_cov) {
         
         int nsteps   = *pnsteps;
@@ -834,36 +859,35 @@ namespace tmcmc {
 
         int i, p;
 
-        int nth = data.Nth;
         int n   = curgen_db.entries;
 
         double *fj 		  = new double[n];
         unsigned int *sel = new unsigned int[n];
 
-        double **g_x = new double*[nth];
-        for (i = 0; i < nth; ++i)
+        double **g_x = new double*[data.Nth];
+        for (i = 0; i < data.Nth; ++i)
             g_x[i] = new double[n]; 
 
         if(0)
         {
             double **x = g_x;
 
-            for (p = 0; p < nth; p++) {
+            for (p = 0; p < data.Nth; p++) {
                 for (i = 0; i < n; ++i) {
                     x[p][i] = curgen_db.entry[i].point[p];
                 }
             }
 
-            double meanx[nth], stdx[nth];
-            for (p = 0; p < nth; p++) {
+            double meanx[data.Nth], stdx[data.Nth];
+            for (p = 0; p < data.Nth; p++) {
                 meanx[p] = gsl_stats_mean(x[p], 1, n);
                 stdx[p]  = gsl_stats_sd_m(x[p], 1, n, meanx[p]);
             }
 
             if(data.options.Display){
                 printf("CURGEN DB (COMPLE) %d\n", runinfo.Gen);
-                print_matrix("means", meanx, nth);
-                print_matrix("std", stdx, nth);
+                print_matrix("means", meanx, data.Nth);
+                print_matrix("std", stdx, data.Nth);
             }
 
         }
@@ -875,20 +899,19 @@ namespace tmcmc {
             double **x = g_x;
             int un = 0, unflag, j;
 
-            for( p = 0; p < nth; p++ )
+            for( p = 0; p < data.Nth; p++ )
                 x[p][un] = curgen_db.entry[0].point[p];
 
             un++;
             for (i = 1; i < n; ++i){
-                double xi[nth];
-                for (p = 0; p < nth; p++)
+                double xi[data.Nth];
+                for (p = 0; p < data.Nth; p++)
                     xi[p] = curgen_db.entry[i].point[p];
 
                 unflag = 1;    /* is this point unique?*/
                 for (j = 0; j < un; ++j){    /* check all the previous unique points*/
-                    int compflag;
-                    compflag = 1;
-                    for (p = 0; p < nth; p++){
+                    int compflag = 1;
+                    for (p = 0; p < data.Nth; p++){
                         if (fabs(xi[p]-x[p][j]) > 1e-6) {
                             compflag = 0;    /* they differ*/
                             break;
@@ -902,7 +925,7 @@ namespace tmcmc {
                 }
 
                 if (unflag){    /* unique, put it in the table */
-                    for (p = 0; p < nth; p++) {
+                    for (p = 0; p < data.Nth; p++) {
                         x[p][un] = xi[p];
                     }
                     un++;
@@ -912,16 +935,16 @@ namespace tmcmc {
             runinfo.currentuniques[runinfo.Gen] = un; /*+ 1*/;
             runinfo.acceptance[runinfo.Gen] = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen]; /* check this*/
 
-            double meanx[nth], stdx[nth];
-            for (p = 0; p < nth; p++) {
+            double meanx[data.Nth], stdx[data.Nth];
+            for (p = 0; p < data.Nth; p++) {
                 meanx[p] = gsl_stats_mean(x[p], 1, n);
                 stdx[p]  = gsl_stats_sd_m(x[p], 1, n, meanx[p]);
             }
 
             printf("CURGEN DB (UNIQUE) %d: [un = %d]\n", runinfo.Gen, un); /* + 1);*/
             if(data.options.Display){
-                print_matrix((char *)"means", meanx, nth);
-                print_matrix((char *)"std", stdx, nth);
+                print_matrix((char *)"means", meanx, data.Nth);
+                print_matrix((char *)"std", stdx, data.Nth);
             }
 
         } /* end block*/
@@ -948,23 +971,23 @@ namespace tmcmc {
             list[i].F = curgen_db.entry[i].F;
         }
 
-    #if VERBOSE
+#if VERBOSE
         printf("Points before\n");
         for (i = 0; i < n; ++i) 
             printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
         
-    #endif
+#endif
 
         qsort(list, n, sizeof(sort_t), compar_desc);
 
-    #if VERBOSE
+#if VERBOSE
         printf("Points after\n");
         for (i = 0; i < n; ++i) 
             printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
         
-    #endif
+#endif
 
-    #if 1   
+#if 1   
         /* UPPER THRESHOLD */
         /* peh:check this */
         /* breaking long chains */
@@ -1017,7 +1040,7 @@ namespace tmcmc {
         for (i = 0; i < n; ++i) {    /* newleader */
             if (list[i].nsel != 0) {
                 int idx = list[i].idx;
-                for (p = 0; p < nth; p++) {
+                for (p = 0; p < data.Nth ; p++) {
                     leaders[ldi].point[p] = curgen_db.entry[idx].point[p];
                 }
                 leaders[ldi].F = curgen_db.entry[idx].F;
@@ -1065,21 +1088,21 @@ namespace tmcmc {
         {
             double **x = g_x;
             for (i = 0; i < newchains; ++i) {
-                for (p = 0; p < nth; p++) {
+                for (p = 0; p < data.Nth; p++) {
                     x[p][i] = leaders[i].point[p];
                 }
             }
 
-            double meanx[nth], stdx[nth];
-            for (p = 0; p < nth; p++) {
+            double meanx[data.Nth], stdx[data.Nth];
+            for (p = 0; p < data.Nth; p++) {
                 meanx[p] = gsl_stats_mean(x[p], 1, newchains);
                 stdx[p]  = gsl_stats_sd_m(x[p], 1, newchains, meanx[p]);
             }
 
             printf("CURGEN DB (LEADER) %d: [nlead=%d]\n", runinfo.Gen, newchains);
             if(data.options.Display){
-                print_matrix("means", meanx, nth);
-                print_matrix("std", stdx, nth);
+                print_matrix("means", meanx, data.Nth);
+                print_matrix("std", stdx, data.Nth);
             }
         }
 
@@ -1089,12 +1112,37 @@ namespace tmcmc {
         curgen_db.entries = 0;
         printf("calculate_statistics: newchains=%d\n", newchains);
 
-        for (i = 0; i < nth; ++i) delete g_x[i]; 
+        for (i = 0; i < data.Nth; ++i) delete g_x[i]; 
         delete[] g_x;
         delete[] fj;
         delete[] sel;
 
         return newchains;
+    }
+
+    void TmcmcEngine::print_runinfo() {
+        printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+        print_matrix_2d("runinfo.SS", runinfo.SS, data.Nth, data.Nth);
+        printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+    }
+
+    void TmcmcEngine::update_runinfo() {
+#ifdef _USE_TORC_
+		MPI_Bcast(runinfo.SS[0], data.Nth*data.Nth, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(runinfo.p, data.MaxStages, MPI_DOUBLE, 0, MPI_COMM_WORLD);    /* just p[Gen]*/
+		MPI_Bcast(&runinfo.Gen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+    }
+
+    void TmcmcEngine::spmd_update_runinfo()    /* step*/
+    {
+#ifdef _USE_TORC_
+        if (torc_num_nodes() == 1) return;
+        for (int i = 0; i < torc_num_nodes(); i++) {
+            torc_create_ex(i*torc_i_num_workers(), 1, (void (*)())update_runinfo, 0);
+        }
+        torc_waitall();
+#endif
     }
 
 } //namespace tmcmc

@@ -66,8 +66,14 @@ namespace tmcmc {
     }
 
 
-    void reset_nfc_task()
-    {
+    void inc_nfc() {
+        pthread_mutex_lock(&feval_m);
+        l_nfeval++;
+        pthread_mutex_unlock(&feval_m);
+    }
+
+
+    void reset_nfc_task() {
         l_nfeval = 0;
     }
 
@@ -93,7 +99,7 @@ namespace tmcmc {
 
 
         for (int i = 0; i < local_workers; ++i) {
-            r[i] = gsl_rng_alloc (T);
+            r[i] = gsl_rng_alloc (gsl_rng_t);
             //printf("...... %p \n", r[i] );
         }
 
@@ -153,11 +159,21 @@ namespace tmcmc {
     }
 
 
+    // TODO: rename torc sth (DW)
+    void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[])
+    {
+        int me = torc_i_worker_id();
+        gsl_ran_multinomial (r[me], K, N, q, nn);
+
+        return;
+    }
+
+
     int mvnrnd(double *mean, double *sigma, double *out, int N) {
 
-        gsl_vector_view mean_view 	= gsl_vector_view_array(mean, N);
-        gsl_matrix_view sigma_view 	= gsl_matrix_view_array(sigma, N,N);
-        gsl_vector_view out_view 	= gsl_vector_view_array(out, N);
+        gsl_vector_view mean_view  = gsl_vector_view_array(mean, N);
+        gsl_matrix_view sigma_view = gsl_matrix_view_array(sigma, N,N);
+        gsl_vector_view out_view   = gsl_vector_view_array(out, N);
 
         int me = torc_i_worker_id();
 
@@ -165,27 +181,49 @@ namespace tmcmc {
         gsl_matrix_memcpy( L, &sigma_view.matrix);
         gsl_linalg_cholesky_decomp( L );
 
-
         int res = gsl_ran_multivariate_gaussian( r[me], &mean_view.vector, L, &out_view.vector);
 
         return res;
     }
 
 
+    /*
+    double eval_density(Density d, double x){
+        return d.f(x,d.par);
+    }
+
+    double eval_log_density(Density d, double x){
+        return d.lf(x,d.par);
+    }
+
+    double eval_random( Density d ){
+        return d.r( d.par );
+    }
+
+
     // TODO: rename torc sth (DW)
     double uniformrand(double a, double b)
     {
-        double res;
+        int me     = torc_i_worker_id();
+        double res = gsl_ran_flat(r[me], a, b);
 
-        int me = torc_i_worker_id();
-        res = gsl_ran_flat(r[me], a, b);
+        return res;
+    }
+
+    // TODO: are both versions required? (DW)
+    double uniform_rnd( double *p )
+    {
+        int me     = torc_i_worker_id();
+        double res = gsl_ran_flat( r[me], p[0], p[1] );
 
         return res;
     }
 
 
-    double uniform_pdf(double x, double *p){
 
+    double uniform_pdf(double x, double *p)
+    {
+        //TODO: is that what we want? (DW)
         return gsl_ran_flat_pdf( x, p[0] , p[1] );
 
     }
@@ -200,25 +238,6 @@ namespace tmcmc {
     }
 
 
-    double uniform_rnd( double *p ){
-        
-        double res;
-        
-        int me = torc_i_worker_id();
-        res = gsl_ran_flat( r[me], p[0], p[1] );
-
-        return res;
-    }
-
-
-    // TODO: rename torc sth (DW)
-    void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[])
-    {
-        int me = torc_i_worker_id();
-        gsl_ran_multinomial (r[me], K, N, q, nn);
-
-        return;
-    }
-
+    */
 
 } //namespace
