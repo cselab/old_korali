@@ -13,7 +13,7 @@ namespace priors {
 
 	Prior::Prior(const char * fname) {
 
-		density_factory_func(fname, densities_, &dim_);
+		density_factory_func(fname, &densities_, dim_);
 	}
 
 	Prior::~Prior() {
@@ -29,10 +29,15 @@ namespace priors {
 
 
 	double Prior::eval_logpdf(double *x){
-		double res=1.;
-		for(int i=0; i<dim_; ++i) res *= densities_[i].log_eval(x[i]);
+		double res=0.0;
+		for(int i=0; i<dim_; ++i) res += densities_[i].log_eval(x[i]);
 		return res;
 	}
+
+    double Prior::rand(int dim){
+        if ( dim>=dim_ || dim<0 ) exit(EXIT_FAILURE);
+        else return densities_[dim].rand();
+    }
 
 	void Prior::print() {
 		printf("==============================\n");

@@ -6,9 +6,11 @@ namespace priors {
 	class Density {
 
 		public:
-			Density(const char * name, double (*density) (double, double*),  
+            
+			void init(const char * name, double (*density) (double, double*),  
 									   double (*logdensity) (double, double*), 
 									   double (*ran) (double*), double * param, int n);
+
 			~Density();
 			double eval(double x);
 			double log_eval(double x);
@@ -26,7 +28,7 @@ namespace priors {
 
 	};
 
-	void density_factory_func(const char *file, Density *out_densities, int *out_dim );
+	void density_factory_func(const char *file, Density **out_densities, int &out_dim );
 	void check_n(int N);
 
 }//namespace priors

@@ -13,15 +13,16 @@ namespace priors {
 
 		double eval_pdf(double *x);
 		double eval_logpdf(double *x);
+        double rand(int dim);
+
 		void  print();
 
 	private:
 		int dim_;
 		Density * densities_;
 
-		// TODO: do we need this below? (DW)
-		//void check_n( int N );
-		//void reassign_prior( Density *p, int Np, double *psi );
+		// (TODO: do we need this below? (DW))
+        //void reassign_prior( Density *p, int Np, double *psi );
 		//void new_prior_from_prior( Density **new_prior, Density *from_prior, int Npr );
 
 	};

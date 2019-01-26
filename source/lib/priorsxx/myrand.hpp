@@ -3,7 +3,8 @@
 
 namespace priors {
 
-	void gsl_rand_init(int seed);
+	//void gsl_rand_init(int seed);
+    void spmd_gsl_rand_init(int seed);
 
 	double normal_pdf(double x, double *p);
 	double normal_log_pdf(double x, double *p);

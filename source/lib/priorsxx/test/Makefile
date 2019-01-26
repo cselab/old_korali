@@ -1,4 +1,4 @@
-# source/lib/priors/test/Makefile
+# source/lib/priorsxx/test/Makefile
 
 include ../../../make/common.mk
 
@@ -24,7 +24,6 @@ $(TARGET): testxx.o
 testxx.o: testxx.cpp
 
 test: $(TARGET)
-
 ifeq ($(use_torc),1)
 	$(warning Testing while Torc activated  may result in unexpected behavior)
 endif

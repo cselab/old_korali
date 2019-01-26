@@ -31,40 +31,59 @@
 
 namespace priors {
 
-	const gsl_rng_type   	*T;
-	gsl_rng   				**r;
-	int   					*local_seed;
+	static const gsl_rng_type   	*T;
+	static gsl_rng   				**r;
+	static int   					*local_seed;
+
+    void gsl_rand_init(int seed){
+
+        int local_workers = torc_i_num_workers();
+        gsl_rng_env_setup();
+        T = gsl_rng_default;
+
+        r = (gsl_rng **)malloc(local_workers*sizeof(gsl_rng *));
 
 
-	void gsl_rand_init(int seed){
+        for (int i = 0; i < local_workers; ++i) {
+            r[i] = gsl_rng_alloc (T);
+            //printf("...... %p \n", r[i] );
+        }
 
-	    int i, local_workers = torc_i_num_workers();
-	    gsl_rng_env_setup();
-	    T = gsl_rng_default;
-	    
-		r = (gsl_rng **)malloc(local_workers*sizeof(gsl_rng *));
+        if (seed == 0) seed = time(0);
+
+        for (int i = 0; i < local_workers; ++i) {
+#if VERBOSE
+            printf("node %d: initializing rng %d with seed %d\n", torc_node_id(), i, seed+i+local_workers*torc_node_id());
+#endif
+            gsl_rng_set(r[i], seed+i+local_workers*torc_node_id());
+        }
+
+        local_seed = (int *)malloc(local_workers*sizeof(int));
+        for (int i = 0; i < local_workers; ++i) {
+            local_seed[i] = seed+i+local_workers*torc_node_id();
+        }
+    }
 
 
-	    for (i = 0; i < local_workers; i++) {
-	        r[i] = gsl_rng_alloc (T);
-			//printf("...... %p \n", r[i] );
-	    }
+    void call_gsl_rand_init(int seed) {
+#ifdef VERBOSE
+        // printf("CALLING gsl_rand_init() on node %d\n", torc_node_id()); fflush(0);
+#endif
+        gsl_rand_init(seed);
+    }
 
-	    if (seed == 0) seed = time(0);
 
-	    for (i = 0; i < local_workers; i++) {
-			#if VERBOSE
-	        printf("node %d: initializing rng %d with seed %d\n", torc_node_id(), i, seed+i+local_workers*torc_node_id());
-			#endif
-	        gsl_rng_set(r[i], seed+i+local_workers*torc_node_id());
-	    }
-
-	    local_seed = (int *)malloc(local_workers*sizeof(int));
-	    for (i = 0; i < local_workers; i++) {
-	        local_seed[i] = seed+i+local_workers*torc_node_id();
-	    }
-	}
-
+    void spmd_gsl_rand_init(int seed)
+    {
+#ifdef _USE_TORC_
+    	for (int i = 0; i < torc_num_nodes(); ++i) {
+        	torc_create_ex(i*torc_i_num_workers(), 1, (void (*)())call_gsl_rand_init, 0);
+    	}
+    	torc_waitall();
+#else
+		call_gsl_rand_init(seed);
+#endif
+    }
 
 
 	//======================================================================================
@@ -102,7 +121,10 @@ namespace priors {
 	//
 	double uniform_pdf(double x, double *p){
 
-		return gsl_ran_flat_pdf( x, p[0] , p[1] );
+		if( x>=p[0] && x<=p[1] )
+		    return 1.0/(p[1]-p[0]);
+        else
+            return 1.0;
 
 	}
 
@@ -110,20 +132,15 @@ namespace priors {
 	double uniform_log_pdf(double x, double *p){
 
 		if( x>=p[0] && x<=p[1] )
-			return -log(p[1]-p[0]);
+		    return -log(p[1]-p[0]);
 		else
-		   return -INFINITY;	
+		    return -INFINITY;	
 	}
 
 
 	double uniform_rnd( double *p ){
-	    
-		double res;
-	    
 		int me = torc_i_worker_id();
-	    res = gsl_ran_flat( r[me], p[0], p[1] );
-
-	    return res;
+	    return gsl_ran_flat( r[me], p[0], p[1] );
 	}
 
 

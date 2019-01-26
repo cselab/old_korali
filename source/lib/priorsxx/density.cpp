@@ -11,7 +11,7 @@
 
 namespace priors {
 
-	Density::Density(const char * name, double (*density) (double, double*),  
+    void Density::init(const char * name, double (*density) (double, double*),  
 											   double (*logdensity) (double, double*), 
 											   double (*ran) (double*), 
 											   double * param, int n) {
@@ -22,16 +22,14 @@ namespace priors {
 		lf_ = logdensity;
 		r_  = ran;
 
+		npar_ = n;
 		par_  = new double[n];
 		for(int i = 0; i < n; ++i) par_[i] = param[i];
 
-		npar_ = n;
-		printf("calling ctor: %s, %f, %f\n", name_, par_[0], par_[1]);
 	}
 
 	Density::~Density() {
-		printf("calling dtor: %f, %f\n", par_[0], par_[1]);
-		//delete[] par_;
+		delete[] par_;
 	}
 
 	double Density::eval(double x) {
@@ -47,10 +45,6 @@ namespace priors {
 	}
 
 	void Density::print() {
-		printf("GO\n");
-		printf("calling print: %s\n", name_);
-
-	
 		if( strcmp(name_,"uniform")==0 )
 			printf("%s: %lf  -  %lf \n", name_, par_[0], par_[1]);
 		else if( strcmp(name_,"normal")==0 )
@@ -63,7 +57,7 @@ namespace priors {
 			printf("Did not recognize density: %s\n", name_);
 	}
 
-	void density_factory_func(const char *file, Density *out_densities, int *out_dim ){
+	void density_factory_func(const char *file, Density **out_densities, int &out_dim ){
 
 		FILE *fp = fopen( file,"r");
 		if(fp==nullptr){
@@ -75,6 +69,8 @@ namespace priors {
 
 		size_t bufsize = 1024;
 		char * buffer  = new char[bufsize];
+
+        Density * densities = nullptr;
 		int cnt = 0;
 
 		while(  -1 != getline( &buffer, &bufsize, fp) ){
@@ -89,27 +85,35 @@ namespace priors {
 	    			pch = strtok (nullptr, BLANKS );
 					N   = atoi(pch);
 					check_n(N);
-					out_densities = (Density *)malloc(N*sizeof(Density));
-					break;
+					densities = new Density[N]; 
+                    break;
 				}
 
 				if( strcmp(pch,"uniform")==0 || strcmp(pch,"uni")==0 ){
 					check_n(N);
-					double * par_ = new double[2];
-					par_[0] = atof ( strtok (nullptr, BLANKS) );
-					par_[1] = atof ( strtok (nullptr, BLANKS) );
-					out_densities[cnt] = Density("uniform", &uniform_pdf, &uniform_log_pdf, &uniform_rnd, par_, 2);
+                    double * par_ = new double[2];
+                    par_[0] = -6;
+                    par_[1] = 6;
+					/*densities[cnt].par_ = new double[2];
+					densities[cnt].par_[0] = atof ( strtok (nullptr, BLANKS) );
+					densities[cnt].par_[1] = atof ( strtok (nullptr, BLANKS) );
+                    densities[cnt].f_   = &uniform_pdf;
+                    densities[cnt].lf_  = &uniform_log_pdf;
+                    densities[cnt].r_   = &uniform_rnd;
+                    //densities[cnt].par_ = par;
+				    strcpy( densities[cnt].name_, "uniform" );*/
+					densities[cnt].init("uniform", &uniform_pdf, &uniform_log_pdf, &uniform_rnd, par_, 2);
 					cnt++;
 					break;
 				}
 
-
+                /*
 				if( strcmp(pch,"normal")==0 || strcmp(pch,"gaussian")==0 ){
 					check_n(N);
 					double * par_ = new double[2];
 					par_[0] = atof ( strtok (nullptr, BLANKS) );
 					par_[1] = atof ( strtok (nullptr, BLANKS) );
-					out_densities[cnt] = Density("normal", &normal_pdf, &normal_log_pdf, &normal_rnd, par_, 2);
+					densities[cnt] = Density("normal", &normal_pdf, &normal_log_pdf, &normal_rnd, par_, 2);
 					cnt++;
 					break;
 				}
@@ -118,7 +122,7 @@ namespace priors {
 					check_n(N);
 					double * par_ = new double[1];
 					par_[0] = atof ( strtok (nullptr, BLANKS) );
-					out_densities[cnt] = Density("exponential", &exp_pdf, &exp_log_pdf, &exp_rnd, par_, 1);
+					densities[cnt] = Density("exponential", &exp_pdf, &exp_log_pdf, &exp_rnd, par_, 1);
 					cnt++;
 					break;
 				}
@@ -128,11 +132,11 @@ namespace priors {
 					double * par_ = new double[2];
 					par_[0] = atof ( strtok (nullptr, BLANKS) );
 					par_[1] = atof ( strtok (nullptr, BLANKS) );
-					out_densities[cnt] = Density("gamma", &gamma_pdf, &gamma_log_pdf, &gamma_rnd, par_, 2);
+					densities[cnt] = Density("gamma", &gamma_pdf, &gamma_log_pdf, &gamma_rnd, par_, 2);
 					cnt++;
 					break;
 				}
-
+                */
 				puts(buffer);
 				printf("\nSomething went wrong while reading the priors parameter file. Exit...\n");
 				exit(EXIT_FAILURE);
@@ -141,9 +145,9 @@ namespace priors {
 		}
 
 		fclose(fp);
-		//delete[] buffer;
-
-		*out_dim = N;
+		delete[] buffer;
+        *out_densities = densities;
+		out_dim = N;
 	}
 
 
