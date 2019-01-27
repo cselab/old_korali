@@ -13,8 +13,9 @@ namespace priors {
 	double uniform_pdf(double x, double *p);
 	double uniform_log_pdf(double x, double *p);
 	double uniform_rnd( double *p );
-
-	double exp_pdf(double x, double *p);
+	double uniformrand(double a, double b);
+	
+    double exp_pdf(double x, double *p);
 	double exp_log_pdf(double x, double *p);
 	double exp_rnd( double *p );
 
@@ -23,7 +24,10 @@ namespace priors {
 	double gamma_rnd( double *p );
 
 	double normalrand(double mu, double sigma);
-	double uniformrand(double a, double b);
+
+    //TODO: prefer this in rand file (DW)
+    int mvnrnd(double *mean, double *sigma, double *out, int N);
+    void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[]);
 
 }
 

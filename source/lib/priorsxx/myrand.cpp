@@ -144,6 +144,12 @@ namespace priors {
 	}
 
 
+	double uniformrand(double a, double b){
+		int 	me 	= torc_i_worker_id();
+	    return gsl_ran_flat( r[me], a, b );
+	}
+
+ 
 	//======================================================================================
 	//
 	//
@@ -234,14 +240,38 @@ namespace priors {
 	}
 
 
+    
+    //======================================================================================
+	//
+	//    
+	//
 
-	// uniform distribution random number between a and b
-	double uniformrand(double a, double b){
 
-		int 	me 	= torc_i_worker_id();
-	    double	res = gsl_ran_flat( r[me], a, b );
+    void multinomialrand(size_t K, unsigned int N, double q[], unsigned int nn[])
+    {
+        int me = torc_i_worker_id();
+        gsl_ran_multinomial (r[me], K, N, q, nn);
 
-		return res;
-	}
+        return;
+    }
+
+
+    int mvnrnd(double *mean, double *sigma, double *out, int N) {
+
+        gsl_vector_view mean_view  = gsl_vector_view_array(mean, N);
+        gsl_matrix_view sigma_view = gsl_matrix_view_array(sigma, N,N);
+        gsl_vector_view out_view   = gsl_vector_view_array(out, N);
+
+        int me = torc_i_worker_id();
+
+        gsl_matrix *L = gsl_matrix_alloc(N,N);
+        gsl_matrix_memcpy( L, &sigma_view.matrix);
+        gsl_linalg_cholesky_decomp( L );
+
+        int res = gsl_ran_multivariate_gaussian( r[me], &mean_view.vector, L, &out_view.vector);
+
+        return res;
+    }
+
 
 }//namespace priors

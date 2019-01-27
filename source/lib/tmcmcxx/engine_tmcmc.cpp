@@ -9,13 +9,15 @@
 #include "tmcmc_obj_fmin.hpp"
 #include "engine_tmcmc.hpp"
 
+using namespace priors;
 
 namespace tmcmc {
 
     TmcmcEngine::TmcmcEngine() : data(data_t()), 
                                  nchains(data.Num[0]),
                                  out_tparam(new double[data.PopSize]),
-                                 leaders(new cgdbp_t[data.PopSize]) {
+                                 leaders(new cgdbp_t[data.PopSize]),
+                                 prior("priors.par") {
         // TODO (DW)
         for (int i = 0; i< data.PopSize; ++i) 
             leaders[i].point = new double[data.Nth];
@@ -51,15 +53,7 @@ namespace tmcmc {
 
         spmd_gsl_rand_init(data.seed);
 
-        int num_priors; //not needed
-        read_priors( "priors.par", &priors, &num_priors);
-        print_priors( priors, num_priors );
-        
-        double test[2] = {-6.0, 6.0};
-        printf("start: %d\n", priors->npar);
-        priors[0].r(test);
-        printf("done\n");
-        
+        prior.print();
         
         curgen_db.entries = 0;
         
@@ -118,7 +112,7 @@ namespace tmcmc {
                 double in_tparam[data.Nth]; 
                 for (int d = 0; d < data.Nth; ++d)
                     //(TODO) resolve namespace, conflict with priots.h (DW)
-                    in_tparam[d] = eval_random( priors[d] ); 
+                    in_tparam[d] = prior.rand(d); 
 
 #ifdef _USE_TORC_
                 torc_create(-1, (void (*)())initchaintask, 4,
@@ -437,7 +431,7 @@ namespace tmcmc {
 
         evaluate_F(point, &fpoint, me, gen_id, chain_id, 0, 1);
 
-        double logprior = prior_log_pdf( priors, data.Nth, point );
+        double logprior = prior.eval_logpdf(point); 
 
         /* update current db entry */
         torc_update_curgen_db( point, fpoint, logprior );
@@ -785,8 +779,8 @@ namespace tmcmc {
         // get initial leader and its value
         for (int i = 0; i < data.Nth; ++i) leader[i] = in_tparam[i];    
         loglik_leader   = *out_tparam;    
-        logprior_leader = prior_log_pdf( priors, data.Nth, leader );
-        
+        logprior_leader = prior.eval_logpdf(leader); 
+
         double pj = runinfo.p[runinfo.Gen];
 
         int burn_in = data.burn_in;
@@ -814,7 +808,7 @@ namespace tmcmc {
                                                     // last argument should be 1 if it is a surrogate
 
                 // decide
-                logprior_candidate = prior_log_pdf( priors, data.Nth, candidate );
+                logprior_candidate = prior.eval_logpdf(candidate); 
                 double L = exp((logprior_candidate-logprior_leader)+(loglik_candidate-loglik_leader)*pj);
 
                 if (L > 1) L = 1;
@@ -824,14 +818,14 @@ namespace tmcmc {
                     for (int i = 0; i < data.Nth; ++i) leader[i] = candidate[i]; 
                     loglik_leader = loglik_candidate;
                     if (step >= burn_in) {
-                        logprior_leader = prior_log_pdf( priors, data.Nth, leader );
+                        logprior_leader = prior.eval_logpdf(leader); 
                         torc_update_curgen_db(leader, loglik_leader, logprior_leader);
                     }
                 }
                 else {
                     // increase counter or add the leader again in curgen_db
                     if (step >= burn_in) {
-                        logprior_leader = prior_log_pdf( priors, data.Nth, leader );
+                        logprior_leader = prior.eval_logpdf(leader); 
                         torc_update_curgen_db(leader, loglik_leader, logprior_leader);
                     }
 
@@ -840,7 +834,7 @@ namespace tmcmc {
             else{
                 // increase counter or add the leader again in curgen_db
                 if (step >= burn_in){
-                    logprior_leader = prior_log_pdf( priors, data.Nth, leader );
+                    logprior_leader = prior.eval_logpdf(leader);
                     torc_update_curgen_db(leader, loglik_leader, logprior_leader);
                 }
             }

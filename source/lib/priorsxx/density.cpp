@@ -92,28 +92,20 @@ namespace priors {
 				if( strcmp(pch,"uniform")==0 || strcmp(pch,"uni")==0 ){
 					check_n(N);
                     double * par_ = new double[2];
-                    par_[0] = -6;
-                    par_[1] = 6;
-					/*densities[cnt].par_ = new double[2];
-					densities[cnt].par_[0] = atof ( strtok (nullptr, BLANKS) );
-					densities[cnt].par_[1] = atof ( strtok (nullptr, BLANKS) );
-                    densities[cnt].f_   = &uniform_pdf;
-                    densities[cnt].lf_  = &uniform_log_pdf;
-                    densities[cnt].r_   = &uniform_rnd;
-                    //densities[cnt].par_ = par;
-				    strcpy( densities[cnt].name_, "uniform" );*/
+					par_[0] = atof ( strtok (nullptr, BLANKS) );
+					par_[1] = atof ( strtok (nullptr, BLANKS) );
 					densities[cnt].init("uniform", &uniform_pdf, &uniform_log_pdf, &uniform_rnd, par_, 2);
 					cnt++;
 					break;
 				}
 
-                /*
+                
 				if( strcmp(pch,"normal")==0 || strcmp(pch,"gaussian")==0 ){
 					check_n(N);
 					double * par_ = new double[2];
 					par_[0] = atof ( strtok (nullptr, BLANKS) );
 					par_[1] = atof ( strtok (nullptr, BLANKS) );
-					densities[cnt] = Density("normal", &normal_pdf, &normal_log_pdf, &normal_rnd, par_, 2);
+					densities[cnt].init("normal", &normal_pdf, &normal_log_pdf, &normal_rnd, par_, 2);
 					cnt++;
 					break;
 				}
@@ -122,7 +114,7 @@ namespace priors {
 					check_n(N);
 					double * par_ = new double[1];
 					par_[0] = atof ( strtok (nullptr, BLANKS) );
-					densities[cnt] = Density("exponential", &exp_pdf, &exp_log_pdf, &exp_rnd, par_, 1);
+					densities[cnt].init("exponential", &exp_pdf, &exp_log_pdf, &exp_rnd, par_, 1);
 					cnt++;
 					break;
 				}
@@ -132,13 +124,13 @@ namespace priors {
 					double * par_ = new double[2];
 					par_[0] = atof ( strtok (nullptr, BLANKS) );
 					par_[1] = atof ( strtok (nullptr, BLANKS) );
-					densities[cnt] = Density("gamma", &gamma_pdf, &gamma_log_pdf, &gamma_rnd, par_, 2);
+					densities[cnt].init("gamma", &gamma_pdf, &gamma_log_pdf, &gamma_rnd, par_, 2);
 					cnt++;
 					break;
 				}
-                */
+                
 				puts(buffer);
-				printf("\nSomething went wrong while reading the priors parameter file. Exit...\n");
+				printf("\nSomething went wrong while reading the prior parameter file. Exit...\n");
 				exit(EXIT_FAILURE);
 
 			}

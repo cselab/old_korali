@@ -8,7 +8,7 @@ L=..
 
 
 DIR_LIKELIHOOD = ../../likelihoodsxx
-DIR_PRIORS = $L/priors
+DIR_PRIORS = $L/priorsxx
 
 LIB_FITFUNXX = fitfunxx
 

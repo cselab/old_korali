@@ -16,13 +16,14 @@
 
 
 extern "C" {
-#include "priors.h"
-#include "myrand.h"
+//#include "priors.h"
+//#include "myrand.h"
 }
 
+#include "myrand.hpp"
+#include "priors.hpp"
 #include "tmcmc_types.hpp"
 #include "tmcmc_utils.hpp"
-
 
 namespace tmcmc {
 
@@ -50,7 +51,7 @@ namespace tmcmc {
         double *out_tparam;
         cgdbp_t *leaders;
         
-        Density *priors;
+        priors::Prior prior;
 
         int EXPERIMENTAL_RESULTS = 0; //TODO: where does this belong? (DW)
 

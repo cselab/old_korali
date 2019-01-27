@@ -1,4 +1,6 @@
-#include <string>
+#include <cstring>
+#include <stdlib.h>
+#include <limits>
 
 #include "tmcmc_types.hpp"
 
@@ -33,7 +35,7 @@ namespace tmcmc {
         FILE *f = fopen(fname, "r");
         if (f == NULL) {
             printf("\nThe input file 'tmcmc.par' is missing. Exit...\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         char line[256];

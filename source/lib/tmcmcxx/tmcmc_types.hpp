@@ -146,6 +146,14 @@ namespace tmcmc {
         double        tol;
     } fparam_t;
 
+    
+    typedef struct sort_s {
+        int idx;
+        int nsel;
+        double F;
+    } sort_t;
+
+
 } //namespace tmcmc
 
 #endif//TMCMC_TYPES?HPP
