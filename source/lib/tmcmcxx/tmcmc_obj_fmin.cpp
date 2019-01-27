@@ -84,7 +84,6 @@ namespace tmcmc {
         double x_lo = 0.0, x_hi = 4.0;    /* input */
         double m = 0.5, fm = 0.0;
         bool converged = 0;
-        int i;
 
         x = gsl_vector_alloc (1);
 
@@ -109,7 +108,8 @@ namespace tmcmc {
             fm = f_hi;
         }
 
-        for (i = 0; i < max_iter; i++) {
+        int i;
+        for (i = 0; i < max_iter; ++i) {
             double x = x_lo + i*(x_hi-x_lo)/max_iter;
             double fx = tmcmc_objlogp_gsl(x, &fp);
             if (fx < fm) {
@@ -122,21 +122,24 @@ namespace tmcmc {
             converged = true;
             gsl_vector_free(x);
             gsl_min_fminimizer_free (s);
-            if (display) printf("fmincon: early return with m = %.16f fm = %.16f\n", m, fm);
+            if (display) 
+                printf("fmincon: Early return with m = %.16f fm = %.16f\n (%dtries).", m, fm, i);
             return converged;
         }
 
         if ((fm < f_lo) && (fm < f_hi)) {
-            if (display) printf("fmincon: initialized with %d tries and m = %f (fm = %f)\n", i, m, fm);
+            if (display) 
+                printf("fmincon: Initialized with %d tries and m = %f (fm = %f)\n", i, m, fm);
         } else {
-            if (display) printf("failed to initialize fmincon (%.16f, %.16f)!\n", f_lo, f_hi);
+            if (display) 
+                printf("fmincon: Failed to initialize (%.16f, %.16f) (%d tries)!\n", f_lo, f_hi, i);
             return 0;
         }
 
         gsl_min_fminimizer_set (s, &F, m, x_lo, x_hi);
 
         if (display) {
-            printf ("using %s method\n", gsl_min_fminimizer_name (s));
+            printf ("fmincon: Using %s method\n", gsl_min_fminimizer_name (s));
             printf ("%5s [%18s, %18s] %18s %18s %18s\n", "iter", "lower", "upper", "min", "fmin", "err(est)");
             printf ("%5zu [%.16f, %.16f] %.16f %.16f %.16f\n", iter, x_lo, x_hi, m, fm, x_hi - x_lo);
         }
@@ -151,13 +154,13 @@ namespace tmcmc {
 
             status = gsl_min_test_interval (x_lo, x_hi, tol, tol);
             if (status == GSL_SUCCESS) {
-                if (display) printf ("Converged:\n");
+                if (display) printf ("fmincon: Converged:\n");
                 converged = true;
             }
             else if (fabs(gsl_min_fminimizer_f_minimum(s)) <= tol) {
                 converged = true;
                 status = GSL_SUCCESS;
-                if (display) printf ("found minimum at\n");
+                if (display) printf ("fmincon: Found minimum at\n");
             }
 
             if (display)
@@ -169,7 +172,7 @@ namespace tmcmc {
         /* double-check */
         if ((converged == true) && (fabs(gsl_min_fminimizer_f_minimum(s)) > tol)) {
             converged = false;
-            if (display) printf ("converged but not found minimum.\n");
+            if (display) printf ("fmincon: Converged but dint not find minimum.\n");
         }
 
         if (converged) {
@@ -226,7 +229,7 @@ namespace tmcmc {
         s = gsl_multimin_fminimizer_alloc (T, 1);
         gsl_multimin_fminimizer_set (s, &minex_func, x, ss);
 
-        if (display) printf ("using %s method\n", gsl_multimin_fminimizer_name (s));
+        if (display) printf ("fminsearch: Using %s method\n", gsl_multimin_fminimizer_name (s));
 
         do {
             iter++;
@@ -239,12 +242,13 @@ namespace tmcmc {
 
             if (status == GSL_SUCCESS) {
                 converged = true;
-                if (display) printf ("converged to minimum at\n");
+                if (display) printf ("fminsearch: Converged to minimum at\n");
             }
             else if (fabs(s->fval) <= tol) {
                 converged = true;
                 status = GSL_SUCCESS;
-                if (display) printf ("found minimum at\n");
+                if (display) 
+                    printf ("fminsearch: Found minimum at\n (not converged)");
             }
             if (display) printf ("%3ld x =  %.16lf f() = %.16f size = %.16f\n",
                                   iter, gsl_vector_get (s->x, 0), s->fval, size);
@@ -254,7 +258,8 @@ namespace tmcmc {
         /* double-check */
         if ((converged == 1) && (fabs(s->fval) > tol)) {
             converged = false;
-            if (display) printf ("fminsearch: converged but not found minimum.\n");
+            if (display) 
+                printf ("fminsearch: Converged but did not find minimum.\n");
         }
 
         if (converged) {
@@ -302,7 +307,7 @@ namespace tmcmc {
         counter++;
         while (converged == false && 1e-16 < step) {
         
-        if(display) printf("fminzero: x_lo %e x_hi %ei step %e\n", x_lo, x_hi, step);
+        if(display) printf("fzerofind: x_lo %e x_hi %ei step %e\n", x_lo, x_hi, step);
         niters = (size_t) ((x_hi-x_lo)/step);
 
         first_try++;

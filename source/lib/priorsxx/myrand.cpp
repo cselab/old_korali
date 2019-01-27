@@ -6,7 +6,7 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf.h>
-
+#include <gsl/gsl_linalg.h>
 
 #if defined(_USE_TORC_)
 	#include <mpi.h>
@@ -251,8 +251,6 @@ namespace priors {
     {
         int me = torc_i_worker_id();
         gsl_ran_multinomial (r[me], K, N, q, nn);
-
-        return;
     }
 
 

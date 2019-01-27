@@ -1,6 +1,8 @@
 #ifndef MYRAND_HPP
 #define MYRAND_HPP
 
+#include <cstddef>
+
 namespace priors {
 
 	//void gsl_rand_init(int seed);

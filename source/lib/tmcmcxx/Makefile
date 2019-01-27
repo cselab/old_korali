@@ -18,9 +18,9 @@ LDXLIBS  := -L$(DIR_LIKELIHOOD) -l$(LIB_FITFUNXX) $(LDXLIBS)
 
 # tmcmc objective minimizers (can be combined)
 
-CXXFLAGS += -D_USE_FMINCON_
+#CXXFLAGS += -D_USE_FMINCON_
 #CXXFLAGS += -D_USE_FMINSEARCH_ 
-#CXXFLAGS += -D_USE_FZEROFIND_
+CXXFLAGS += -D_USE_FZEROFIND_
 
 all: $(TARGET)
 

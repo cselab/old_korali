@@ -16,14 +16,15 @@ DIR_SUNDIALS ?= ../../lib/stan/lib/sundials_3.1.0/include
 all: $(TARGET) tmcmcxx
 
 L=../lib
-DIR_PRIORS  = $L/priors
-DIR_TMCMCXX = $L/tmcmcxx
+DIR_PRIORS   = $L/priors
+DIR_PRIORSXX = $L/priorsxx
+DIR_TMCMCXX  = $L/tmcmcxx
 
 LDLIBS    := -L$(DIR_PRIORS) -lpriors $(LDLIBS)
 CFLAGS    += -I$(DIR_PRIORS)
 
-LDXLIBS  := -L$(DIR_PRIORS) -lpriors $(LDXLIBS)
-CXXFLAGS += -I$(DIR_PRIORS)
+LDXLIBS  := -L$(DIR_PRIORSXX) -lpriorsxx $(LDXLIBS)
+CXXFLAGS += -I$(DIR_PRIORSXX)
 
 LDLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDLIBS)
 CFLAGS += -I$(DIR_FITFUN)
@@ -47,7 +48,7 @@ $(TARGET):
 	$(LINK.o) $^ $(LDLIBS)
 
 tmcmcxx:
-	(cd $(DIR_PRIORS); make libpriors.a)
+	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
 	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
@@ -71,6 +72,7 @@ main.o: main.cpp
 
 clean:; rm -rf  $(TARGET) tmcmcxx *.o
 	(cd $(DIR_PRIORS); make clean)
+	(cd $(DIR_PRIORSXX); make clean)
 	(cd $(DIR_FITFUNXX); make clean)
 	(cd $(DIR_TMCMCXX); make clean)
 

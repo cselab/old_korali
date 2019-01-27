@@ -1,6 +1,8 @@
 #include <cmath>
 #include <numeric>
 
+#include <iostream> //cin test remove
+
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_statistics.h>
@@ -30,8 +32,28 @@ namespace tmcmc {
     }
 
     void TmcmcEngine::run() {
-        // TODO (DW) 
-        init();
+        init(); 
+
+        if (data.MaxStages == 1) {
+            printf("Maxstages == 1, nothing to do\n");
+            return; 
+        } else if (runinfo.p[runinfo.Gen] == 1.0) {
+            printf("p == 1 from previous run, nothing more to do\n");
+            return;
+        }
+
+        nchains = prepare_newgen(nchains, leaders);
+        spmd_update_runinfo();
+        if (data.options.Display) print_runinfo();
+
+
+        while(runinfo.Gen < data.MaxStages || runinfo.p[runinfo.Gen] == 1) {
+            evalGen();
+            runinfo.Gen++;
+            int tmp;
+            std::cin >> tmp;
+        }
+
     }
 
 
@@ -45,11 +67,7 @@ namespace tmcmc {
 
         runinfo_t::init(runinfo, data.Nth, data.MaxStages);
 
-        if (data.options.Display) {
-            printf("runinfo    = %p\n", &runinfo);
-            printf("runinfo.p  = %p\n", runinfo.p);
-            printf("runinfo.SS = %p\n", runinfo.SS);
-        }
+        if (data.options.Display) print_runinfo();
 
         spmd_gsl_rand_init(data.seed);
 
@@ -67,21 +85,120 @@ namespace tmcmc {
         
         runinfo_t::save(runinfo, data.Nth, data.MaxStages);
         if (data.restart) check_for_exit();
-     
-        if (data.MaxStages == 1) {
-            printf("Maxstages == 1, nothing to do\n");
-            return; 
-        } else if (runinfo.p[runinfo.Gen] == 1.0) {
-            printf("p == 1 from previous run, nothing more to do\n");
-            return;
-        }
-
-        nchains = prepare_newgen(nchains, leaders);
-        return; //remove
-        spmd_update_runinfo();
-        if (data.options.Display) print_runinfo();
-
+        
         printf("----------------------------------------------------------------\n");
+        
+        return;
+    }
+
+    void TmcmcEngine::evalGen() {
+    
+        int nsteps;
+        gt0 = torc_gettime();
+
+#ifdef _USE_OPENMP_
+        #pragma omp parallel
+        {
+            #pragma omp single nowait
+            {
+#endif
+                int winfo[4];
+                double in_tparam[data.Nth];
+                double init_mean[data.Nth];
+                double chain_cov[data.Nth*data.Nth];
+
+
+                for (int i = 0; i < nchains; ++i) {
+                    winfo[0] = runinfo.Gen;
+                    winfo[1] = i;
+                    winfo[2] = -1;    /* not used */
+                    winfo[3] = -1;    /* not used */
+                
+                    for(int d = 0; d < data.Nth; ++d) 
+                        in_tparam[d] = leaders[i].point[d];
+
+                    nsteps = leaders[i].nsel;
+                    
+                    if (data.use_local_cov){
+                        for (int d = 0; d < data.Nth*data.Nth; ++d)
+                            chain_cov[d] = data.local_cov[i][d];
+
+                        for (int d = 0; d < data.Nth; ++d) {
+                            if (data.use_proposal_cma)
+                                init_mean[d] = data.init_mean[i][d];
+                            else
+                                init_mean[d] = leaders[i].point[d];
+                        }
+                    } else {
+                        for (int d = 0; d < data.Nth; ++d)
+                            for (int e = 0; e < data.Nth; ++e)
+                                chain_cov[d*data.Nth+e]=
+                                    data.bbeta*runinfo.SS[d][e];
+
+                        for (int d = 0; d < data.Nth; ++d)
+                            init_mean[d] = in_tparam[d];
+                    }
+
+                    out_tparam[i] = leaders[i].F;    /* loglik_leader...*/
+
+
+#ifdef _USE_TORC_
+                    torc_create(leaders[i].queue, (void (*)())chaintask, 7,
+                                data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                1, MPI_INT, CALL_BY_COP,
+                                1, MPI_INT, CALL_BY_COP,
+                                1, MPI_DOUBLE, CALL_BY_REF,
+                                4, MPI_INT, CALL_BY_COP,
+                                data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                data.Nth*data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                in_tparam, &data.Nth, &nsteps, &out_tparam[i], winfo,
+                                init_mean, chain_cov);
+#else
+#ifdef _USE_OPENMP_
+                    #pragma omp task shared(data, out_tparam) firstprivate(i, nsteps, in_tparam, winfo, init_mean, chain_cov)
+#endif
+                    chaintask( in_tparam, &nsteps, &out_tparam[i], winfo, init_mean, chain_cov );
+#endif
+                }
+
+#if defined(_USE_OPENMP_)
+            }// single
+        }// parallel
+#endif
+
+#if defined(_USE_TORC_)
+        if (data.stealing) torc_enable_stealing();
+
+        torc_waitall();
+        if (data.stealing) torc_disable_stealing();
+#endif
+
+        gt1 = torc_gettime();
+        int g_nfeval = get_nfc();
+        printf("evalGen: Generation %d: total elapsed time = %lf secs, \
+                    generation elapsed time = %lf secs for function calls = %d\n", 
+                    runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
+        
+        reset_nfc();
+		
+        if (data.icdump) dump_curgen_db();
+        if (data.ifdump) dump_full_db();
+
+        runinfo_t::save(runinfo, data.Nth, data.MaxStages);
+ 
+        if (data.restart) check_for_exit();
+
+        curres_db.entries = 0;
+        nchains = prepare_newgen(nchains, leaders);
+
+        spmd_update_runinfo(); 
+
+        if(data.options.Display) print_runinfo();
+
+        printf("Acceptance rate   :  %lf \n",runinfo.acceptance[runinfo.Gen]) ;
+        printf("Annealing exponent:  %lf \n",runinfo.p[runinfo.Gen]) ;
+        printf("----------------------------------------------------------------\n");
+        return; 
     }
     
     bool TmcmcEngine::load_data() {
@@ -111,7 +228,6 @@ namespace tmcmc {
                 //store draw from prior
                 double in_tparam[data.Nth]; 
                 for (int d = 0; d < data.Nth; ++d)
-                    //(TODO) resolve namespace, conflict with priots.h (DW)
                     in_tparam[d] = prior.rand(d); 
 
 #ifdef _USE_TORC_
@@ -149,8 +265,9 @@ namespace tmcmc {
         
         int g_nfeval = get_nfc();
         
-        printf("server: Generation %d: total elapsed time = %lf secs, generation elapsed time = %lf secs for function calls = %d\n", 
-               runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
+        printf("sample_from_prior: Generation %d: total elapsed time = %lf sec,\
+                generation elapsed time = %lf secs for function calls = %d\n", 
+                runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
         
         reset_nfc();
 	       
@@ -459,14 +576,16 @@ namespace tmcmc {
 #ifdef _USE_FMINCON_
             conv = fmincon(flc, n, p[gen], data.TolCOV, &xmin, &fmin,
                     data.options);
-            if (display) printf("fmincon: conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
+            if (display) printf("calculate_statistics: \
+                fmincon conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
 #endif
 
 #ifdef _USE_FMINSEARCH_
             if (!conv){
                 conv = fminsearch(flc, n, p[gen], data.TolCOV, &xmin, &fmin, 
                         data.options);
-                if (display) printf("fminsearch: conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
+                if (display) printf("calculate_statistics: \
+                    fminsearch conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
             }
 #endif
 
@@ -474,7 +593,8 @@ namespace tmcmc {
             if (!conv) {
                 conv = fzerofind(flc, n, p[gen], data.TolCOV, &xmin, &fmin,
                         data.options);
-                if (display) printf("fzerofind: conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
+                if (display) printf("calculate_statistics: \
+                    fzerofind conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
             }
 #endif
 
@@ -853,14 +973,13 @@ namespace tmcmc {
 
         int i, p;
 
-        int n   = curgen_db.entries;
+        int n = curgen_db.entries;
 
         double *fj 		  = new double[n];
         unsigned int *sel = new unsigned int[n];
 
         double **g_x = new double*[data.Nth];
-        for (i = 0; i < data.Nth; ++i)
-            g_x[i] = new double[n]; 
+        for (i = 0; i < data.Nth; ++i) g_x[i] = new double[n]; 
 
         if(0)
         {
@@ -890,55 +1009,49 @@ namespace tmcmc {
 
         if (1)
         {
-            double **x = g_x;
+            double **uniques = g_x;
             int un = 0, unflag, j;
 
-            for( p = 0; p < data.Nth; p++ )
-                x[p][un] = curgen_db.entry[0].point[p];
+            for( p = 0; p < data.Nth; ++p )
+                uniques[p][un] = curgen_db.entry[0].point[p];
 
             un++;
             for (i = 1; i < n; ++i){
                 double xi[data.Nth];
-                for (p = 0; p < data.Nth; p++)
+                for (p = 0; p < data.Nth; ++p)
                     xi[p] = curgen_db.entry[i].point[p];
 
-                unflag = 1;    /* is this point unique?*/
-                for (j = 0; j < un; ++j){    /* check all the previous unique points*/
-                    int compflag = 1;
-                    for (p = 0; p < data.Nth; p++){
-                        if (fabs(xi[p]-x[p][j]) > 1e-6) {
-                            compflag = 0;    /* they differ*/
-                            break;
+                unflag = 1;                 /* is this point unique? */
+                for (j = 0; j < un; ++j){   /* compare with  previous uniques */
+                    for (p = 0; p < data.Nth; ++p){
+                        if (fabs(xi[p]-uniques[p][j]) > 1e-6) {
+                            break;          /* they differ, check next  */
                         }
+                        unflag = 0;         /* not unique */
                     }
 
-                    if (compflag == 1) {
-                        unflag = 0;    /* not unique, just found it in the unique points table*/
-                        break;
-                    }
+                    if (unflag == 0) break; /* not unique - stop comparison */
                 }
 
-                if (unflag){    /* unique, put it in the table */
-                    for (p = 0; p < data.Nth; p++) {
-                        x[p][un] = xi[p];
-                    }
+                if (unflag){                /* unique, put it in the table */
+                    for (p = 0; p < data.Nth; ++p) uniques[p][un] = xi[p];
                     un++;
                 }
             }
 
-            runinfo.currentuniques[runinfo.Gen] = un; /*+ 1*/;
-            runinfo.acceptance[runinfo.Gen] = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen]; /* check this*/
+            runinfo.currentuniques[runinfo.Gen] = un;
+            runinfo.acceptance[runinfo.Gen]     = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen]; /* check this*/
 
-            double meanx[data.Nth], stdx[data.Nth];
-            for (p = 0; p < data.Nth; p++) {
-                meanx[p] = gsl_stats_mean(x[p], 1, n);
-                stdx[p]  = gsl_stats_sd_m(x[p], 1, n, meanx[p]);
+            double meanu[data.Nth], stdu[data.Nth];
+            for (p = 0; p < data.Nth; ++p) {
+                meanu[p] = gsl_stats_mean(uniques[p], 1, n);
+                stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
             }
 
-            printf("CURGEN DB (UNIQUE) %d: [un = %d]\n", runinfo.Gen, un); /* + 1);*/
+            printf("CURGEN DB (UNIQUE) %d: [un = %d]\n", runinfo.Gen, un);
             if(data.options.Display){
-                print_matrix((char *)"means", meanx, data.Nth);
-                print_matrix((char *)"std", stdx, data.Nth);
+                print_matrix((char *)"uniques mean", meanu, data.Nth);
+                print_matrix((char *)"uniques std", stdu, data.Nth);
             }
 
         } /* end block*/
@@ -954,19 +1067,16 @@ namespace tmcmc {
         }
 
         int newchains = 0;
+        sort_t *list = new sort_t[n];
         for (i = 0; i < n; ++i) {
+            list[i].idx  = i;
+            list[i].nsel = sel[i];
+            list[i].F    = curgen_db.entry[i].F;
             if (sel[i] != 0) newchains++;
         }
 
-        sort_t *list = new sort_t[n];
-        for (i = 0; i < n; ++i) {
-            list[i].idx = i;
-            list[i].nsel = sel[i];
-            list[i].F = curgen_db.entry[i].F;
-        }
-
 #if VERBOSE
-        printf("Points before\n");
+        printf("Points before qsort\n");
         for (i = 0; i < n; ++i) 
             printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
         
@@ -975,13 +1085,13 @@ namespace tmcmc {
         qsort(list, n, sizeof(sort_t), compar_desc);
 
 #if VERBOSE
-        printf("Points after\n");
+        printf("Points after qsort\n");
         for (i = 0; i < n; ++i) 
             printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
         
 #endif
 
-#if 1   
+#if 0 // TODO: check what is going on here (DW)   
         /* UPPER THRESHOLD */
         /* peh:check this */
         /* breaking long chains */
@@ -1000,16 +1110,17 @@ namespace tmcmc {
 
         qsort(list, n, sizeof(sort_t), compar_desc);
 
-    #if VERBOSE
+#if VERBOSE
         printf("Points broken\n");
         for (i = 0; i < n; ++i) 
             printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
         
-    #endif
+#endif
 
-    #endif
+#endif
 
-    #if 1   /* LOWER THRESHOLD */
+#if 0 // TODO: check what is going on here (DW)   
+        /* LOWER THRESHOLD */
         /* single to double step chains */
         int l_threshold = data.MinChainLength;    /* peh: configuration file + more balanced lengths */
         for (i = 0; i < newchains; ++i) {
@@ -1020,18 +1131,17 @@ namespace tmcmc {
 
         qsort(list, n, sizeof(sort_t), compar_desc);
 
-    #if VERBOSE
+#if VERBOSE
         printf("Points advanced\n");
         for (i = 0; i < n; ++i) {
             printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
         }
-    #endif
+#endif
 
-    #endif
+#endif
 
-        int ldi;    /* leader index*/
-        ldi = 0;
-        for (i = 0; i < n; ++i) {    /* newleader */
+        int ldi = 0;                    /* leader index */
+        for (i = 0; i < n; ++i) {       /* newleader */
             if (list[i].nsel != 0) {
                 int idx = list[i].idx;
                 for (p = 0; p < data.Nth ; p++) {
@@ -1043,19 +1153,20 @@ namespace tmcmc {
             }
         }
 
-        free(list);
+        delete[] list;
 
         for (i = 0; i < newchains; ++i) leaders[i].queue = -1;    /* rr*/
 
+
+#ifdef _USE_TORC_
+
 #if VERBOSE
-        printf("Leaders before\n");
+        printf("Leaders before partitioning\n");
         for (i = 0; i < newchains; ++i) {
             printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
         }
 #endif
 
-
-#if defined(_USE_TORC_)
         /* cool and greedy partitioning ala Panos-- ;-) */
 
         int nworkers  = torc_num_workers();
@@ -1069,15 +1180,15 @@ namespace tmcmc {
 
         print_matrix_i("initial workload", workload, nworkers);
         delete[] workload;
-#endif
 
 #if VERBOSE
-        printf("Leaders after\n");
+        printf("Leaders after partitioning\n");
         for (i = 0; i < newchains; ++i) {
             printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
         }
 #endif
 
+#endif
         if (1)
         {
             double **x = g_x;
@@ -1104,7 +1215,7 @@ namespace tmcmc {
             precompute_chain_covariances(leaders, data.init_mean, data.local_cov, newchains);
 
         curgen_db.entries = 0;
-        printf("calculate_statistics: newchains=%d\n", newchains);
+        printf("prepare_newgen: newchains=%d\n", newchains);
 
         for (i = 0; i < data.Nth; ++i) delete g_x[i]; 
         delete[] g_x;
@@ -1116,11 +1227,13 @@ namespace tmcmc {
 
     void TmcmcEngine::print_runinfo() {
         printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+        printf("runinfo.Gen = \n\n   %d\n\n", runinfo.Gen);
+        print_matrix("runinfo.p", runinfo.p, runinfo.Gen+1); 
         print_matrix_2d("runinfo.SS", runinfo.SS, data.Nth, data.Nth);
         printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
     }
 
-    void TmcmcEngine::update_runinfo() {
+    void TmcmcEngine::bcast_runinfo() {
 #ifdef _USE_TORC_
 		MPI_Bcast(runinfo.SS[0], data.Nth*data.Nth, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 		MPI_Bcast(runinfo.p, data.MaxStages, MPI_DOUBLE, 0, MPI_COMM_WORLD);    /* just p[Gen]*/
@@ -1133,7 +1246,7 @@ namespace tmcmc {
 #ifdef _USE_TORC_
         if (torc_num_nodes() == 1) return;
         for (int i = 0; i < torc_num_nodes(); i++) {
-            torc_create_ex(i*torc_i_num_workers(), 1, (void (*)())update_runinfo, 0);
+            torc_create_ex(i*torc_i_num_workers(), 1, (void (*)())bcast_runinfo, 0);
         }
         torc_waitall();
 #endif

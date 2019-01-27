@@ -14,15 +14,7 @@
 #ifndef ENGINE_TMCMC_HPP
 #define ENGINE_TMCMC_HPP
 
-
-extern "C" {
-//#include "priors.h"
-//#include "myrand.h"
-}
-
 #include "myrand.hpp"
-#include "priors.hpp"
-#include "tmcmc_types.hpp"
 #include "tmcmc_utils.hpp"
 
 namespace tmcmc {
@@ -55,7 +47,9 @@ namespace tmcmc {
 
         int EXPERIMENTAL_RESULTS = 0; //TODO: where does this belong? (DW)
 
-        void init(); // TODO: called data_init (reminder)
+        void init();
+        void evalGen();
+
         bool load_data();
         void sample_from_prior();
 
@@ -104,7 +98,7 @@ namespace tmcmc {
 
 
         void print_runinfo();
-        void update_runinfo();
+        void bcast_runinfo();
         void spmd_update_runinfo();
     };
 

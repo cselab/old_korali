@@ -2,7 +2,7 @@
 #define TMCMC_UTILS_HPP
 
 #include "priors.hpp"
-#include "tmcmc_types.cpp"
+#include "tmcmc_types.hpp"
 
 namespace tmcmc {
 

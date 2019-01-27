@@ -15,7 +15,7 @@ namespace fitfun{
     }
 
     double fitfun(const double *x, int N, void *output, int *info) {
-        return f_Rosenbrock(x, N);
+        return -f_Rosenbrock(x, N);
     }
 
     void fitfun_finalize() {}

@@ -1,5 +1,5 @@
-#ifndef TMCMC_TYPES
-#define TMCMC_TYPES
+#ifndef TMCMC_TYPES_HPP
+#define TMCMC_TYPES_HPP
 
 #include <stdio.h>
 
@@ -156,4 +156,4 @@ namespace tmcmc {
 
 } //namespace tmcmc
 
-#endif//TMCMC_TYPES?HPP
+#endif//TMCMC_TYPES_HPP
