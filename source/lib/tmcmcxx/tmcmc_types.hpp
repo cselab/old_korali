@@ -14,23 +14,27 @@
 namespace tmcmc {
 
     struct optim_options {
-        int    MaxIter;
-        double Tol;
-        int    Display;
-        double Step;
+        int    MaxIter;             /* Max number of search iterations */
+        double Tol;                 /* Tolerance for root finding */
+        int    Display;             /* Print output */
+        double Step;                /* Search stepsize */
+        double LowerBound;          /* Lower bound for root finding (fmincon &
+                                        fzerosearch)*/
+        double UpperBound;          /* Upper bound for root finding (fmincon &
+                                        fzerosearch)*/
     };
 
 
     typedef struct data_t {
         data_t(const char * fname = "tmcmc.par");
-        int Nth;       
-        int MaxStages;
-        int PopSize; 
+        int Nth;                        /* PROBDIM */
+        int MaxStages;                  /* Max number of tmcmc generations */
+        int PopSize;                    /* Number of samples */
 
-        double *lowerbound;    /*[PROBDIM];*/
-        double *upperbound;    /*[PROBDIM];*/
+        double *lowerbound;             /*[PROBDIM];*/
+        double *upperbound;             /*[PROBDIM];*/
 
-        double *compositeprior_distr; /*[PROBDIM]*/
+        double *compositeprior_distr;   /*[PROBDIM]*/
 
         double *prior_mu;
         double *prior_sigma;
@@ -41,7 +45,7 @@ namespace tmcmc {
         int MinChainLength;
         int MaxChainLength;
 
-        double lb, ub;        /*generic lower and upper bound*/
+        double lb, ub;          /* generic lower and upper bound*/
 
         double TolCOV;          /* Target coefficient of variation of weights */
         double MinStep;         /* Min update of rho */
@@ -49,21 +53,21 @@ namespace tmcmc {
         long   seed;
         int    burn_in;         /* Number of burn in iterations */
 
-        optim_options options;
+        optim_options options;  /* Optimization options (see above) */
 
-        int prior_type;     /* 0: uniform, 1: gaussian, 3: composite */
+        int prior_type;         /* 0: uniform, 1: gaussian, 3: composite */
         int load_from_file;
 
         int icdump;
         int ifdump;
 
-        int *Num;        /*[MAXGENS];*/
+        int *Num;               /*[MAXGENS];*/
         int  LastNum;
 
         int    use_proposal_cma;
-        double **init_mean;    /* [DATANUM][PROBDIM] */
+        double **init_mean;     /* [DATANUM][PROBDIM] */
 
-        double **local_cov;    /* [DATANUM][PROBDIM*PROBDIM] */
+        double **local_cov;     /* [DATANUM][PROBDIM*PROBDIM] */
         int    use_local_cov;
         double local_scale;
 

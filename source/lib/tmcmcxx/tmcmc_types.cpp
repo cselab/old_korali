@@ -20,10 +20,12 @@ namespace tmcmc {
         seed    = 280675;
         burn_in = -1;
 
-        options.MaxIter = -1;
-        options.Tol     = -1;
-        options.Display = 0;
-        options.Step    = -1;
+        options.MaxIter    = -1;
+        options.Tol        = -1;
+        options.Display    = 0;
+        options.Step       = -1;
+        options.LowerBound = 0.0;
+        options.UpperBound = 1.0;
 
         load_from_file = 0;
 
@@ -50,6 +52,8 @@ namespace tmcmc {
 
             if (strstr(line, "Nth")) {
                 sscanf(line, "%*s %d", &Nth);
+                lowerbound = new double[Nth];
+                upperbound = new double[Nth];
             }
             else if (strstr(line, "MaxStages")) {
                 sscanf(line, "%*s %d", &MaxStages);
@@ -84,6 +88,14 @@ namespace tmcmc {
             else if (strstr(line, "opt.Step")) {
                 sscanf(line, "%*s %lf", &options.Step);
                 printf("setting step = %f\n", options.Step);
+            }    
+            else if (strstr(line, "opt.Lowerbound")) {
+                sscanf(line, "%*s %lf", &options.LowerBound);
+                printf("setting step = %f\n", options.LowerBound);
+            }
+            else if (strstr(line, "opt.Upperbound")) {
+                sscanf(line, "%*s %lf", &options.UpperBound);
+                printf("setting step = %f\n", options.UpperBound);
             }
             else if (strstr(line, "icdump")) {
                 sscanf(line, "%*s %d", &icdump);
@@ -100,18 +112,27 @@ namespace tmcmc {
             else if (strstr(line, "restart")) {
                 sscanf(line, "%*s %d", &restart);
             }
+            else if (strstr(line, "UpperBound")) {
+                int idx = 0;
+                while((sscanf(line, "%lf", &lowerbound[idx++])) != EOF)
+                if (idx+1 != Nth) {
+                    printf("\nLength of LowerBound does not match Nth. Exit...\n");
+                    exit(1);
+                }
+            }
+            else if (strstr(line, "LowerBound")) {
+                int idx = 0;
+                while((sscanf(line, "%lf", &upperbound[idx++])) != EOF)
+                if (idx+1 != Nth) {
+                    printf("\nLength of UpperBound does not match Nth. Exit...\n");
+                    exit(1);
+                }
+            }
+
+
         }
 
         fclose(f);
-
-
-        //XXX add: check if all parameters are ok
-        lowerbound = new double[Nth];
-        upperbound = new double[Nth]; 
-        for(int i=0; i<Nth; ++i){
-            lowerbound[i] = std::numeric_limits<double>::min();
-            upperbound[i] = std::numeric_limits<double>::max();
-        }
 
         Num = new int[MaxStages];
         for (int i = 0; i < MaxStages; ++i){

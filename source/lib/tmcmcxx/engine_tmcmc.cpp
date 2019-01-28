@@ -660,11 +660,11 @@ namespace tmcmc {
         multinomialrand (curgen_db.entries, N, q, nn);
         for (i = 0; i < curgen_db.entries; ++i) sel[i]+=nn[i];
 
-        if (display) {
-            printf("\n s = [");
-            for (i = 0; i < curgen_db.entries; ++i) printf("%d ", sel[i]);
-            printf("]\n");
-        }
+#ifdef VERBOSE
+        printf("\n s = [");
+        for (i = 0; i < curgen_db.entries; ++i) printf("%d ", sel[i]);
+        printf("]\n");
+#endif
 
         /* compute SS */
         unsigned int PROBDIM = data.Nth;
@@ -995,7 +995,7 @@ namespace tmcmc {
             }
 
             if(data.options.Display){
-                printf("CURGEN DB (COMPLE) %d\n", runinfo.Gen);
+                printf("prepare_newgen: CURGEN DB (COMPLE) %d\n", runinfo.Gen);
                 print_matrix("means", meanx, data.Nth);
                 print_matrix("std", stdx, data.Nth);
             }
@@ -1045,7 +1045,7 @@ namespace tmcmc {
                 stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
             }
 
-            printf("CURGEN DB (UNIQUE) %d: [un = %d]\n", runinfo.Gen, un);
+            printf("prepare_newgen: CURGEN DB (UNIQUE) %d: [un = %d]\n", runinfo.Gen, un);
             if(data.options.Display){
                 print_matrix((char *)"uniques mean", meanu, data.Nth);
                 print_matrix((char *)"uniques std", stdu, data.Nth);
@@ -1060,7 +1060,7 @@ namespace tmcmc {
             double t1 = torc_gettime();
             calculate_statistics(fj, data.Num[runinfo.Gen], runinfo.Gen, sel);
             double t2 = torc_gettime();
-            printf("init + calc stats : %lf + %lf = %lf seconds\n", t2-t1, t1-t0, t2-t0);
+            printf("prepare_newgen: init + calc stats : %lf + %lf = %lf seconds\n", t2-t1, t1-t0, t2-t0);
         }
 
         int newchains = 0;
@@ -1201,7 +1201,7 @@ namespace tmcmc {
                 stdx[p]  = gsl_stats_sd_m(x[p], 1, newchains, meanx[p]);
             }
 
-            printf("CURGEN DB (LEADER) %d: [nlead=%d]\n", runinfo.Gen, newchains);
+            printf("prepare_newgen: CURGEN DB (LEADER) %d: [nlead=%d]\n", runinfo.Gen, newchains);
             if(data.options.Display){
                 print_matrix("means", meanx, data.Nth);
                 print_matrix("std", stdx, data.Nth);
