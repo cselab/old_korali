@@ -43,10 +43,11 @@ namespace tmcmc {
 
         double lb, ub;        /*generic lower and upper bound*/
 
-        double TolCOV;
-        double bbeta;
+        double TolCOV;          /* Target coefficient of variation of weights */
+        double MinStep;         /* Min update of rho */
+        double bbeta;           /* Covariance scaling parameter */
         long   seed;
-        int    burn_in;
+        int    burn_in;         /* Number of burn in iterations */
 
         optim_options options;
 

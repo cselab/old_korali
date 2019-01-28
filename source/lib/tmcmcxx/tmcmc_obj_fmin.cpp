@@ -17,7 +17,7 @@
 
 namespace tmcmc {
 
-    double tmcmc_objlogp(double x, const double *fj, int fn, double pj, double tol)
+    double tmcmc_objlogp(double x, const double *fj, int fn, double pj, double zero)
     {
         const double fjmax = gsl_stats_max(fj, 1, fn);
        
@@ -44,14 +44,14 @@ namespace tmcmc {
 
         double mean_q = gsl_stats_mean(q, 1, fn);
         double std_q  = gsl_stats_sd_m(q, 1, fn, mean_q);
-        double coef   = pow(std_q/mean_q-tol, 2); // (TODO: is this true and not cvar? (DW))
+        double cov2   = pow(std_q/mean_q-zero, 2);
 
 #ifdef LARGE_SCALE_POPS
         delete[] weight;
         delete[] q;
 #endif
 
-        return coef;
+        return cov2;
     }
 
 
@@ -81,7 +81,7 @@ namespace tmcmc {
         gsl_function F;
         gsl_vector *x;
         
-        double x_lo = 0.0, x_hi = 4.0;    /* input */
+        double x_lo = 0.0, x_hi = 1.0;    /* input */
         double m = 0.5, fm = 0.0;
         bool converged = 0;
 
@@ -95,7 +95,7 @@ namespace tmcmc {
 
         T = gsl_min_fminimizer_brent;
     /*	T = gsl_min_fminimizer_goldensection;*/
-    /*	T = gsl_min_fminimizer_quad_golden;*/
+    /*	T = gsl_min_fminimizer_quad_golden;; */
         s = gsl_min_fminimizer_alloc (T);
 
         double f_lo = tmcmc_objlogp_gsl(x_lo, &fp);
@@ -118,7 +118,7 @@ namespace tmcmc {
             }
         }
 
-        if (fabs(fm) <= tol) {
+        if (fm <= tol) {
             converged = true;
             gsl_vector_free(x);
             gsl_min_fminimizer_free (s);
@@ -178,7 +178,7 @@ namespace tmcmc {
         if (converged) {
             converged = 1;
             gsl_vector_set (x, 0, m);
-            *fmin = tmcmc_objlogp_gsl(m, &fp);
+            *fmin = pow(tmcmc_objlogp_gsl(m, &fp),0.5);
             *xmin = m;
         } else {
             *fmin = 0;
@@ -244,7 +244,7 @@ namespace tmcmc {
                 converged = true;
                 if (display) printf ("fminsearch: Converged to minimum at\n");
             }
-            else if (fabs(s->fval) <= tol) {
+            else if (s->fval <= tol) {
                 converged = true;
                 status = GSL_SUCCESS;
                 if (display) 
@@ -263,7 +263,7 @@ namespace tmcmc {
         }
 
         if (converged) {
-            *fmin = s->fval;
+            *fmin = pow(s->fval, 0.5);
             *xmin = gsl_vector_get(s->x, 0);
         } else {
             *fmin = 0;
@@ -280,17 +280,17 @@ namespace tmcmc {
     /* simple min search, check stepwise for x < opt.Tol; if unsuccessfull increase
         range and refine steps (DW: could be optimized) */
     int fzerofind(double const *fj, int fn, double pj, double objTol, 
-            double *xmin, double *fmin, const optim_options& opt) {
+            double *xmin, double *fm, const optim_options& opt) {
 
         bool display = opt.Display;
         double tol   = opt.Tol;
         double step  = opt.Step;
         
         double x_lo = 0.0;
-        double x_hi = 4.0;
+        double x_hi = 1.0;
 
-        int first_try = 1;
-        bool dump = 0;
+        int first_try = true;
+        bool dump = true; //TODO: take from tmcmc.par (DW)
 
         FILE *fp = NULL;
         char fname[64];
@@ -299,100 +299,98 @@ namespace tmcmc {
         
         size_t iter;
         size_t niters;
-
-
-        double m, fm;
+        
+        double min  = 0;
+        double fmin = std::numeric_limits<double>::max();
+          
         bool converged = false;
         
         counter++;
         while (converged == false && 1e-16 < step) {
         
-        if(display) printf("fzerofind: x_lo %e x_hi %ei step %e\n", x_lo, x_hi, step);
-        niters = (size_t) ((x_hi-x_lo)/step);
+            if(display) printf("fzerofind: x_lo %e x_hi %ei step %e\n", x_lo, x_hi, step);
+            niters = (size_t) ((x_hi-x_lo)/step);
 
-        first_try++;
-        if (first_try) dump = true;
-
-        if (dump) {
-            sprintf(fname, "fzero_%03d.txt", counter);
-            fp = fopen(fname, "w");
-        }
-
-        m  = 0;
-        fm = std::numeric_limits<double>::max();
-        double t0  = torc_gettime();
-
-#ifndef _USE_OPENMP_
-        for (iter = 0; iter < niters; ++iter) {
-            
-            double x  = x_lo + iter*step;
-            double fx = tmcmc_objlogp(x, fj, fn, pj, tol);
-            
-            if (dump) fprintf(fp, "%.16f %.16f\n", x, fx);
-
-            if (fx < fm) {
-                fm = fx;
-                m  = x;
+            if (dump && first_try) {
+                first_try = false;
+                sprintf(fname, "fzero_%03d.txt", counter);
+                fp = fopen(fname, "w");
+                fprintf(fp, "%-19s%-19s\n","x","fx=(cov-TolCOV)^2");
             }
-            if (fabs(fx) <= tol) {
-                converged = true;
-                break;
-            }
-        }
-#else
-        #pragma omp parallel 
-        {
-            double lm = 0;
-            double lfm = std::numeric_limits<double>::max();
-            #pragma omp for
-            for (iter = 0; iter < niters; ++iter)
-            {
-                double x, fx;
 
-                if (converged == false)
-                {
-                    x  = x_lo + iter*Step;
-                    fx = tmcmc_objlogp_gsl(x, fj, fn, pj, tol);
-                    if (fx < lfm)
-                    {
-                        lfm = fx;
-                        lm  = x;
-                    }
-                    if (fabs(fx) <= tol) {
-                        converged = true;
-                        #pragma omp flush(converged)
-                    }
-                } /* (PH: task cancellation?) */
-            }
-            
-            #pragma omp critical
-            {
-                if (lfm < fm) {
-                    fm = lfm;
-                    m  = lm;
+           double t0  = torc_gettime();
+
+    #ifndef _USE_OPENMP_
+            for (iter = 0; iter < niters; ++iter) {
+                
+                double x  = x_lo + iter*step;
+                double fx = tmcmc_objlogp(x, fj, fn, pj, objTol);
+                
+                if (dump) fprintf(fp, "%.16f %.16f\n", x, fx);
+
+                if (fx < fmin) {
+                    fmin = fx;
+                    min  = x;
+                }
+                if (fx <= tol) {
+                    converged = true;
+                    break;
                 }
             }
-        }
-#endif
-        double t1 = torc_gettime();
+    #else
+            #pragma omp parallel 
+            {
+                double lmin  = 0;
+                double lfmin = std::numeric_limits<double>::max();
+                #pragma omp for
+                for (iter = 0; iter < niters; ++iter)
+                {
+                    double x, fx;
 
-        if (converged) {
-            if (display) printf("fzerofind: m=%.16f fm=%.16f iter=%ld, time=%lf s\n",
-                                 m, fm, niters, t1-t0);
-        } else {
-            x_lo = m - 10*step;
-            if (x_lo < 0) x_lo = 0.0;
-            x_hi = m + 10*step;
-            if (x_hi > 4) x_hi = 4.0;
-            step *= 0.1;
-            if (display) printf("fzerofind (%e): m=%.16f fm=%.16f iter=%ld, time=%lf s\n", 
-                                 step, m, fm, niters, t1-t0);
-        }
+                    if (converged == false)
+                    {
+                        x  = x_lo + iter*Step;
+                        fx = tmcmc_objlogp_gsl(x, fj, fn, pj, tol);
+                        if (fx < lfmin)
+                        {
+                            lfmin = fx;
+                            lmin  = x;
+                        }
+                        if (fabs(fx) <= tol) {
+                            converged = true;
+                            #pragma omp flush(converged)
+                        }
+                    } /* (PH: task cancellation?) */
+                }
+                
+                #pragma omp critical
+                {
+                    if (lfmin < fmin) {
+                        fmin = lfmin;
+                        min  = lmin;
+                    }
+                }
+            }
+    #endif
+            double t1 = torc_gettime();
+
+            if (converged) {
+                if (display) printf("fzerofind: m=%.16f fm=%.16f iter=%ld, time=%lf s\n",
+                                     min, fmin, niters, t1-t0);
+            } else {
+                x_lo = min - 10*step;
+                if (x_lo < 0) x_lo = 0.0;
+                x_hi = min + 10*step;
+                if (x_hi > 4) x_hi = 1.0;
+                step *= 0.1;
+                if (display) printf("fzerofind (%e): m=%.16f fm=%.16f iter=%ld, time=%lf s\n", 
+                                     step, min, fmin, niters, t1-t0);
+            }
 
         }
 
-        *xmin = m; // (TODO: check if we should set this if converged == false (DW))
-        *fmin = fm;
+        *xmin = min;
+        *fm   = pow(fmin,0.5);
 
         if (dump) fclose(fp);
 

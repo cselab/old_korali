@@ -15,6 +15,7 @@ namespace tmcmc {
         MaxChainLength = 0;
 
         TolCOV  = -1;
+        MinStep = 1e-6;
         bbeta   = -1;
         seed    = 280675;
         burn_in = -1;
@@ -58,6 +59,9 @@ namespace tmcmc {
             }
             else if (strstr(line, "TolCOV")) {
                 sscanf(line, "%*s %lf", &TolCOV);
+            }
+            else if (strstr(line, "MinStep")) {
+                sscanf(line, "%*s %lf", &MinStep);
             }
             else if (strstr(line, "bbeta")) {
                 sscanf(line, "%*s %lf", &bbeta);

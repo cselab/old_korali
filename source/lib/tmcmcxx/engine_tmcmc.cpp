@@ -50,8 +50,6 @@ namespace tmcmc {
         while(runinfo.Gen < data.MaxStages || runinfo.p[runinfo.Gen] == 1) {
             evalGen();
             runinfo.Gen++;
-            int tmp;
-            std::cin >> tmp;
         }
 
     }
@@ -558,14 +556,13 @@ namespace tmcmc {
         return;
     }
 
-    void TmcmcEngine::calculate_statistics(double flc[], unsigned int n, int nselections, 
+    void TmcmcEngine::calculate_statistics(double flc[], int nselections, 
                                            int gen, unsigned int sel[]) {
 
         int display = data.options.Display;    
-        double step = data.options.Step;
         
-        int *num             = data.Num;
-        double *coefVar      = runinfo.CoefVar;
+        int *num              = data.Num;
+        double *coefVar       = runinfo.CoefVar;
         double *p             = runinfo.p;
         double *logselections = runinfo.logselections;
         
@@ -574,7 +571,7 @@ namespace tmcmc {
         bool conv = 0;
 
 #ifdef _USE_FMINCON_
-            conv = fmincon(flc, n, p[gen], data.TolCOV, &xmin, &fmin,
+            conv = fmincon(flc, curgen_db.entries, p[gen], data.TolCOV, &xmin, &fmin,
                     data.options);
             if (display) printf("calculate_statistics: \
                 fmincon conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
@@ -582,7 +579,7 @@ namespace tmcmc {
 
 #ifdef _USE_FMINSEARCH_
             if (!conv){
-                conv = fminsearch(flc, n, p[gen], data.TolCOV, &xmin, &fmin, 
+                conv = fminsearch(flc, curgen_db.entries, p[gen], data.TolCOV, &xmin, &fmin, 
                         data.options);
                 if (display) printf("calculate_statistics: \
                     fminsearch conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
@@ -591,7 +588,7 @@ namespace tmcmc {
 
 #ifdef _USE_FZEROFIND_
             if (!conv) {
-                conv = fzerofind(flc, n, p[gen], data.TolCOV, &xmin, &fmin,
+                conv = fzerofind(flc, curgen_db.entries, p[gen], data.TolCOV, &xmin, &fmin,
                         data.options);
                 if (display) printf("calculate_statistics: \
                     fzerofind conv=%d xmin=%.16lf fmin=%.16lf\n", conv, xmin, fmin);
@@ -602,70 +599,70 @@ namespace tmcmc {
         /* gen: next generation number */
         unsigned int j = gen+1;
 
-        if ((conv)&&(xmin > p[gen])) {
-            p[j] = xmin;
+        if ( conv && (xmin > p[gen] + data.MinStep) ) {
+            p[j]       = xmin;
             coefVar[j] = fmin;
         } else {
-            p[j] = p[gen] + 0.1*step;
+            p[j]       = p[gen] + data.MinStep;
             coefVar[j] = coefVar[gen];
         }
 
         if (p[j] > 1) {
             /*pflag=p[j-1];*/
-            p[j]   = 1;
-            num[j] = 0; // TODOdata.LastNum;
+            p[j]       = 1;
+            coefVar[j] = tmcmc_objlogp(p[j], &fmin, curgen_db.entries, 
+                            p[j-1], data.TolCOV);
+            num[j] = 0; // TODO: data.LastNum;
         }
 
         /* Compute weights and normalize*/
         unsigned int i;
 
-        double *flcp  = new double[n]; 	
-        for (i = 0; i<n; ++i)
+        double *flcp  = new double[curgen_db.entries]; 	
+        for (i = 0; i < curgen_db.entries; ++i)
             flcp[i] = flc[i]*(p[j]-p[j-1]);
 
 
-        const double fjmax = gsl_stats_max(flcp, 1, n);
-        double *weight     = new double[n]; 
-        for (i = 0; i < n; ++i)
+        const double fjmax = gsl_stats_max(flcp, 1, curgen_db.entries);
+        double *weight     = new double[curgen_db.entries]; 
+        for (i = 0; i < curgen_db.entries; ++i)
             weight[i] = exp( flcp[i] - fjmax );
 
-        if (display) print_matrix((char *)"weight", weight, n);
+        if (display) print_matrix((char *)"weight", weight, curgen_db.entries);
 
-        double sum_weight = std::accumulate(weight, weight+n, 0.0);
+        double sum_weight = std::accumulate(weight, weight+curgen_db.entries, 0.0);
 
-        double *q = new double[n];
-        for (i = 0; i < n; ++i)
+        double *q = new double[curgen_db.entries];
+        for (i = 0; i < curgen_db.entries; ++i)
             q[i] = weight[i]/sum_weight;
 
-        if (display) print_matrix((char *)"runinfo_q", q, n);
+        if (display) print_matrix((char *)"runinfo_q", q, curgen_db.entries);
 
-        logselections[gen] = log(sum_weight) + fjmax - log(n);
+        logselections[gen] = log(sum_weight) + fjmax - log(curgen_db.entries);
 
         if (display) print_matrix((char *)"logselections", logselections, gen+1);
 
-        double mean_q = gsl_stats_mean(q, 1, n);
-        double std_q  = gsl_stats_sd_m(q, 1, n, mean_q);
+        double mean_q = gsl_stats_mean(q, 1, curgen_db.entries);
+        double std_q  = gsl_stats_sd_m(q, 1, curgen_db.entries, mean_q);
 
         coefVar[gen] = std_q/mean_q;
 
         if (display) print_matrix((char *)"CoefVar", coefVar, gen+1);
 
-        size_t K = n;
         unsigned int N = 1;
 
-        unsigned int samples = n; /*1000;*/
-        unsigned int *nn = new unsigned int[samples];
+        unsigned int *nn = new unsigned int[curgen_db.entries];
 
-        for (i = 0; i < samples; ++i) sel[i] = 0;
+        for (i = 0; i < curgen_db.entries; ++i) sel[i] = 0;
 
-        if (nselections == 0) nselections = samples; /* n;*/
+        if (nselections == 0) nselections = curgen_db.entries; /* n;*/
         N = nselections;
-        multinomialrand (K, N, q, nn);
-        for (i = 0; i < K; ++i) sel[i]+=nn[i];
+        multinomialrand (curgen_db.entries, N, q, nn);
+        for (i = 0; i < curgen_db.entries; ++i) sel[i]+=nn[i];
 
         if (display) {
             printf("\n s = [");
-            for (i = 0; i < K; ++i) printf("%d ", sel[i]);
+            for (i = 0; i < curgen_db.entries; ++i) printf("%d ", sel[i]);
             printf("]\n");
         }
 
@@ -676,7 +673,7 @@ namespace tmcmc {
 
         for (i = 0; i < PROBDIM; ++i) {
             mean_of_theta[i] = 0;
-            for (j = 0; j < n; ++j) mean_of_theta[i]+=curgen_db.entry[j].point[i]*q[j];
+            for (j = 0; j < curgen_db.entries; ++j) mean_of_theta[i]+=curgen_db.entry[j].point[i]*q[j];
 
             runinfo.meantheta[gen][i] = mean_of_theta[i];
         }
@@ -691,7 +688,7 @@ namespace tmcmc {
         for (i = 0; i < PROBDIM; ++i) {
             for (j = 0; j < PROBDIM; ++j) {
                 double s = 0;
-                for (unsigned int k = 0; k < n; ++k) {
+                for (unsigned int k = 0; k < curgen_db.entries; ++k) {
                     s += q[k]*(curgen_db.entry[k].point[i]-meanv[i])*(curgen_db.entry[k].point[j]-meanv[j]);
                 }
                 runinfo.SS[i][j] = runinfo.SS[j][i] = s;
@@ -1061,7 +1058,7 @@ namespace tmcmc {
             for (i = 0; i < n; ++i)
                 fj[i] = curgen_db.entry[i].F;    /* separate point from F ?*/
             double t1 = torc_gettime();
-            calculate_statistics(fj, n, data.Num[runinfo.Gen], runinfo.Gen, sel);
+            calculate_statistics(fj, data.Num[runinfo.Gen], runinfo.Gen, sel);
             double t2 = torc_gettime();
             printf("init + calc stats : %lf + %lf = %lf seconds\n", t2-t1, t1-t0, t2-t0);
         }

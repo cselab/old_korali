@@ -77,8 +77,8 @@ namespace tmcmc {
         void update_curres_db(double point[/* EXPERIMENTAL_RESULTS */], double F);
         void dump_curres_db(int gen);
 
-        void calculate_statistics(double flc[], unsigned int n, int nselections, 
-                                 int gen, unsigned int sel[]);
+        void calculate_statistics(double flc[], int nselections, int gen, 
+                                    unsigned int sel[]);
 
 
         void taskfun(const double *x, int *pN, double *res, int winfo[4]);
