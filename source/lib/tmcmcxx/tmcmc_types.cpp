@@ -35,6 +35,8 @@ namespace tmcmc {
         stealing = 0;
         restart  = 0;
 
+        int idx = 0;
+        
         FILE *f = fopen(fname, "r");
         if (f == NULL) {
             printf("\nThe input file 'tmcmc.par' is missing. Exit...\n");
@@ -112,27 +114,19 @@ namespace tmcmc {
             else if (strstr(line, "restart")) {
                 sscanf(line, "%*s %d", &restart);
             }
-            else if (strstr(line, "UpperBound")) {
-                int idx = 0;
-                while((sscanf(line, "%lf", &lowerbound[idx++])) != EOF)
-                if (idx+1 != Nth) {
-                    printf("\nLength of LowerBound does not match Nth. Exit...\n");
-                    exit(1);
-                }
+            else if (strstr(line, "Bound")) {
+                sscanf(line, "%*s %lf %lf", &lowerbound[idx] , &upperbound[idx]);
+                idx++;
             }
-            else if (strstr(line, "LowerBound")) {
-                int idx = 0;
-                while((sscanf(line, "%lf", &upperbound[idx++])) != EOF)
-                if (idx+1 != Nth) {
-                    printf("\nLength of UpperBound does not match Nth. Exit...\n");
-                    exit(1);
-                }
-            }
-
 
         }
 
         fclose(f);
+        
+        if (idx != Nth) {
+            printf("\nNumber of Bounds does not match Nth. Exit...\n");
+            exit(1);
+        }
 
         Num = new int[MaxStages];
         for (int i = 0; i < MaxStages; ++i){

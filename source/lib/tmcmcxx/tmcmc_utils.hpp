@@ -49,16 +49,21 @@ namespace tmcmc {
 
     static pthread_mutex_t feval_m = PTHREAD_MUTEX_INITIALIZER;
 
-    int  get_nfc();
+    int get_nfc();
+    int get_tfc();
     void inc_nfc();
     void reset_nfc();
     
     int compar_desc(const void *p1, const void *p2);
 
+    double compute_sum(double *v, int n);
+    
     int in_rect(double *v1, double *v2, double *diam, double sc, int D);
 
+    int make_posdef(double *mat, int dim, int method);
+    
     void print_matrix(const char *name, double *x, int n);
-    //void print_matrix_i(char *name, int *x, int n);
+    void print_matrix_i(char *name, int *x, int n);
     void print_matrix_2d(const char *name, double **x, int n1, int n2);
  
 } // namespace tmcmc

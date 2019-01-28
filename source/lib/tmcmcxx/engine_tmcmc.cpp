@@ -47,11 +47,40 @@ namespace tmcmc {
         if (data.options.Display) print_runinfo();
 
 
-        while(runinfo.Gen < data.MaxStages || runinfo.p[runinfo.Gen] == 1) {
+        while(++runinfo.Gen < data.MaxStages && runinfo.p[runinfo.Gen] < 1.0) {
             evalGen();
-            runinfo.Gen++;
         }
 
+        print_matrix((char *)"runinfo.p", runinfo.p, runinfo.Gen+1);
+        print_matrix((char *)"runinfo.CoefVar", runinfo.CoefVar, runinfo.Gen+1);
+        print_matrix_i((char *)"runinfo.currentuniques", runinfo.currentuniques, runinfo.Gen+1);
+        print_matrix((char *)"runinfo.acceptance", runinfo.acceptance, runinfo.Gen+1);
+        print_matrix((char *)"runinfo.logselection", runinfo.logselections, runinfo.Gen+1);
+
+        double logEvidence[1];
+        logEvidence[0] = compute_sum(runinfo.logselections, runinfo.Gen+1);
+        print_matrix((char *)"logEvidence", logEvidence, 1);
+
+        FILE *fp;
+        fp = fopen("log_evidence.txt", "w");
+        fprintf(fp, "%lf\n", logEvidence[0]);
+        fclose(fp);
+
+        runinfo_t::save(runinfo, data.Nth, data.MaxStages);
+
+        if (data.icdump){
+            printf("lastgen = %d\n", runinfo.Gen);
+            char cmd[256];
+            sprintf(cmd, "cp curgen_db_%03d.txt final.txt", runinfo.Gen);
+            system(cmd);
+        }
+
+        fitfun::fitfun_finalize();
+        printf("total function calls = %d\n", get_tfc());
+#if defined(_USE_TORC_)
+        torc_finalize();
+#endif
+        return;
     }
 
 
@@ -599,7 +628,7 @@ namespace tmcmc {
         /* gen: next generation number */
         unsigned int j = gen+1;
 
-        if ( conv && (xmin > p[gen] + data.MinStep) ) {
+        if ( conv && (xmin > p[gen] /* + data.MinStep */  ) ) {
             p[j]       = xmin;
             coefVar[j] = fmin;
         } else {
@@ -610,8 +639,8 @@ namespace tmcmc {
         if (p[j] > 1) {
             /*pflag=p[j-1];*/
             p[j]       = 1;
-            coefVar[j] = tmcmc_objlogp(p[j], &fmin, curgen_db.entries, 
-                            p[j-1], data.TolCOV);
+            coefVar[j] = tmcmc_objlogp(p[j], flc, curgen_db.entries, 
+                                        p[j-1], data.TolCOV);
             num[j] = 0; // TODO: data.LastNum;
         }
 
@@ -628,7 +657,7 @@ namespace tmcmc {
         for (i = 0; i < curgen_db.entries; ++i)
             weight[i] = exp( flcp[i] - fjmax );
 
-        if (display) print_matrix((char *)"weight", weight, curgen_db.entries);
+        if (display>2) print_matrix((char *)"weight", weight, curgen_db.entries);
 
         double sum_weight = std::accumulate(weight, weight+curgen_db.entries, 0.0);
 
@@ -636,7 +665,7 @@ namespace tmcmc {
         for (i = 0; i < curgen_db.entries; ++i)
             q[i] = weight[i]/sum_weight;
 
-        if (display) print_matrix((char *)"runinfo_q", q, curgen_db.entries);
+        if (display>2) print_matrix((char *)"runinfo_q", q, curgen_db.entries);
 
         logselections[gen] = log(sum_weight) + fjmax - log(curgen_db.entries);
 
@@ -660,11 +689,11 @@ namespace tmcmc {
         multinomialrand (curgen_db.entries, N, q, nn);
         for (i = 0; i < curgen_db.entries; ++i) sel[i]+=nn[i];
 
-#ifdef VERBOSE
-        printf("\n s = [");
-        for (i = 0; i < curgen_db.entries; ++i) printf("%d ", sel[i]);
-        printf("]\n");
-#endif
+        if (display>2) {
+            printf("\n s = [");
+            for (i = 0; i < curgen_db.entries; ++i) printf("%d ", sel[i]);
+            printf("]\n");
+        }
 
         /* compute SS */
         unsigned int PROBDIM = data.Nth;
@@ -686,7 +715,7 @@ namespace tmcmc {
         }
 
         for (i = 0; i < PROBDIM; ++i) {
-            for (j = 0; j < PROBDIM; ++j) {
+            for (j = i; j < PROBDIM; ++j) {
                 double s = 0;
                 for (unsigned int k = 0; k < curgen_db.entries; ++k) {
                     s += q[k]*(curgen_db.entry[k].point[i]-meanv[i])*(curgen_db.entry[k].point[j]-meanv[j]);
@@ -722,7 +751,7 @@ namespace tmcmc {
         if (exitgen == runinfo.Gen) {
             printf("Read Exit Envrironment Variable!!!\n");
 
-#if defined(_USE_TORC_)
+#ifdef _USE_TORC_
                 torc_finalize();
 #endif
             exit(1); // TODO: can we do this smoother? (DW)
@@ -733,7 +762,7 @@ namespace tmcmc {
         if (fp != NULL) {
             printf("Found Exit File!!!\n");
             //unlink("exit.txt"); TODO: reinsert? (DW)
-#if defined(_USE_TORC_)
+#ifdef _USE_TORC_
             torc_finalize();
 #endif
             exit(1); // TODO: can we do this smoother? (DW)
@@ -840,26 +869,27 @@ namespace tmcmc {
 
 
     int TmcmcEngine::compute_candidate(double candidate[], double chain_mean[], double var) {
-        int i;
         double bSS[data.Nth*data.Nth];
 
-        for (i = 0; i < data.Nth; ++i)
+        for (int i = 0; i < data.Nth; ++i)
             for (int j = 0; j < data.Nth; ++j)
                 bSS[i*data.Nth+j]= data.bbeta*runinfo.SS[i][j];
 
 
         mvnrnd(chain_mean, (double *)bSS, candidate, data.Nth);
 
-        for (i = 0; i < data.Nth; ++i) {
-            if (isnan(candidate[i])) {
+        int idx = 0;
+        for (; idx < data.Nth; ++idx) {
+            if (isnan(candidate[idx])) {
                 printf("!!!!  isnan in candidate point!\n");
                 exit(1);
                 break;
             }
-            if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) break;
+            if ((candidate[idx] < data.lowerbound[idx]) || 
+                    (candidate[idx] > data.upperbound[idx])) break;
         }
 
-        if (i < data.Nth) return -1;
+        if (idx < data.Nth) return -1;
 
         return 0;    // all good
     }
@@ -911,11 +941,11 @@ namespace tmcmc {
 
             //printf("---> %d -  %ld/%d   ---  %p  \n", chain_id, me, torc_i_num_workers(), priors ); fflush(NULL);
 
-            #if 0
+#if 0
                 int fail = compute_candidate_cov(candidate, chain_mean, chain_cov);
-            #else
+#else
                 int fail = compute_candidate(candidate, chain_mean, 1); // I keep this for the moment, for performance reasons
-            #endif
+#endif
 
             if (!fail){
 

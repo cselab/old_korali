@@ -94,7 +94,6 @@ namespace priors {
 		return gsl_ran_gaussian_pdf( x-p[0] , p[1] );
 	}
 
-
 	double normal_log_pdf(double x, double *p){
 
 		double res  =  -0.5*log(2*M_PI)

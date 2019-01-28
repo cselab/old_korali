@@ -11,7 +11,6 @@
 #include "tmcmc_types.hpp"
 #include "tmcmc_obj_fmin.hpp"
 
-#define CHECK_POSDEF
 #define LARGE_SCALE_POPS
 
 
@@ -19,8 +18,8 @@ namespace tmcmc {
 
     double tmcmc_objlogp(double x, const double *fj, int fn, double pj, double zero)
     {
+        
         const double fjmax = gsl_stats_max(fj, 1, fn);
-       
 #ifdef LARGE_SCALE_POPS
         double *weight = new double[fn];
 #else
@@ -116,7 +115,7 @@ namespace tmcmc {
             double x = x_lo + i*(x_hi-x_lo)/max_iter;
             double fx = tmcmc_objlogp_gsl(x, &fp);
             if (fx < fm) {
-                m = x;
+                m  = x;
                 fm = fx;
             }
         }
@@ -326,9 +325,8 @@ namespace tmcmc {
 
            double t0  = torc_gettime();
 
-    #ifndef _USE_OPENMP_
+#ifndef _USE_OPENMP_
             for (iter = 0; iter < niters; ++iter) {
-                
                 double x  = x_lo + iter*step;
                 double fx = tmcmc_objlogp(x, fj, fn, pj, objTol);
                 
@@ -343,7 +341,7 @@ namespace tmcmc {
                     break;
                 }
             }
-    #else
+#else
             #pragma omp parallel 
             {
                 double lmin  = 0;
@@ -377,7 +375,7 @@ namespace tmcmc {
                     }
                 }
             }
-    #endif
+#endif
             double t1 = torc_gettime();
 
             if (converged) {
