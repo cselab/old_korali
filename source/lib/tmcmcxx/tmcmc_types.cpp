@@ -132,8 +132,6 @@ namespace tmcmc {
         for (int i = 0; i < MaxStages; ++i){
             Num[i] = PopSize;
         }
-        
-        LastNum = PopSize;
 
         double *LCmem = new double[PopSize*Nth*Nth];
         local_cov     = new double*[PopSize];
@@ -147,14 +145,14 @@ namespace tmcmc {
 
     void runinfo_t::init(runinfo_t& runinfo, int nth, int maxstages) {
         
-        runinfo.Gen = 0;
-
         runinfo.CoefVar        = new double[maxstages+1];
-        runinfo.CoefVar[0]     = 10;
         runinfo.p              = new double[maxstages+1];
         runinfo.currentuniques = new int[maxstages];
         runinfo.logselections  = new double[maxstages];
         runinfo.acceptance     = new double[maxstages];
+        
+        runinfo.Gen = 0;
+        runinfo.CoefVar[0] = std::numeric_limits<double>::infinity();
         
         // TODO: is this leaking? (DW)
         double *SSmem = new double[nth*nth];

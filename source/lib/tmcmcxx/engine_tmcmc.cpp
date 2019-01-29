@@ -47,7 +47,7 @@ namespace tmcmc {
         if (data.options.Display) print_runinfo();
 
 
-        while(++runinfo.Gen < data.MaxStages && runinfo.p[runinfo.Gen] < 1.0) {
+        while(runinfo.p[runinfo.Gen] < 1.0 && ++runinfo.Gen < data.MaxStages) {
             evalGen();
         }
 
@@ -57,13 +57,12 @@ namespace tmcmc {
         print_matrix((char *)"runinfo.acceptance", runinfo.acceptance, runinfo.Gen+1);
         print_matrix((char *)"runinfo.logselection", runinfo.logselections, runinfo.Gen+1);
 
-        double logEvidence[1];
-        logEvidence[0] = compute_sum(runinfo.logselections, runinfo.Gen+1);
-        print_matrix((char *)"logEvidence", logEvidence, 1);
+        double logEvidence = compute_sum(runinfo.logselections, runinfo.Gen+1);
+        printf("logEvidence = %f", logEvidence);
 
         FILE *fp;
         fp = fopen("log_evidence.txt", "w");
-        fprintf(fp, "%lf\n", logEvidence[0]);
+        fprintf(fp, "%lf\n", logEvidence);
         fclose(fp);
 
         runinfo_t::save(runinfo, data.Nth, data.MaxStages);
@@ -217,13 +216,13 @@ namespace tmcmc {
 
         curres_db.entries = 0;
         nchains = prepare_newgen(nchains, leaders);
-
         spmd_update_runinfo(); 
 
         if(data.options.Display) print_runinfo();
 
-        printf("Acceptance rate   :  %lf \n",runinfo.acceptance[runinfo.Gen]) ;
-        printf("Annealing exponent:  %lf \n",runinfo.p[runinfo.Gen]) ;
+        printf("Acceptance rate         :  %lf \n", runinfo.acceptance[runinfo.Gen]) ;
+        printf("Annealing exponent      :  %lf \n", runinfo.p[runinfo.Gen]) ;
+        printf("Coeficient of Variation :  %lf \n", runinfo.CoefVar[runinfo.Gen]) ;
         printf("----------------------------------------------------------------\n");
         return; 
     }
@@ -590,7 +589,6 @@ namespace tmcmc {
 
         int display = data.options.Display;    
         
-        int *num              = data.Num;
         double *coefVar       = runinfo.CoefVar;
         double *p             = runinfo.p;
         double *logselections = runinfo.logselections;
@@ -630,18 +628,19 @@ namespace tmcmc {
 
         if ( conv && (xmin > p[gen] /* + data.MinStep */  ) ) {
             p[j]       = xmin;
-            coefVar[j] = fmin;
+            coefVar[j] = pow(fmin, 0.5) + data.TolCOV;
         } else {
             p[j]       = p[gen] + data.MinStep;
-            coefVar[j] = coefVar[gen];
+            coefVar[j] = pow(tmcmc_objlogp(p[j], flc, curgen_db.entries,        
+                                            p[j-1], data.TolCOV), 0.5) +            
+                                                data.TolCOV;
         }
 
         if (p[j] > 1) {
-            /*pflag=p[j-1];*/
             p[j]       = 1;
-            coefVar[j] = tmcmc_objlogp(p[j], flc, curgen_db.entries, 
-                                        p[j-1], data.TolCOV);
-            num[j] = 0; // TODO: data.LastNum;
+            coefVar[j] = pow(tmcmc_objlogp(p[j], flc, curgen_db.entries, 
+                                            p[j-1], data.TolCOV), 0.5) +
+                                                data.TolCOV; 
         }
 
         /* Compute weights and normalize*/
@@ -656,26 +655,23 @@ namespace tmcmc {
         double *weight     = new double[curgen_db.entries]; 
         for (i = 0; i < curgen_db.entries; ++i)
             weight[i] = exp( flcp[i] - fjmax );
-
         if (display>2) print_matrix((char *)"weight", weight, curgen_db.entries);
 
         double sum_weight = std::accumulate(weight, weight+curgen_db.entries, 0.0);
+        
+        logselections[gen] = log(sum_weight) + fjmax - log(curgen_db.entries);
+        if (display) print_matrix((char *)"logselections", logselections, gen+1);
+
 
         double *q = new double[curgen_db.entries];
         for (i = 0; i < curgen_db.entries; ++i)
             q[i] = weight[i]/sum_weight;
-
         if (display>2) print_matrix((char *)"runinfo_q", q, curgen_db.entries);
 
-        logselections[gen] = log(sum_weight) + fjmax - log(curgen_db.entries);
+        //double mean_q = gsl_stats_mean(q, 1, curgen_db.entries);
+        //double std_q  = gsl_stats_sd_m(q, 1, curgen_db.entries, mean_q);
 
-        if (display) print_matrix((char *)"logselections", logselections, gen+1);
-
-        double mean_q = gsl_stats_mean(q, 1, curgen_db.entries);
-        double std_q  = gsl_stats_sd_m(q, 1, curgen_db.entries, mean_q);
-
-        coefVar[gen] = std_q/mean_q;
-
+        //coefVar[gen] = std_q/mean_q;
         if (display) print_matrix((char *)"CoefVar", coefVar, gen+1);
 
         unsigned int N = 1;

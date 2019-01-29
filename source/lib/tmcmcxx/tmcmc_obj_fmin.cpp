@@ -180,7 +180,7 @@ namespace tmcmc {
         if (converged) {
             converged = 1;
             gsl_vector_set (x, 0, m);
-            *fmin = pow(tmcmc_objlogp_gsl(m, &fp),0.5);
+            *fmin = tmcmc_objlogp_gsl(m, &fp);
             *xmin = m;
         } else {
             *fmin = 0;
@@ -269,7 +269,7 @@ namespace tmcmc {
         }
 
         if (converged) {
-            *fmin = pow(s->fval, 0.5);
+            *fmin = s->fval;
             *xmin = gsl_vector_get(s->x, 0);
         } else {
             *fmin = 0;
@@ -286,7 +286,7 @@ namespace tmcmc {
     /* simple min search, check stepwise for x < opt.Tol; if unsuccessfull
      * adjust range and refine steps (DW: could be optimized) */
     int fzerofind(double const *fj, int fn, double pj, double objTol, 
-            double *xmin, double *fm, const optim_options& opt) {
+            double *xmin, double *fmin, const optim_options& opt) {
 
         bool display = opt.Display;
         double tol   = opt.Tol;
@@ -306,7 +306,7 @@ namespace tmcmc {
         size_t niters;
         
         double min  = 0;
-        double fmin = std::numeric_limits<double>::max();
+        double fm = std::numeric_limits<double>::max();
           
         bool converged = false;
         
@@ -332,9 +332,9 @@ namespace tmcmc {
                 
                 if (dump) fprintf(fp, "%.16f %.16f\n", x, fx);
 
-                if (fx < fmin) {
-                    fmin = fx;
-                    min  = x;
+                if (fx < fm) {
+                    fm  = fx;
+                    min = x;
                 }
                 if (fx <= tol) {
                     converged = true;
@@ -369,9 +369,9 @@ namespace tmcmc {
                 
                 #pragma omp critical
                 {
-                    if (lfmin < fmin) {
-                        fmin = lfmin;
-                        min  = lmin;
+                    if (lfmin < fm) {
+                        fm  = lfmin;
+                        min = lmin;
                     }
                 }
             }
@@ -380,7 +380,7 @@ namespace tmcmc {
 
             if (converged) {
                 if (display) printf("fzerofind: m=%.16f fm=%.16f iter=%ld, time=%lf s\n",
-                                     min, fmin, niters, t1-t0);
+                                     min, fm, niters, t1-t0);
             } else {
                 x_lo = min - 10*step;
                 if (x_lo < 0) x_lo = 0.0;
@@ -388,13 +388,13 @@ namespace tmcmc {
                 if (x_hi > 4) x_hi = 1.0;
                 step *= 0.1;
                 if (display) printf("fzerofind (%e): m=%.16f fm=%.16f iter=%ld, time=%lf s\n", 
-                                     step, min, fmin, niters, t1-t0);
+                                     step, min, fm, niters, t1-t0);
             }
 
         }
 
         *xmin = min;
-        *fm   = pow(fmin,0.5);
+        *fmin = fm;
 
         if (dump) fclose(fp);
 

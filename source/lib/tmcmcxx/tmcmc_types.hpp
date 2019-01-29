@@ -62,7 +62,6 @@ namespace tmcmc {
         int ifdump;
 
         int *Num;               /*[MAXGENS];*/
-        int  LastNum;
 
         int    use_proposal_cma;
         double **init_mean;     /* [DATANUM][PROBDIM] */
