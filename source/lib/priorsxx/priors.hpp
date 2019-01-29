@@ -3,29 +3,31 @@
 
 #include "density.hpp"
 
-namespace priors {
+namespace priors
+{
 
-	class Prior {
+class Prior
+{
 
-	public:
-		Prior(const char * fname);
-		~Prior();
+public:
+    Prior(const char * fname);
+    ~Prior();
 
-		double eval_pdf(double *x);
-		double eval_logpdf(double *x);
-        double rand(int dim);
+    double eval_pdf(double *x);
+    double eval_logpdf(double *x);
+    double rand(int dim);
 
-		void  print();
+    void  print();
 
-	private:
-		int dim_;
-		Density * densities_;
+private:
+    int dim_;
+    Density * densities_;
 
-		// (TODO: do we need this below? (DW))
-        //void reassign_prior( Density *p, int Np, double *psi );
-		//void new_prior_from_prior( Density **new_prior, Density *from_prior, int Npr );
+    // (TODO: do we need this below? (DW))
+    //void reassign_prior( Density *p, int Np, double *psi );
+    //void new_prior_from_prior( Density **new_prior, Density *from_prior, int Npr );
 
-	};
+};
 
 }//namespace priors
 
