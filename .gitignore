@@ -2,6 +2,7 @@
 *.a
 *.swp
 *.out
+*.orig
 
 .DS_Store
 
