@@ -3,19 +3,20 @@
 
 #include "tmcmc_types.hpp"
 
-namespace tmcmc {
+namespace tmcmc
+{
 
-    double tmcmc_objlogp(double x, const double *fj, int fn, 
-            double pj, double zero);
+double tmcmc_objlogp(double x, const double *fj, int fn,
+                     double pj, double zero);
 
-    int fmincon(const double *fj, int fn, double pj, double objTol, 
+int fmincon(const double *fj, int fn, double pj, double objTol,
             double *xmin, double *fmin, const optim_options& opt);
 
-    int fminsearch(double const *fj, int fn, double pj, double objTol, 
-            double *xmin, double *fmin, const optim_options& opt);
- 
-    int fzerofind(double const *fj, int fn, double pj, double objTol, 
-        double *xmin, double *fmin, const optim_options& opt);
+int fminsearch(double const *fj, int fn, double pj, double objTol,
+               double *xmin, double *fmin, const optim_options& opt);
+
+int fzerofind(double const *fj, int fn, double pj, double objTol,
+              double *xmin, double *fmin, const optim_options& opt);
 
 }//namespace tmcmc
 
