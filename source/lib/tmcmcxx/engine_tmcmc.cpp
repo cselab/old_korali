@@ -55,7 +55,7 @@ namespace tmcmc {
         print_matrix((char *)"runinfo.CoefVar", runinfo.CoefVar, runinfo.Gen+1);
         print_matrix_i((char *)"runinfo.currentuniques", runinfo.currentuniques, runinfo.Gen+1);
         print_matrix((char *)"runinfo.acceptance", runinfo.acceptance, runinfo.Gen+1);
-        print_matrix((char *)"runinfo.logselection", runinfo.logselections, runinfo.Gen+1);
+        print_matrix((char *)"runinfo.logselection", runinfo.logselections, runinfo.Gen);
 
         double logEvidence = compute_sum(runinfo.logselections, runinfo.Gen+1);
         printf("logEvidence = %f", logEvidence);
@@ -201,9 +201,10 @@ namespace tmcmc {
 
         gt1 = torc_gettime();
         int g_nfeval = get_nfc();
-        printf("evalGen: Generation %d: total elapsed time = %lf secs, \
-                    generation elapsed time = %lf secs for function calls = %d\n", 
-                    runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
+        printf("evalGen: Generation %d: total elapsed time = %lf secs, ",
+                runinfo.Gen, gt1-t0);
+        printf("generation elapsed time = %lf secs for function calls = %d\n", 
+                gt1-gt0, g_nfeval);
         
         reset_nfc();
 		
@@ -593,7 +594,6 @@ namespace tmcmc {
         double *p             = runinfo.p;
         double *logselections = runinfo.logselections;
         
-        /*double pflag = 0;*/
         double fmin = 0, xmin = 0;
         bool conv = 0;
 
@@ -655,24 +655,23 @@ namespace tmcmc {
         double *weight     = new double[curgen_db.entries]; 
         for (i = 0; i < curgen_db.entries; ++i)
             weight[i] = exp( flcp[i] - fjmax );
-        if (display>2) print_matrix((char *)"weight", weight, curgen_db.entries);
+        if (display>2) print_matrix("weight", weight, curgen_db.entries);
 
-        double sum_weight = std::accumulate(weight, weight+curgen_db.entries, 0.0);
+        delete [] flcp;
         
-        logselections[gen] = log(sum_weight) + fjmax - log(curgen_db.entries);
-        if (display) print_matrix((char *)"logselections", logselections, gen+1);
-
+        double sum_weight = std::accumulate(weight, weight+curgen_db.entries, 0.0);
+        logselections[gen]  = log(sum_weight) + fjmax - log(curgen_db.entries);
+        if (display) print_matrix("logselections", logselections, gen);
 
         double *q = new double[curgen_db.entries];
         for (i = 0; i < curgen_db.entries; ++i)
             q[i] = weight[i]/sum_weight;
-        if (display>2) print_matrix((char *)"runinfo_q", q, curgen_db.entries);
-
-        //double mean_q = gsl_stats_mean(q, 1, curgen_db.entries);
-        //double std_q  = gsl_stats_sd_m(q, 1, curgen_db.entries, mean_q);
-
-        //coefVar[gen] = std_q/mean_q;
-        if (display) print_matrix((char *)"CoefVar", coefVar, gen+1);
+        if (display>2) print_matrix("runinfo_q", q, curgen_db.entries);
+        
+        delete [] q;
+        delete [] weight;
+        
+        if (display) print_matrix("CoefVar", coefVar, gen+1);
 
         unsigned int N = 1;
 
@@ -684,7 +683,9 @@ namespace tmcmc {
         N = nselections;
         multinomialrand (curgen_db.entries, N, q, nn);
         for (i = 0; i < curgen_db.entries; ++i) sel[i]+=nn[i];
-
+        
+        delete [] nn;
+        
         if (display>2) {
             printf("\n s = [");
             for (i = 0; i < curgen_db.entries; ++i) printf("%d ", sel[i]);
@@ -703,7 +704,7 @@ namespace tmcmc {
             runinfo.meantheta[gen][i] = mean_of_theta[i];
         }
 
-        if (display) print_matrix((char *)"mean_of_theta", mean_of_theta, PROBDIM);
+        if (display) print_matrix("mean_of_theta", mean_of_theta, PROBDIM);
 
         double meanv[PROBDIM];
         for (i = 0; i < PROBDIM; ++i) {
@@ -727,12 +728,8 @@ namespace tmcmc {
         }
 #endif
 
-        if (display) print_matrix_2d((char *)"runinfo.SS", runinfo.SS, PROBDIM, PROBDIM);
+        if (display) print_matrix_2d("runinfo.SS", runinfo.SS, PROBDIM, PROBDIM);
 
-        delete [] flcp;
-        delete [] weight;
-        delete [] q;
-        delete [] nn;
     }
 
 
@@ -878,7 +875,7 @@ namespace tmcmc {
         for (; idx < data.Nth; ++idx) {
             if (isnan(candidate[idx])) {
                 printf("!!!!  isnan in candidate point!\n");
-                exit(1);
+                //exit(1);
                 break;
             }
             if ((candidate[idx] < data.lowerbound[idx]) || 
@@ -954,8 +951,9 @@ namespace tmcmc {
                 logprior_candidate = prior.eval_logpdf(candidate); 
                 double L = exp((logprior_candidate-logprior_leader)+(loglik_candidate-loglik_leader)*pj);
 
-                if (L > 1) L = 1;
-                double P = uniformrand(0,1);
+                double P = 0;
+                if (L > 1) L = 1; 
+                else P = uniformrand(0,1);
                 if (P < L) {
                     // new leader
                     for (int i = 0; i < data.Nth; ++i) leader[i] = candidate[i]; 
@@ -998,7 +996,6 @@ namespace tmcmc {
 
         int n = curgen_db.entries;
 
-        double *fj 		  = new double[n];
         unsigned int *sel = new unsigned int[n];
 
         double **g_x = new double*[data.Nth];
@@ -1032,24 +1029,31 @@ namespace tmcmc {
 
         if (1)
         {
+              
+            double * uf = new double[n];
             double **uniques = g_x;
             int un = 0, unflag, j;
 
+            uf[un] = curgen_db.entry[0].F;
             for( p = 0; p < data.Nth; ++p )
                 uniques[p][un] = curgen_db.entry[0].point[p];
-
+            
             un++;
             for (i = 1; i < n; ++i){
                 double xi[data.Nth];
-                for (p = 0; p < data.Nth; ++p)
-                    xi[p] = curgen_db.entry[i].point[p];
+                double fi = curgen_db.entry[i].F;
+                for (p = 0; p < data.Nth; ++p) xi[p] = curgen_db.entry[i].point[p];
 
                 unflag = 1;                 /* is this point unique? */
                 for (j = 0; j < un; ++j){   /* compare with  previous uniques */
                     for (p = 0; p < data.Nth; ++p){
-                        if (fabs(xi[p]-uniques[p][j]) > 1e-6) {
-                            break;          /* they differ, check next  */
-                        }
+                        
+                        /* do they differ in position? */
+                        if (fabs(xi[p]-uniques[p][j]) > 1e-8) break; /* check next */
+                    
+                        /* do they differ in fun eval? */
+                        if (fabs(fi - uf[j]) > 1e-8) break; /* check next */
+
                         unflag = 0;         /* not unique */
                     }
 
@@ -1057,6 +1061,7 @@ namespace tmcmc {
                 }
 
                 if (unflag){                /* unique, put it in the table */
+                    uf[un] = fi;
                     for (p = 0; p < data.Nth; ++p) uniques[p][un] = xi[p];
                     un++;
                 }
@@ -1073,21 +1078,24 @@ namespace tmcmc {
 
             printf("prepare_newgen: CURGEN DB (UNIQUE) %d: [un = %d]\n", runinfo.Gen, un);
             if(data.options.Display){
-                print_matrix((char *)"uniques mean", meanu, data.Nth);
-                print_matrix((char *)"uniques std", stdu, data.Nth);
+                print_matrix("uniques mean", meanu, data.Nth);
+                print_matrix("uniques std", stdu, data.Nth);
             }
 
         } /* end block*/
 
         {
-            double t0 = torc_gettime();
+            double *fj = new double[n];
+            double t0  = torc_gettime();
             for (i = 0; i < n; ++i)
                 fj[i] = curgen_db.entry[i].F;    /* separate point from F ?*/
             double t1 = torc_gettime();
             calculate_statistics(fj, data.Num[runinfo.Gen], runinfo.Gen, sel);
             double t2 = torc_gettime();
             printf("prepare_newgen: init + calc stats : %lf + %lf = %lf seconds\n", t2-t1, t1-t0, t2-t0);
+            delete[] fj;
         }
+
 
         int newchains = 0;
         sort_t *list = new sort_t[n];
@@ -1241,8 +1249,8 @@ namespace tmcmc {
         printf("prepare_newgen: newchains=%d\n", newchains);
 
         for (i = 0; i < data.Nth; ++i) delete g_x[i]; 
+        
         delete[] g_x;
-        delete[] fj;
         delete[] sel;
 
         return newchains;

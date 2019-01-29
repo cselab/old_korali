@@ -5,7 +5,7 @@ Nth		        4
 MaxStages	    100
 PopSize		    100000
 TolCOV	        1
-MinStep         1e-4
+MinStep         1e-3
 Bound           -6 6
 Bound           -6 6
 Bound           -6 6
