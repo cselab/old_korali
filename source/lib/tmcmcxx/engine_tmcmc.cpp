@@ -22,7 +22,6 @@ TmcmcEngine::TmcmcEngine() : data(data_t()),
     leaders(new cgdbp_t[data.PopSize]),
     prior("priors.par")
 {
-    // TODO (DW)
     for (int i = 0; i< data.PopSize; ++i)
         leaders[i].point = new double[data.Nth];
 
@@ -31,7 +30,8 @@ TmcmcEngine::TmcmcEngine() : data(data_t()),
 
 TmcmcEngine::~TmcmcEngine()
 {
-    // TODO (DW)
+     for (int i = 0; i< data.PopSize; ++i)
+        delete[] leaders[i].point;
 }
 
 void TmcmcEngine::run()
@@ -521,34 +521,13 @@ void TmcmcEngine::init_curres_db()
     curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize];
 }
 
-// TODO: is this needed (DW)?
-void TmcmcEngine::update_curres_db(double point[/* EXPERIMENTAL_RESULTS */], double F)
-{
-
-#if (EXPERIMENTAL_RESULTS <=0)
-    return;
-#endif
-    pthread_mutex_lock(&curres_db.m);
-    int pos = curres_db.entries;
-    curres_db.entries++;
-    pthread_mutex_unlock(&curres_db.m);
-
-    if (curres_db.entry[pos].point == NULL)
-        curres_db.entry[pos].point = new double[EXPERIMENTAL_RESULTS+1];
-
-    for (int i = 0; i < EXPERIMENTAL_RESULTS; ++i)
-        curres_db.entry[pos].point[i] = point[i];
-
-    curres_db.entry[pos].F = F;
-}
-
 
 void TmcmcEngine::taskfun(const double *x, int *pN, double *res, int winfo[4])
 {
     double f;
     int N = *pN;
 
-    inc_nfc(); // (TODO: include this again, use singleton or so (DW))   /* increment function call counter*/
+    inc_nfc();
 
     f = fitfun::fitfun(x, N, (void *)NULL, winfo);
 #if (EXPERIMENTAL_RESULTS > 0)    /* peh: decide about this (results should be passed as argument to fitfun) */
@@ -782,7 +761,7 @@ void TmcmcEngine::check_for_exit()
     fp = fopen("exit.txt", "r");
     if (fp != NULL) {
         printf("Found Exit File!!!\n");
-        //unlink("exit.txt"); TODO: reinsert? (DW)
+        //unlink("exit.txt"); //TODO: reinsert? (DW)
 #ifdef _USE_TORC_
         torc_finalize();
 #endif
@@ -790,7 +769,7 @@ void TmcmcEngine::check_for_exit()
     }
 }
 
-
+//TODO: this func has not been checked (DW)
 void TmcmcEngine::precompute_chain_covariances(const cgdbp_t* leader,double** init_mean, double** chain_cov, int newchains)
 {
     printf("Precomputing covariances for the current generation...\n");

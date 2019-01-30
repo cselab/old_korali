@@ -1,4 +1,0 @@
-Run
-1. make (to compile) 
-2. run_saem.sh (to execute the test case)
-3. extract_and_plot.sh (to extra and visualize with gnuplot the results)

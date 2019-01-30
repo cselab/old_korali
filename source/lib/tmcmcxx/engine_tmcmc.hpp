@@ -56,7 +56,6 @@ private:
     void sample_from_prior();
 
     void init_full_db();
-    //void update_full_db();
     void update_full_db(double point[], double F, double *G, int n, int surrogate);
     void torc_update_full_db(double point[], double F, double *G, int n, int surrogate);
     void print_full_db();
@@ -65,7 +64,6 @@ private:
     void init_curgen_db();      // (TODO: check if different funcs are needed for
     //   full, curgen and curres)
 
-    //void update_curgen_db();
     void update_curgen_db(double point[], double F, double prior);
     void torc_update_curgen_db_task(double point[], double *pF, double *pprior);
     void torc_update_curgen_db(double point[], double F, double prior);
@@ -75,8 +73,6 @@ private:
     int load_curgen_db();
 
     void init_curres_db();
-    //    void update_curres_db();
-    void update_curres_db(double point[/* EXPERIMENTAL_RESULTS */], double F);
     void dump_curres_db(int gen);
 
     void calculate_statistics(double flc[], int nselections, int gen,
@@ -90,8 +86,7 @@ private:
     void check_for_exit();
 
     void precompute_chain_covariances(const cgdbp_t* leader,double** init_mean,
-                                      double** chain_cov, int newchains); // TODO: chain_cov, mean etc can be rmvd from args?
-
+                                      double** chain_cov, int newchains); 
     int compute_candidate(double candidate[], double chain_mean[], double var);
     int compute_candidate_cov(double candidate[], double chain_mean[], double chain_cov[]);
     void chaintask(double in_tparam[], int *pnsteps, double *out_tparam, int winfo[4],
