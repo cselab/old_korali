@@ -18,55 +18,52 @@ class CoupledOdeSystem : public Fitfun
 
 public:
 
-    CoupledOdeSystem(int dim, int numparam, vec_d params, double it, int nobs)
-        : _dim(dim), _numparam(numparam), _it(it), _numobs(nobs)
+    CoupledOdeSystem(int numparam, int odedim, double it)
+        : _numparam(numparam), _obsdim(0), _dim(odedim), _it(it)
     {
-        _params = vec_s(_numparam);
-        for(int i = 0; i< _numparam; ++i) {
-            _params[i] = params[i];
-        };
-        _trans     = Eigen::MatrixXd::Zero(_dim, _numparam);
-        _trans_tmp = Eigen::MatrixXd::Zero(_dim, _numparam);
+        _trans     = Eigen::MatrixXd::Zero(_dim, numparam);
+        _trans_tmp = Eigen::MatrixXd::Zero(_dim, numparam);
     }
 
-    vec_s getIC(const vec_s & params) const;
-
     return_type * fitfun(double *x, int n, void* output, int *info);
-
+    
+    void setObservations (const vec_d & times, const std::vector<vec_d> & observations);
     void operator() (const vec_s & z, vec_s & dz, double t);
+    void operator() (const vec_d & z, vec_d & dz, double t);
 
 protected:
 
-    int _dim;
-    int _numparam;
-    vec_s _params;
-
-    double _it;
-
-    vec_d _times;
-
-    int _numobs;// dim of outer vec (num observations)
-    std::vector<vec_d> _obs;
+    std::vector<vec_d> _obs; // [_obdsdim] x [_ntimes]
+    std::vector<vec_d> _sim; // [_obdsdim] x [_ntimes]
 
     virtual vec_s getModelIC(const vec_s & params) const = 0;
-    virtual void evalModel(vec_s & dyOut, double t, const vec_s & y) = 0;
+    virtual void evalModel(vec_s & dyOut, const vec_s & y, double t) = 0;
 
-    inline int getDim() const
-    {
-        return _dim;
-    };
+    inline int getDim() const { return _dim; };
 
 private:
 
+    int _numparam;
+    int _ntimes;    
+    int _obsdim;
+    int _dim;
+    double _it;
+    
+    vec_d _times;
+    
     Eigen::MatrixXd _trans;
     Eigen::MatrixXd _trans_tmp;
 
+    vec_s getIC(const vec_s & params) const;
+    
     std::pair<std::vector<vec_d >, bool> integrate_boost(
         const vec_d& y_in,
+        const double integration_dt = 0.1,
         double relative_tolerance = 1e-8,
         double absolute_tolerance = 1e-8,
         int max_num_steps = 1e3);
 
+    void observer(const vec_d & coupled_state, double t);
 };
 
 

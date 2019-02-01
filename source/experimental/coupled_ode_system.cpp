@@ -2,10 +2,12 @@
 #include "system_utils.hpp"
 
 #include <boost/numeric/odeint.hpp>
+#include <boost/bind.hpp>
+#include <boost/array.hpp>
+
 
 vec_s CoupledOdeSystem::getIC(const vec_s & params) const
 {
-
     vec_s ic = getModelIC(params);
 
     try {
@@ -24,9 +26,20 @@ vec_s CoupledOdeSystem::getIC(const vec_s & params) const
     return ic;
 }
 
+void CoupledOdeSystem::operator() (const vec_d & z, vec_d & dz, double t) 
+{
+    vec_s z_s  = vec_s(_dim);
+    vec_s dz_s = vec_s(_dim);
+    for(int i = 0; i < _dim; ++i) {
+        z_s[i]  = z[i];  //TODO:optimize? (DW)
+        dz_s[i] = dz[i];
+    }   
+    this->operator()(z_s, dz_s, t);
+}
+
 void CoupledOdeSystem::operator() (const vec_s & z, vec_s & dz, double t)
 {
-    evalModel(dz, t, z);
+    evalModel(dz, z, t);
 
     vec_d z_d  = vec_d(_dim);
     vec_d dz_d = vec_d(_dim);
@@ -37,7 +50,7 @@ void CoupledOdeSystem::operator() (const vec_s & z, vec_s & dz, double t)
     vec_s z_in( z.begin(), z.begin()+_dim );
     vec_s model_dot( _dim );
 
-    evalModel(model_dot, t, z);
+    evalModel(model_dot, z, t);
 
 
     Eigen::Map<const Eigen::Matrix<double,-1,-1, Eigen::ColMajor>>
@@ -45,6 +58,7 @@ void CoupledOdeSystem::operator() (const vec_s & z, vec_s & dz, double t)
     Eigen::Map<Eigen::Matrix<double,-1,-1, Eigen::ColMajor>>
             B_trans(&dz_d[_dim], _numparam, _dim);
 
+    /*
     for(size_t i = 0; i < _dim; ++i) {
         stan::math::set_zero_all_adjoints_nested();
 
@@ -61,7 +75,7 @@ void CoupledOdeSystem::operator() (const vec_s & z, vec_s & dz, double t)
     stan::math::recover_memory_nested();
 
     B_trans = S_trans*_trans+_trans_tmp; //TODO: why calculate this? (DW)
-
+    */
 }
 
 return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
@@ -77,15 +91,13 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     for (size_t i = 0; i < n; i++) theta_s.push_back(x[i]);
 
     stan::math::start_nested();
-    std::vector<vec_s> observable_s;
-    observable_s.reserve(_numobs);
+    std::vector<vec_s> observable_s(_obsdim);
 
-
-    vec_s ic_tmp = getIC(theta_s);
+    vec_s ic_s = getIC(theta_s);
     vec_d ic;
 
     for(size_t i = 0; i < _dim; ++i) {
-        ic.push_back(value_of(ic_tmp[i]));
+        ic.push_back(value_of(ic_s[i]));
     }
 
     bool success; //tmp (DW)
@@ -109,24 +121,24 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     vec_fitfun1 = vec_d(solution_of_coupled_system.back().begin(), solution_of_coupled_system.back().end());
 #endif
 
-    std::vector<vec_s> eq_sol(_numobs);
+    std::vector<vec_s> eq_sol(_obsdim);
     vec_d gradients;
     //associate sensitivities with respective values and find observable (using mala)
-    for(size_t i = 0; i < _numobs; ++i) {
+    for(size_t i = 0; i < _obsdim; ++i) {
         eq_sol[i].resize( _dim );
         for(size_t j = 0; j < _dim; j++) {
             gradients = vec_d(sensitivity_d[i].begin()+j*_numparam,
                               sensitivity_d[i].begin()+(j+1)*_numparam);
             eq_sol[i][j] = stan::math::precomputed_gradients(
-                               equation_solution_d[i][j], _params, gradients);
+                               equation_solution_d[i][j], theta_s, gradients);
         }
         vec_s temp_obs; // = findObservable(eq_sol[i]);
         observable_s.push_back(temp_obs);
     }
 
     scalar_t llk = 0;
-    for(size_t i = 0; i < _times.size(); ++i) {
-        for(size_t j = 0; j < _numobs; ++j) {
+    for(size_t i = 0; i < _ntimes; ++i) {
+        for(size_t j = 0; j < _obsdim; ++j) {
             llk += (_obs[i][j]-observable_s[i][j]) *
                    (_obs[i][j]-observable_s[i][j]);
         }
@@ -135,7 +147,7 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     //--------------------------------------------------------------------------------------
 
     llk /= sigma2;
-    llk += _numobs*(std::log(2 * M_PI) + std::log(sigma2));
+    llk += _obsdim*(std::log(2 * M_PI) + std::log(sigma2));
     llk *= -0.5;
 
     double sumVal = llk.val();
@@ -156,7 +168,7 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     llk.grad();
     for(size_t i = 0; i < _numparam; ++i) {
         grad_loglike[i] = 0;
-        grad_loglike[i] = _params[i].adj();
+        grad_loglike[i] = theta_s[i].adj();
     }
 
     for (size_t i = 0; i < _numparam; ++i) {
@@ -164,7 +176,7 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
         if (!std::isfinite(gsl_vector_get(gradient, i))) grad_err = 1;
     }
 
-    double totObs = _times.size() * _numobs;
+    double totObs = _ntimes * _obsdim;
     double tmp    = -totObs/sigma + sumVal*invsigma3;
     gsl_vector_set(gradient, indexSigma, tmp);
     if (!std::isfinite(gsl_vector_get(gradient, indexSigma))) grad_err = 1;
@@ -172,14 +184,14 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     return_type* result = reinterpret_cast<return_type*>(calloc(1, sizeof(return_type)) );
 
     // find Fischer Matrix
-    Eigen::MatrixXd eigS(_numparam, _numobs);
+    Eigen::MatrixXd eigS(_numparam, _obsdim);
     Eigen::MatrixXd eigFIM = Eigen::MatrixXd::Zero(n,n);
 
-    for(size_t i = 0; i < _numobs; ++i) {
+    for(size_t i = 0; i < _obsdim; ++i) {
         stan::math::set_zero_all_adjoints_nested();
         observable_s[i][0].grad();
         for(size_t j = 0; j < _numparam; ++j) {
-            eigS(j,i) = _params[j].adj();
+            eigS(j,i) = theta_s[j].adj();
         }
     }
 
@@ -266,98 +278,67 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     return result;
 }
 
+void CoupledOdeSystem::setObservations (const vec_d & times, 
+    const std::vector<vec_d> & observations) {
+
+    _ntimes = times.size();
+    _times  = vec_d(_ntimes);
+    _obsdim = observations.size();
+    _obs    = std::vector<vec_d>(_obsdim);
+    _sim    = std::vector<vec_d>(_obsdim);
+
+
+    for(int i = 0; i < _ntimes; ++i) { _times[i] = times[i]; };
+
+    for(int i = 0; i < _obsdim; ++i) {
+        _obs[i]   = vec_d(_ntimes);
+        _sim[i]   = vec_d(_ntimes);
+        for(int j = 0; j < _ntimes; ++j) _obs[i][j] = observations[i][j];
+    }
+
+}
+
+void CoupledOdeSystem::observer(const vec_d & coupled_state, double t) {
+    for(int i = 0; i < _obsdim; ++i) _sim[i][0] = coupled_state[i];
+}
+
+void test(const vec_d &x, const double t) { printf("x(%lf): %lf\n", x[0], t); };
 
 std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
-    const vec_d& y_in,
+    const vec_d& y_in,                  /* intial condition */
+    const double integration_dt,
     double relative_tolerance,
     double absolute_tolerance,
     int max_num_steps)
 {
-
-    using boost::numeric::odeint::integrate_adaptive;
-    using boost::numeric::odeint::integrate_times;
     using boost::numeric::odeint::make_controlled;
     using boost::numeric::odeint::runge_kutta_dopri5;
     using boost::numeric::odeint::max_step_checker;
+    
+    auto system = [this] (const vec_d & y, vec_d & dy, double t) 
+                            { return this->operator()(y, dy, t); };
+    
+    auto observer = [this] (const vec_d & x, double t) 
+                            { return this->observer(x, t); };
+    
+    vec_d y_test = vec_d(_dim);
+    for(int i = 0; i < _dim; ++i) y_test[i] = y_in[i]; 
 
-    std::vector<vec_d > y_coupled(_times.size());
-    Observer observer(y_coupled);
-
-    const double step_size = 0.1;
-    vec_d numerical_sol;
-    for(size_t i = 0; i< y_in.size(); i++) {
-        numerical_sol.push_back(y_in[i]);
+    try {
+        boost::numeric::odeint::integrate_times(
+            make_controlled( absolute_tolerance, relative_tolerance, runge_kutta_dopri5<vec_d>() ),
+            system,                           
+            y_test,
+            std::begin(_times),                     
+            std::end(_times),     
+            integration_dt,                
+            observer,
+            max_step_checker(max_num_steps)
+        );
+    } catch (std::exception& e) {
+        return std::make_pair(_sim, false);
     }
-
-    observer(numerical_sol, _times[0]);
-
-    int restart_idx = 0;
-    double start_time, end_time;
-    bool restart = false;
-    bool callobserver = true;
-
-    end_time = _times[0];
-    vec_d integration_times(2);
-
-    for(size_t i = 1; i < _times?gc.size(); i++) {
-        start_time = end_time;
-        bool no_skip = restart_idx < restart_points.size();
-        if (no_skip && std::abs(restart_points[restart_idx]-_times?gc[i]) < 1e-8) {
-            end_time = restart_points[restart_idx];
-            restart = true;
-            restart_idx++;
-        } else if (no_skip && restart_points[restart_idx] < _times?gc[i] ) {
-            end_time = restart_points[restart_idx];
-            restart = true;
-            callobserver = false;
-            restart_idx++;
-            if(i>0) i--;
-        } else {
-            end_time = _times?gc[i];
-        }
-
-        std::vector<vec_d> pseudo_vec(2*_times?gc.size()+2*restart_points.size());
-        Observer pseudo_obs(pseudo_vec);
-
-        integration_times[0] = start_time;
-        integration_times[1] = end_time;
-
-        try {
-            // integrate_adaptive(
-            //     make_controlled( absolute_tolerance, relative_tolerance, runge_kutta_dopri5<vec_d>() ),
-            //     system,
-            //     numerical_sol,
-            //     start_time,
-            //     end_time,
-            //     step_size );
-            integrate_times(
-                make_controlled( absolute_tolerance, relative_tolerance, runge_kutta_dopri5<vec_d>() ),
-                system,
-                numerical_sol,
-                boost::begin(integration_times),
-                boost::end(integration_times),
-                step_size,
-                pseudo_obs,
-                max_step_checker(max_num_steps)
-            );
-        } catch (std::exception& e) {
-            return std::make_pair(y_coupled, false);
-        }
-
-
-        if(restart) {
-            vec_d cpy_numerical_sol(numerical_sol.begin(), numerical_sol.end() );
-            system.restart( cpy_numerical_sol, numerical_sol, end_time);
-            restart = false;
-        }
-        if (callobserver) {
-            observer(numerical_sol, end_time);
-        } else {
-            callobserver = true;
-        }
-    }
-
-    return std::make_pair(y_coupled,true);
+    return std::make_pair(_sim,true);
 }
 
 

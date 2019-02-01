@@ -7,13 +7,14 @@ class AutoFitfun :  public CoupledOdeSystem
 {
 
 public:
-    AutoFitfun(vec_d params, int nobs) : CoupledOdeSystem (4,8, params, 0.0, nobs) {};
-    return_type* operator () (double *x, int n, void* output, int * info);
-
+    AutoFitfun() : CoupledOdeSystem (8, 4, 0.0 ) {};
+    //return_type* operator () (double *x, int n, void* output, int * info);
+    void setParams(vec_d params) { _params = params; };
 private:
 
     vec_s getModelIC(const vec_s & theta) const;
-    void evalModel(vec_s & dyOut, double t, const vec_s & y);
+    void evalModel(vec_s & dyOut, const vec_s & y, double t);
+    vec_d _params;
 
 };
 

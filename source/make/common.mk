@@ -29,7 +29,7 @@ CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
 CFLAGS += `gsl-config --cflags`
 
-CXXFLAGS += -O3 -std=c++14 -g #remove debug if done
+CXXFLAGS += -std=c++14 -g #remove debug if done and add O3
 CXXFLAGS += -Wall -Wno-unused-function
 
 LDLIBS  += `gsl-config --libs` -lm -lpthread
