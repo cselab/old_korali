@@ -12,6 +12,7 @@ public:
 private:
 
     vec_s getModelIC() const;
+    void observer(const vec_d & state, double t);
     void evalModel(vec_s & dyOut, const vec_s & y, double t);
 
 };

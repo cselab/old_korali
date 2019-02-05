@@ -45,6 +45,7 @@ protected:
     std::vector<vec_d> _sim; // [_obdsdim] x [_ntimes]
 
     virtual vec_s getModelIC() const = 0;
+    virtual void observer(const vec_d & state, double t) = 0;
     virtual void evalModel(vec_s & dyOut, const vec_s & y, double t) = 0;
 
     inline int getDim() const { return _dim; };
@@ -66,7 +67,6 @@ private:
         double absolute_tolerance = 1e-8,
         int max_num_steps = 1e3);
 
-    void observer(const vec_d & coupled_state, double t);
 };
 
 

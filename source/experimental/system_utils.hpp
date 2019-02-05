@@ -10,6 +10,6 @@ void decouple(
     int nr_equations,
     int parameter_dimension);
 
-void printvec_s(const char * name, vec_s v);
+void printvec_s(const char * name, const vec_s & v);
 
 #endif // _SYSTEM_UTILS_HPP_

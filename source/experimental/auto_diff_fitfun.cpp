@@ -14,6 +14,12 @@ vec_s AutoFitfun::getModelIC() const
     return ic;
 }
 
+void AutoFitfun::observer(const vec_d & state, double t) {
+
+    printf("\n [[ x(%lf): %lf\t%lf\t%lf\t%lf ]]  \n ", t, state[0], state[1], state[2], state[3]);
+
+}
+
 void AutoFitfun::evalModel(vec_s & dy_out, const vec_s & y_in, double t )
 {
     // here model is independent of t

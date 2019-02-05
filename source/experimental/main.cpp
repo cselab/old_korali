@@ -6,11 +6,10 @@
 int main(int argc, char* argv[])
 {
     int info[1] = {0};
-    double * out;
+    double * out = nullptr;
     
 
     vec_d theta = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01};
-    double in[4] = {0.5, 0.5, 0.5, 0.5};
     
     AutoFitfun af;
     af.setParams(theta);
@@ -30,12 +29,15 @@ int main(int argc, char* argv[])
 
 
     printvec_s("dzOut",dzOut);
-
-
     
 
 
-    //printf("result: %lf\n", tmp->loglike);
+    double x[8] = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01};
+    return_type * ptr = af.fitfun(x, 8, out, info);
+ 
+
+
+    printf("loglike: %lf\n", ptr->loglike);
 
     return 0;
 }

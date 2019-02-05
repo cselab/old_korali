@@ -40,7 +40,7 @@ vec_s CoupledOdeSystem::getIC() const
                 ic[_dim + _numparam * i + j] = _params[j].adj();
         }
     } catch (const std::exception& e) {
-        std::cout << "coupled_ode_system.cpp: exception caught: " << e.what() << std::endl;
+        std::cout << "coupled_ode_system.cpp::getIC() exception caught: " << e.what() << std::endl;
     }
 
     return ic;
@@ -48,24 +48,35 @@ vec_s CoupledOdeSystem::getIC() const
 
 void CoupledOdeSystem::step(const vec_d & z, vec_d & dz, double t) 
 {
+
+    /*
     vec_s z_s  = vec_s(_dim);
     vec_s dz_s = vec_s(_dim);
     for(int i = 0; i < _dim; ++i) {
         z_s[i]  = z[i];  //TODO:optimize? (DW)
         dz_s[i] = dz[i];
-    }   
+    } */
+    vec_s z_s(z.begin(), z.end());
+    vec_s dz_s(dz.begin(), dz.end());
     this->step(z_s, dz_s, t);
+    
+    for(int i = 0; i< dz_s.size(); ++i) dz[i] = value_of(dz_s[i]);
+
+
 }
 
 void CoupledOdeSystem::step(const vec_s & z, vec_s & dzOut, double t)
 {
     
+    printvec_s("z",z);
+
     evalModel(dzOut, z, t); //i think this is not used (DW)
+    dzOut.resize( (_dim + 1) * _numparam, 0.0 );
     
     stan::math::start_nested();
     
-    vec_d z_d  = vec_d(_dim);
-    vec_d dz_d = vec_d(_dim);
+    vec_d z_d  = vec_d( (_dim + 1) * _numparam, 0.0 );
+    vec_d dz_d = vec_d( (_dim + 1) * _numparam, 0.0 ) ;
     for(int i = 0; i < _dim; ++i) {
         z_d[i]  = value_of(z[i]);  //TODO:optimize? (DW)
         dz_d[i] = value_of(dzOut[i]);
@@ -103,8 +114,13 @@ void CoupledOdeSystem::step(const vec_s & z, vec_s & dzOut, double t)
     }
 
     stan::math::recover_memory_nested();
-
+    
     GK_trans = S_trans*_A_trans+_B_temp_trans;
+    
+    //dzOut.resize( (_dim + 1) * _numparam, 0.0 );
+    //dzOut = vec_s(dz_d.begin(), dz_d.end());
+    printvec_s("dzOut (out)",dzOut);
+    
 }
 
 return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
@@ -125,17 +141,16 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     std::vector<vec_s> observable_s(_obsdim);
 
     vec_s ic_s = getIC();
-    vec_d ic;
+    vec_d ic(ic_s.size());
 
-    for(size_t i = 0; i < _dim; ++i) {
-        ic.push_back(value_of(ic_s[i]));
-    }
+    for(size_t i = 0; i < ic_s.size(); ++i) ic[i] = value_of(ic_s[i]);
 
     bool success; //tmp (DW)
     std::vector<vec_d > solution_of_coupled_system;
     std::tie(solution_of_coupled_system, success) = integrate_boost(ic);
 
-    if(!success) {
+
+    /*if(!success)*/ {
         return_type* result = reinterpret_cast<return_type*>(calloc(1, sizeof(return_type)) );
         result->error_flg = 1;
         result->loglike   = -1e6;
@@ -310,12 +325,6 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
 }
 
 
-void CoupledOdeSystem::observer(const vec_d & coupled_state, double t) {
-    for(int i = 0; i < _obsdim; ++i) _sim[i][0] = coupled_state[i];
-}
-
-void test(const vec_d &x, const double t) { printf("x(%lf): %lf\n", x[0], t); };
-
 std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
     const vec_d& y_in,                  /* intial condition */
     const double integration_dt,
@@ -327,24 +336,24 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
     using boost::numeric::odeint::runge_kutta_dopri5;
     using boost::numeric::odeint::max_step_checker;
     
-    auto system = [this] (const vec_d & y, vec_d & dy, double t) 
+    auto systemLambda = [this] (const vec_d & y, vec_d & dy, double t) 
                             { return this->step(y, dy, t); };
     
-    auto observer = [this] (const vec_d & x, double t) 
+    auto observerLambda = [this] (const vec_d & x, double t) 
                             { return this->observer(x, t); };
-    
-    vec_d y_test = vec_d(_dim);
-    for(int i = 0; i < _dim; ++i) y_test[i] = y_in[i]; 
+   
+    vec_d y_test = vec_d(y_in.size()); //TODO: rmv later (DW)
+    for(int i = 0; i < y_in.size(); ++i) y_test[i] = y_in[i];
 
     try {
         boost::numeric::odeint::integrate_times(
             make_controlled( absolute_tolerance, relative_tolerance, runge_kutta_dopri5<vec_d>() ),
-            system,                           
+            systemLambda,                           
             y_test,
             std::begin(_times),                     
             std::end(_times),     
             integration_dt,                
-            observer,
+            observerLambda,
             max_step_checker(max_num_steps)
         );
     } catch (std::exception& e) {
