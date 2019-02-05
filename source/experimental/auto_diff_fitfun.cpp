@@ -16,6 +16,8 @@ vec_s AutoFitfun::getModelIC() const
 
 void AutoFitfun::observer(const vec_d & state, double t) {
 
+    vec_d sol(state.begin(), state.end());
+    _sim.push_back(sol);
     printf("\n [[ x(%lf): %lf\t%lf\t%lf\t%lf ]]  \n ", t, state[0], state[1], state[2], state[3]);
 
 }

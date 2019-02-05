@@ -13,14 +13,13 @@ void CoupledOdeSystem::setObservations (const vec_d & times,
     _times  = vec_d(_ntimes);
     _obsdim = observations.size();
     _obs    = std::vector<vec_d>(_obsdim);
-    _sim    = std::vector<vec_d>(_obsdim);
+    _sim    = std::vector<vec_d>(0);
 
 
     for(int i = 0; i < _ntimes; ++i) { _times[i] = times[i]; };
 
     for(int i = 0; i < _obsdim; ++i) {
         _obs[i]   = vec_d(_ntimes);
-        _sim[i]   = vec_d(_ntimes);
         for(int j = 0; j < _ntimes; ++j) _obs[i][j] = observations[i][j];
     }
 
@@ -67,36 +66,36 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dz, double t)
 
 void CoupledOdeSystem::step(const vec_s & z, vec_s & dzOut, double t)
 {
-    
-    printvec_s("z",z);
+    const int COUPLED_DIM = _dim * (_numparam + 1);
+    printf("t %lf\n",t);
+    //printvec_s("z",z);
 
     evalModel(dzOut, z, t); //i think this is not used (DW)
-    dzOut.resize( (_dim + 1) * _numparam, 0.0 );
+    dzOut.resize(COUPLED_DIM, 0.0 );
     
     stan::math::start_nested();
     
-    vec_d z_d  = vec_d( (_dim + 1) * _numparam, 0.0 );
-    vec_d dz_d = vec_d( (_dim + 1) * _numparam, 0.0 ) ;
+    vec_d z_d  = vec_d(COUPLED_DIM);
+    vec_d dz_d = vec_d(COUPLED_DIM) ;
     for(int i = 0; i < _dim; ++i) {
         z_d[i]  = value_of(z[i]);  //TODO:optimize? (DW)
         dz_d[i] = value_of(dzOut[i]);
     }
-
+    
     Eigen::Map<const Eigen::Matrix<double,-1,-1, Eigen::ColMajor>>
             S_trans(&z_d[_dim], _numparam, _dim);
     Eigen::Map<Eigen::Matrix<double,-1,-1, Eigen::ColMajor>>
             GK_trans(&dz_d[_dim], _numparam, _dim);
 
     vec_s tmp = _params;
-    for(int i = 0; i < tmp.size(); ++i) _params[i] = tmp[i].val();
+    for(int i = 0; i < _numparam; ++i) _params[i] = tmp[i].val();
 
     vec_s model_dot(_dim);
 
     vec_s z_in(z.begin(), z.end());
 
-    printvec_s("z_in",z_in);
+    //printvec_s("z_in",z_in);
     evalModel(model_dot, z_in, t);
-
     for(size_t i = 0; i < _dim; ++i) {
         stan::math::set_zero_all_adjoints_nested();
 
@@ -104,12 +103,12 @@ void CoupledOdeSystem::step(const vec_s & z, vec_s & dzOut, double t)
 
         for(size_t j = 0; j < _numparam; ++j) {
             _B_temp_trans(j,i) = _params[j].adj();
-            printf("_B_temp_trans(%zu,%zu) = %lf\n", j, i, _B_temp_trans(j,i));
+            //printf("_B_temp_trans(%zu,%zu) = %lf\n", j, i, _B_temp_trans(j,i));
         }
 
         for(size_t k = 0; k < _dim; ++k) {
             _A_trans(k,i) = z_in[k].adj();
-            printf("_A_trans(%zu,%zu) = %lf\n", k, i, _A_trans(k,i));
+            //printf("_A_trans(%zu,%zu) = %lf\n", k, i, _A_trans(k,i));
         }
     }
 
@@ -117,20 +116,19 @@ void CoupledOdeSystem::step(const vec_s & z, vec_s & dzOut, double t)
     
     GK_trans = S_trans*_A_trans+_B_temp_trans;
     
-    //dzOut.resize( (_dim + 1) * _numparam, 0.0 );
-    //dzOut = vec_s(dz_d.begin(), dz_d.end());
-    printvec_s("dzOut (out)",dzOut);
+    for(int i = _dim; i< COUPLED_DIM; ++i) dzOut[i] = dz_d[i];
+    printvec_s("dzOut (out)", dzOut);
     
 }
 
 return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
 {
 
-    int indexSigma = n-1;
+    const int indexSigma = n-1;
 
-    double sigma     = x[indexSigma];
-    double sigma2    = sigma*sigma;
-    double invsigma3 = 1.0/(sigma2*sigma);
+    const double sigma     = x[indexSigma];
+    const double sigma2    = sigma*sigma;
+    const double invsigma3 = 1.0/(sigma2*sigma);
 
     vec_d theta_d(x, x+n);
     vec_s theta_s(x, x+n);
@@ -150,7 +148,7 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     std::tie(solution_of_coupled_system, success) = integrate_boost(ic);
 
 
-    /*if(!success)*/ {
+    if(!success) {
         return_type* result = reinterpret_cast<return_type*>(calloc(1, sizeof(return_type)) );
         result->error_flg = 1;
         result->loglike   = -1e6;

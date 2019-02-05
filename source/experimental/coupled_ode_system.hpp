@@ -65,7 +65,7 @@ private:
         const double integration_dt = 0.1,
         double relative_tolerance = 1e-8,
         double absolute_tolerance = 1e-8,
-        int max_num_steps = 1e3);
+        int max_num_steps = 1e4);
 
 };
 
