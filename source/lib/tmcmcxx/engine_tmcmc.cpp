@@ -674,7 +674,6 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
         q[i] = weight[i]/sum_weight;
     if (display>2) print_matrix("runinfo_q", q, curgen_db.entries);
 
-    delete [] q;
     delete [] weight;
 
     if (display) print_matrix("CoefVar", coefVar, gen+1);
@@ -726,6 +725,8 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
             runinfo.SS[i][j] = runinfo.SS[j][i] = s;
         }
     }
+
+    delete [] q;
 
 #ifdef CHECK_POSDEF
     int fixed = make_posdef(runinfo.SS[0], PROBDIM, 2);
