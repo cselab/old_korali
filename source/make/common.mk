@@ -31,6 +31,7 @@ CFLAGS += `gsl-config --cflags`
 
 CXXFLAGS += -std=c++14 -g #remove debug if done and add O3
 CXXFLAGS += -Wall -Wno-unused-function
+CXXFLAGS += `gsl-config --cflags`
 
 LDLIBS  += `gsl-config --libs` -lm -lpthread
 LDXLIBS += `gsl-config --libs` -lm -lpthread
