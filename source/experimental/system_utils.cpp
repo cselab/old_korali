@@ -20,3 +20,12 @@ void decouple(
                                   sol_coupled_sys[i].end());
     }
 }
+
+void printvec_s(const char * name, vec_s v) {
+    printf("\n");
+    for(int i = 0; i < v.size(); ++i) 
+        printf("%s[%d]: %lf\n", name, i, v[i].val());
+    printf("\n");
+}
+
+

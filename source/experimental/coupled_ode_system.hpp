@@ -19,42 +19,45 @@ class CoupledOdeSystem : public Fitfun
 public:
 
     CoupledOdeSystem(int numparam, int odedim, double it)
-        : _numparam(numparam), _obsdim(0), _dim(odedim), _it(it)
+        : _numparam(numparam),  _dim(odedim), _it(it), _obsdim(0)
     {
-        _trans     = Eigen::MatrixXd::Zero(_dim, numparam);
-        _trans_tmp = Eigen::MatrixXd::Zero(_dim, numparam);
+        _A_trans      = Eigen::MatrixXd::Zero(_dim, _dim);
+        _B_temp_trans = Eigen::MatrixXd::Zero(_numparam, _dim);
     }
 
     return_type * fitfun(double *x, int n, void* output, int *info);
-    
+   
+    void setParams(vec_d params) { _params = vec_s(params.begin(), params.end()); };
     void setObservations (const vec_d & times, const std::vector<vec_d> & observations);
-    void operator() (const vec_s & z, vec_s & dz, double t);
-    void operator() (const vec_d & z, vec_d & dz, double t);
+    void step(const vec_s & z, vec_s & dz, double t);
+    void step(const vec_d & z, vec_d & dz, double t);
+
+    vec_s getIC() const;
 
 protected:
 
+    const int _numparam;
+    const int _dim;
+    const double _it;
+ 
+    vec_s _params;
     std::vector<vec_d> _obs; // [_obdsdim] x [_ntimes]
     std::vector<vec_d> _sim; // [_obdsdim] x [_ntimes]
 
-    virtual vec_s getModelIC(const vec_s & params) const = 0;
+    virtual vec_s getModelIC() const = 0;
     virtual void evalModel(vec_s & dyOut, const vec_s & y, double t) = 0;
 
     inline int getDim() const { return _dim; };
 
 private:
 
-    int _numparam;
-    int _ntimes;    
     int _obsdim;
-    int _dim;
-    double _it;
-    
+    int _ntimes;    
     vec_d _times;
     
-    Eigen::MatrixXd _trans;
-    Eigen::MatrixXd _trans_tmp;
+    Eigen::MatrixXd _A_trans;
+    Eigen::MatrixXd _B_temp_trans;
 
-    vec_s getIC(const vec_s & params) const;
     
     std::pair<std::vector<vec_d >, bool> integrate_boost(
         const vec_d& y_in,

@@ -6,18 +6,38 @@
 #include <boost/array.hpp>
 
 
-vec_s CoupledOdeSystem::getIC(const vec_s & params) const
-{
-    vec_s ic = getModelIC(params);
+void CoupledOdeSystem::setObservations (const vec_d & times, 
+    const std::vector<vec_d> & observations) {
 
+    _ntimes = times.size();
+    _times  = vec_d(_ntimes);
+    _obsdim = observations.size();
+    _obs    = std::vector<vec_d>(_obsdim);
+    _sim    = std::vector<vec_d>(_obsdim);
+
+
+    for(int i = 0; i < _ntimes; ++i) { _times[i] = times[i]; };
+
+    for(int i = 0; i < _obsdim; ++i) {
+        _obs[i]   = vec_d(_ntimes);
+        _sim[i]   = vec_d(_ntimes);
+        for(int j = 0; j < _ntimes; ++j) _obs[i][j] = observations[i][j];
+    }
+
+}
+
+
+vec_s CoupledOdeSystem::getIC() const
+{
+    vec_s ic = getModelIC();
+    ic.resize(_dim + _dim * _numparam);
     try {
         vec_d grads;
         for(size_t i = 0; i < _dim; ++i) {
             stan::math::set_zero_all_adjoints();
             ic[i].grad();
-            for(size_t j = 0; j < _numparam; ++j) {
-                ic.push_back( params[j].adj() );
-            }
+            for(size_t j = 0; j < _numparam; ++j) 
+                ic[_dim + _numparam * i + j] = _params[j].adj();
         }
     } catch (const std::exception& e) {
         std::cout << "coupled_ode_system.cpp: exception caught: " << e.what() << std::endl;
@@ -26,7 +46,7 @@ vec_s CoupledOdeSystem::getIC(const vec_s & params) const
     return ic;
 }
 
-void CoupledOdeSystem::operator() (const vec_d & z, vec_d & dz, double t) 
+void CoupledOdeSystem::step(const vec_d & z, vec_d & dz, double t) 
 {
     vec_s z_s  = vec_s(_dim);
     vec_s dz_s = vec_s(_dim);
@@ -34,48 +54,57 @@ void CoupledOdeSystem::operator() (const vec_d & z, vec_d & dz, double t)
         z_s[i]  = z[i];  //TODO:optimize? (DW)
         dz_s[i] = dz[i];
     }   
-    this->operator()(z_s, dz_s, t);
+    this->step(z_s, dz_s, t);
 }
 
-void CoupledOdeSystem::operator() (const vec_s & z, vec_s & dz, double t)
+void CoupledOdeSystem::step(const vec_s & z, vec_s & dzOut, double t)
 {
-    evalModel(dz, z, t);
-
+    
+    evalModel(dzOut, z, t); //i think this is not used (DW)
+    
+    stan::math::start_nested();
+    
     vec_d z_d  = vec_d(_dim);
     vec_d dz_d = vec_d(_dim);
     for(int i = 0; i < _dim; ++i) {
         z_d[i]  = value_of(z[i]);  //TODO:optimize? (DW)
-        dz_d[i] = value_of(dz[i]);
+        dz_d[i] = value_of(dzOut[i]);
     }
-    vec_s z_in( z.begin(), z.begin()+_dim );
-    vec_s model_dot( _dim );
-
-    evalModel(model_dot, z, t);
-
 
     Eigen::Map<const Eigen::Matrix<double,-1,-1, Eigen::ColMajor>>
             S_trans(&z_d[_dim], _numparam, _dim);
     Eigen::Map<Eigen::Matrix<double,-1,-1, Eigen::ColMajor>>
-            B_trans(&dz_d[_dim], _numparam, _dim);
+            GK_trans(&dz_d[_dim], _numparam, _dim);
 
-    /*
+    vec_s tmp = _params;
+    for(int i = 0; i < tmp.size(); ++i) _params[i] = tmp[i].val();
+
+    vec_s model_dot(_dim);
+
+    vec_s z_in(z.begin(), z.end());
+
+    printvec_s("z_in",z_in);
+    evalModel(model_dot, z_in, t);
+
     for(size_t i = 0; i < _dim; ++i) {
         stan::math::set_zero_all_adjoints_nested();
 
         model_dot[i].grad();
-        for(size_t j = 0; j < _dim; ++j) {
-            _trans_tmp(j,i) = _params[j].adj();
+
+        for(size_t j = 0; j < _numparam; ++j) {
+            _B_temp_trans(j,i) = _params[j].adj();
+            printf("_B_temp_trans(%zu,%zu) = %lf\n", j, i, _B_temp_trans(j,i));
         }
 
         for(size_t k = 0; k < _dim; ++k) {
-            _trans(k,i) = z[k].adj();
+            _A_trans(k,i) = z_in[k].adj();
+            printf("_A_trans(%zu,%zu) = %lf\n", k, i, _A_trans(k,i));
         }
     }
 
     stan::math::recover_memory_nested();
 
-    B_trans = S_trans*_trans+_trans_tmp; //TODO: why calculate this? (DW)
-    */
+    GK_trans = S_trans*_A_trans+_B_temp_trans;
 }
 
 return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
@@ -87,13 +116,15 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     double sigma2    = sigma*sigma;
     double invsigma3 = 1.0/(sigma2*sigma);
 
-    std::vector<scalar_t> theta_s;
-    for (size_t i = 0; i < n; i++) theta_s.push_back(x[i]);
+    vec_d theta_d(x, x+n);
+    vec_s theta_s(x, x+n);
+
+    setParams(theta_d);
 
     stan::math::start_nested();
     std::vector<vec_s> observable_s(_obsdim);
 
-    vec_s ic_s = getIC(theta_s);
+    vec_s ic_s = getIC();
     vec_d ic;
 
     for(size_t i = 0; i < _dim; ++i) {
@@ -278,25 +309,6 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     return result;
 }
 
-void CoupledOdeSystem::setObservations (const vec_d & times, 
-    const std::vector<vec_d> & observations) {
-
-    _ntimes = times.size();
-    _times  = vec_d(_ntimes);
-    _obsdim = observations.size();
-    _obs    = std::vector<vec_d>(_obsdim);
-    _sim    = std::vector<vec_d>(_obsdim);
-
-
-    for(int i = 0; i < _ntimes; ++i) { _times[i] = times[i]; };
-
-    for(int i = 0; i < _obsdim; ++i) {
-        _obs[i]   = vec_d(_ntimes);
-        _sim[i]   = vec_d(_ntimes);
-        for(int j = 0; j < _ntimes; ++j) _obs[i][j] = observations[i][j];
-    }
-
-}
 
 void CoupledOdeSystem::observer(const vec_d & coupled_state, double t) {
     for(int i = 0; i < _obsdim; ++i) _sim[i][0] = coupled_state[i];
@@ -316,7 +328,7 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
     using boost::numeric::odeint::max_step_checker;
     
     auto system = [this] (const vec_d & y, vec_d & dy, double t) 
-                            { return this->operator()(y, dy, t); };
+                            { return this->step(y, dy, t); };
     
     auto observer = [this] (const vec_d & x, double t) 
                             { return this->observer(x, t); };
