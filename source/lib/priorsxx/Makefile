@@ -6,9 +6,11 @@ TARGET := libpriorsxx.a
 
 all: $(TARGET)
 
-libpriorsxx.a: myrand.o density.o priors.o
+libpriorsxx.a: myrand.o mvgauss.o density.o priors.o 
 
 myrand.o: myrand.cpp myrand.hpp
+
+mvgauss.o: mvgauss.cpp
 
 density.o: density.cpp density.hpp
 

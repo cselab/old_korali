@@ -8,6 +8,8 @@
 #include <gsl/gsl_sf.h>
 #include <gsl/gsl_linalg.h>
 
+#include "mvgauss.hpp"
+
 #if defined(_USE_TORC_)
 #include <mpi.h>
 #include <torc.h>
