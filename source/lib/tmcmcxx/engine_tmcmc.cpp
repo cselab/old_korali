@@ -1,8 +1,6 @@
 #include <cmath>
 #include <numeric>
 
-#include <iostream> //cin test remove
-
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_statistics.h>
@@ -30,8 +28,14 @@ TmcmcEngine::TmcmcEngine() : data(data_t()),
 
 TmcmcEngine::~TmcmcEngine()
 {
-     for (int i = 0; i< data.PopSize; ++i)
-        delete[] leaders[i].point;
+    delete [] out_tparam;
+
+    for (int i = 0; i< data.PopSize; ++i) delete[] leaders[i].point;
+    delete[] leaders;
+
+    for(int i = 0; i< data.MaxStages; ++i) delete [] runinfo.meantheta[i];
+
+    //TODO: what else needs to be deleted?? (DW)
 }
 
 void TmcmcEngine::run()
@@ -97,8 +101,6 @@ void TmcmcEngine::init()
     init_full_db();
 
     runinfo_t::init(runinfo, data.Nth, data.MaxStages);
-
-    if (data.options.Display) print_runinfo();
 
     spmd_gsl_rand_init(data.seed);
 
@@ -302,9 +304,10 @@ void TmcmcEngine::sample_from_prior()
 
     int g_nfeval = get_nfc();
 
-    printf("sample_from_prior: Generation %d: total elapsed time = %lf sec,\
-                generation elapsed time = %lf secs for function calls = %d\n",
-           runinfo.Gen, gt1-t0, gt1-gt0, g_nfeval);
+    printf("sample_from_prior: Generation %d: total elapsed time = %lf sec,\n",
+           runinfo.Gen, gt1-t0);
+    printf("generation elapsed time = %lf secs for function calls = %d\n",
+        gt1-gt0, g_nfeval);
 
     reset_nfc();
 
@@ -495,7 +498,7 @@ int TmcmcEngine::load_curgen_db()
     while (fgets(line, 1024, fp) != NULL)
         curgen_db.entries++;
 
-    fclose(fp);	/* fseek...*/
+    fclose(fp);
     fp = fopen(fname, "r");
 
     int pos;
@@ -632,7 +635,7 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
     /* gen: next generation number */
     unsigned int j = gen+1;
 
-    if ( conv && (xmin > p[gen] /* + data.MinStep */  ) ) {
+    if ( conv && (xmin > p[gen]) ) {
         p[j]       = xmin;
         coefVar[j] = pow(fmin, 0.5) + data.TolCOV;
     } else {
@@ -684,7 +687,7 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
 
     for (i = 0; i < curgen_db.entries; ++i) sel[i] = 0;
 
-    if (nselections == 0) nselections = curgen_db.entries; /* n;*/
+    if (nselections == 0) nselections = curgen_db.entries;
     N = nselections;
     multinomialrand (curgen_db.entries, N, q, nn);
     for (i = 0; i < curgen_db.entries; ++i) sel[i]+=nn[i];
@@ -755,25 +758,27 @@ void TmcmcEngine::check_for_exit()
 #ifdef _USE_TORC_
         torc_finalize();
 #endif
-        exit(1); // TODO: can we do this smoother? (DW)
+        exit(1);
     }
 
     FILE *fp;
     fp = fopen("exit.txt", "r");
     if (fp != NULL) {
         printf("Found Exit File!!!\n");
-        //unlink("exit.txt"); //TODO: reinsert? (DW)
+        fclose(fp);
 #ifdef _USE_TORC_
         torc_finalize();
 #endif
-        exit(1); // TODO: can we do this smoother? (DW)
+        exit(1);
     }
 }
 
 //TODO: this func has not been checked (DW)
 void TmcmcEngine::precompute_chain_covariances(const cgdbp_t* leader,double** init_mean, double** chain_cov, int newchains)
 {
-    printf("Precomputing covariances for the current generation...\n");
+    bool display = data.options.Display;
+    
+    printf("Precomputing chain covariances for the current generation...\n");
 
     int D = data.Nth;
     int N = curgen_db.entries;
@@ -797,7 +802,7 @@ void TmcmcEngine::precompute_chain_covariances(const cgdbp_t* leader,double** in
             if (d_max < s) d_max = s;
         }
         diam[d] = d_max-d_min;
-        printf("Diameter %d: %.6lf\n", d, diam[d]);
+        if (display) printf("Diameter %d: %.6lf\n", d, diam[d]);
     }
 
     int ind, pos;
@@ -884,7 +889,6 @@ int TmcmcEngine::compute_candidate(double candidate[], double chain_mean[], doub
     for (; idx < data.Nth; ++idx) {
         if (isnan(candidate[idx])) {
             printf("!!!!  isnan in candidate point!\n");
-            //exit(1);
             break;
         }
         if ((candidate[idx] < data.lowerbound[idx]) ||
@@ -893,7 +897,7 @@ int TmcmcEngine::compute_candidate(double candidate[], double chain_mean[], doub
 
     if (idx < data.Nth) return -1;
 
-    return 0;    // all good
+    return 0;// all good
 }
 
 
@@ -905,12 +909,11 @@ int TmcmcEngine::compute_candidate_cov(double candidate[], double chain_mean[],
     for (int i = 0; i < data.Nth; ++i) {
         if (isnan(candidate[i])) {
             printf("!!!!  isnan in candidate point!\n");
-            exit(1);
             break;
         }
         if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) return -1;
     }
-    return 0;
+    return 0;// all good
 }
 
 
@@ -1010,33 +1013,8 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
     double **g_x = new double*[data.Nth];
     for (i = 0; i < data.Nth; ++i) g_x[i] = new double[n];
-
-    if(0) {
-        double **x = g_x;
-
-        for (p = 0; p < data.Nth; p++) {
-            for (i = 0; i < n; ++i) {
-                x[p][i] = curgen_db.entry[i].point[p];
-            }
-        }
-
-        double meanx[data.Nth], stdx[data.Nth];
-        for (p = 0; p < data.Nth; p++) {
-            meanx[p] = gsl_stats_mean(x[p], 1, n);
-            stdx[p]  = gsl_stats_sd_m(x[p], 1, n, meanx[p]);
-        }
-
-        if(data.options.Display) {
-            printf("prepare_newgen: CURGEN DB (COMPLE) %d\n", runinfo.Gen);
-            print_matrix("means", meanx, data.Nth);
-            print_matrix("std", stdx, data.Nth);
-        }
-
-    }
-
-
-
-    if (1) {
+ 
+    { // calculate uniques & acceptance rate
 
         double * uf = new double[n];
         double **uniques = g_x;
@@ -1077,22 +1055,25 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
         runinfo.currentuniques[runinfo.Gen] = un;
         runinfo.acceptance[runinfo.Gen]     = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen]; /* check this*/
-
-        double meanu[data.Nth], stdu[data.Nth];
-        for (p = 0; p < data.Nth; ++p) {
-            meanu[p] = gsl_stats_mean(uniques[p], 1, n);
-            stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
-        }
-
-        printf("prepare_newgen: CURGEN DB (UNIQUE) %d: [un = %d]\n", runinfo.Gen, un);
+       
         if(data.options.Display) {
-            print_matrix("uniques mean", meanu, data.Nth);
-            print_matrix("uniques std", stdu, data.Nth);
+            
+            double meanu[data.Nth], stdu[data.Nth];
+            for (p = 0; p < data.Nth; ++p) {
+                meanu[p] = gsl_stats_mean(uniques[p], 1, n);
+                stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
+            }    
+     
+            printf("prepare_newgen: CURGEN DB (UNIQUES) %d\n", runinfo.Gen);
+            print_matrix("means", meanu, data.Nth);
+            print_matrix("std", stdu, data.Nth);
+
         }
 
     } /* end block*/
 
-    {
+
+    { // calculate statistics
         double *fj = new double[n];
         double t0  = torc_gettime();
         for (i = 0; i < n; ++i)
@@ -1130,54 +1111,53 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
 #endif
 
-#if 0 // TODO: check what is going on here (DW)   
     /* UPPER THRESHOLD */
-    /* peh:check this */
-    /* breaking long chains */
-    int initial_newchains = newchains;
-    int h_threshold = data.MaxChainLength;    /* peh: configuration file + more balanced lengths */
-    for (i = 0; i < initial_newchains; ++i) {
-        if (list[i].nsel > h_threshold) {
-            while (list[i].nsel > h_threshold) {
-                list[newchains] = list[i];
-                list[newchains].nsel = h_threshold;
-                list[i].nsel = list[i].nsel - h_threshold;
-                newchains++;
+    /* splitting long chains */
+    //TODO: untested feature (DW)
+    if (data.MaxChainLength > 0) {
+        int initial_newchains = newchains;
+        int h_threshold = data.MaxChainLength;
+        for (i = 0; i < initial_newchains; ++i) {
+            if (list[i].nsel > h_threshold) {
+                while (list[i].nsel > h_threshold) {
+                    list[newchains] = list[i];
+                    list[newchains].nsel = h_threshold;
+                    list[i].nsel = list[i].nsel - h_threshold;
+                    newchains++;
+                }
             }
         }
-    }
 
-    qsort(list, n, sizeof(sort_t), compar_desc);
+        qsort(list, n, sizeof(sort_t), compar_desc);
 
 #if VERBOSE
-    printf("Points broken\n");
-    for (i = 0; i < n; ++i)
-        printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
+        printf("Points broken\n");
+        for (i = 0; i < n; ++i)
+            printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
 
 #endif
+    }
 
-#endif
-
-#if 0 // TODO: check what is going on here (DW)   
     /* LOWER THRESHOLD */
-    /* single to double step chains */
-    int l_threshold = data.MinChainLength;    /* peh: configuration file + more balanced lengths */
-    for (i = 0; i < newchains; ++i) {
-        if ((list[i].nsel > 0)&&(list[i].nsel < l_threshold)) {
-            list[i].nsel = l_threshold;
+    /* setting min chain length */
+    //TODO: untested feature (DW)
+    if (data.MinChainLength > 0) {
+        int l_threshold = data.MinChainLength; 
+        for (i = 0; i < newchains; ++i) {
+            if ((list[i].nsel > 0)&&(list[i].nsel < l_threshold)) {
+                list[i].nsel = l_threshold;
+            }
         }
-    }
 
-    qsort(list, n, sizeof(sort_t), compar_desc);
+        qsort(list, n, sizeof(sort_t), compar_desc);
 
 #if VERBOSE
-    printf("Points advanced\n");
-    for (i = 0; i < n; ++i) {
-        printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
+        printf("Points advanced\n");
+        for (i = 0; i < n; ++i) {
+            printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
+        }
+#endif
     }
-#endif
-
-#endif
 
     int ldi = 0;                    /* leader index */
     for (i = 0; i < n; ++i) {       /* newleader */
@@ -1207,14 +1187,13 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 #endif
 
     /* cool and greedy partitioning ala Panos-- ;-) */
-
     int nworkers  = torc_num_workers();
     int *workload = new int[nworkers];
 
     for (i = 0; i < newchains; ++i) {
-        int least_loader_worker = compute_min_idx_i(workload, nworkers);
+        int least_loaded_worker = compute_min_idx_i(workload, nworkers);
         leaders[i].queue = least_loader_worker;
-        workload[least_loader_worker] += leaders[i].nsel;
+        workload[least_loaded_worker] += leaders[i].nsel;
     }
 
     print_matrix_i("initial workload", workload, nworkers);
@@ -1228,6 +1207,7 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 #endif
 
 #endif
+
     if (1) {
         double **x = g_x;
         for (i = 0; i < newchains; ++i) {
@@ -1265,7 +1245,7 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
 void TmcmcEngine::print_runinfo()
 {
-    printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+    printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
     printf("runinfo.Gen = \n\n   %d\n\n", runinfo.Gen);
     print_matrix("runinfo.p", runinfo.p, runinfo.Gen+1);
     print_matrix_2d("runinfo.SS", runinfo.SS, data.Nth, data.Nth);

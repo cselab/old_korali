@@ -79,7 +79,7 @@ int fmincon(const double *fj, int fn, double pj, double objTol,
     double tol      = opt.Tol;
     bool display    = opt.Display;
     double x_lo     = opt.LowerBound;
-    double x_hi     = opt.UpperBound;    /* input */
+    double x_hi     = opt.UpperBound;
 
     const gsl_min_fminimizer_type *T;
     gsl_min_fminimizer *s;
@@ -89,7 +89,7 @@ int fmincon(const double *fj, int fn, double pj, double objTol,
     double m  = 0.5*(x_hi-x_lo);
     double fm = 0.0;
 
-    bool converged = 0;
+    bool converged = false;
 
     x = gsl_vector_alloc (1);
 
@@ -102,6 +102,7 @@ int fmincon(const double *fj, int fn, double pj, double objTol,
     F.function = tmcmc_objlogp_gsl;
     F.params = &fp;
 
+    // SELECT ONE MINIMIZER STRATEGY
     T = gsl_min_fminimizer_brent;
     /*	T = gsl_min_fminimizer_goldensection;*/
     /*	T = gsl_min_fminimizer_quad_golden;; */
@@ -163,12 +164,16 @@ int fmincon(const double *fj, int fn, double pj, double objTol,
 
         status = gsl_min_test_interval (x_lo, x_hi, tol, tol);
         if (status == GSL_SUCCESS) {
-            if (display) printf ("fmincon: Converged:\n");
-            converged = true;
+            if (gsl_min_fminimizer_f_minimum(s) <= tol) {
+                if (display) printf ("fmincon: Converged:\n");
+                converged = true;
+            } else {
+                if (display) printf ("fmincon: Converged but did not find minimum:\n");
+            }
         } else if (gsl_min_fminimizer_f_minimum(s) <= tol) {
             converged = true;
             status = GSL_SUCCESS;
-            if (display) printf ("fmincon: Found minimum at\n");
+            if (display) printf ("fmincon: Did not converge but found minimum at\n");
         }
 
         if (display)
@@ -176,12 +181,6 @@ int fmincon(const double *fj, int fn, double pj, double objTol,
                     iter, x_lo, x_hi, m, gsl_min_fminimizer_f_minimum(s), x_hi - x_lo);
 
     } while (status == GSL_CONTINUE && iter < max_iter);
-
-    /* double-check */
-    if ((converged == true) && (gsl_min_fminimizer_f_minimum(s) > tol)) {
-        converged = false;
-        if (display) printf ("fmincon: Converged but dint not find minimum.\n");
-    }
 
     if (converged) {
         converged = 1;
@@ -234,6 +233,7 @@ int fminsearch(double const *fj, int fn, double pj, double objTol,
     minex_func.f      = tmcmc_objlogp_gsl2;
     minex_func.params = &fp;
 
+    // SELECT ONE MINIMIZER STRATEGY
     /*	T = gsl_multimin_fminimizer_nmsimplex;*/
     T = gsl_multimin_fminimizer_nmsimplex2;
     /*	T = gsl_multimin_fminimizer_nmsimplex2rand;*/
@@ -252,29 +252,27 @@ int fminsearch(double const *fj, int fn, double pj, double objTol,
         status = gsl_multimin_test_size (size, tol);
 
         if (status == GSL_SUCCESS) {
-            converged = true;
-            if (display) printf ("fminsearch: Converged to minimum at\n");
+            if(s->fval <= tol) {
+                converged = true;
+                if (display) printf ("fminsearch: Converged to minimum at\n");
+            } else {
+                converged = false;
+                if (display) printf ("fminsearch: Converged but did not find minimum.\n");
+            }
         } else if (s->fval <= tol) {
             converged = true;
             status = GSL_SUCCESS;
             if (display)
                 printf ("fminsearch: NOT converged but found minimum at\n");
+        } else {
+            converged = false;
+            if (display) 
+                printf("fminsearch: NOT converged and did not find minimum.\n");
         }
         if (display) printf ("%3ld x =  %.16lf f() = %.16f size = %.16f\n",
                                  iter, gsl_vector_get (s->x, 0), s->fval, size);
 
     } while (status == GSL_CONTINUE && iter < max_iter);
-
-    /* double-check */
-    if ((converged == 1) && (s->fval > tol)) {
-        converged = false;
-        if (display)
-            printf ("fminsearch: Converged but did not find minimum.\n");
-    } else if (s->fval > tol) {
-        if (display)
-            printf("fminsearch: NOT converged and did not find minimum.\n");
-
-    }
 
     if (converged) {
         *fmin = s->fval;
@@ -298,13 +296,13 @@ int fzerofind(double const *fj, int fn, double pj, double objTol,
 {
 
     bool display = opt.Display;
+    bool dump    = opt.Zdump;
     double tol   = opt.Tol;
     double step  = opt.Step;
     double x_lo  = opt.LowerBound;
     double x_hi  = opt.UpperBound;
 
     int first_try = true;
-    bool dump = true; //TODO: take from tmcmc.par (DW)
 
     FILE *fp = NULL;
     char fname[64];

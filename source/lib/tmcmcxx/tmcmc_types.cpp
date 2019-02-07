@@ -28,6 +28,7 @@ data_t::data_t(const char * fname)
     options.Step       = -1;
     options.LowerBound = 0.0;
     options.UpperBound = 1.0;
+    options.Zdump      = 0;
 
     load_from_file = 0;
 
@@ -46,7 +47,7 @@ data_t::data_t(const char * fname)
     }
 
     char line[256];
-    // TODO: can this initialization be aligned with CMAES?
+    // TODO: can this initialization be aligned with CMAES? (DW)
     int line_no = 0;
     while (fgets(line, 256, f)!= NULL) {
         line_no++;
@@ -60,46 +61,68 @@ data_t::data_t(const char * fname)
             upperbound = new double[Nth];
         } else if (strstr(line, "MaxStages")) {
             sscanf(line, "%*s %d", &MaxStages);
+            printf("setting MaxStages = %d\n", MaxStages);
         } else if (strstr(line, "PopSize")) {
             sscanf(line, "%*s %d", &PopSize);
+            printf("setting PopSize = %d\n", PopSize);
         } else if (strstr(line, "TolCOV")) {
             sscanf(line, "%*s %lf", &TolCOV);
+            printf("setting TolCOV = %lf\n", TolCOV);
         } else if (strstr(line, "MinStep")) {
             sscanf(line, "%*s %lf", &MinStep);
+            printf("setting Minstep = %lf\n", MinStep);
         } else if (strstr(line, "bbeta")) {
             sscanf(line, "%*s %lf", &bbeta);
+            printf("setting bbeta = %lf\n", bbeta);
         } else if (strstr(line, "seed")) {
             sscanf(line, "%*s %ld", &seed);
+            printf("setting seed = %ld\n", seed);
         } else if (strstr(line, "burn_in")) {
             sscanf(line, "%*s %d", &burn_in);
+            printf("setting burn_in = %d\n", burn_in);
         } else if (strstr(line, "opt.MaxIter")) {
             sscanf(line, "%*s %d", &options.MaxIter);
+            printf("setting options.MaxIter = %d\n", options.MaxIter);
         } else if (strstr(line, "opt.Tol")) {
             sscanf(line, "%*s %lf", &options.Tol);
+            printf("setting options.Tol = %lf\n", options.Tol);
         } else if (strstr(line, "opt.Display")) {
             sscanf(line, "%*s %d", &options.Display);
+            printf("setting options.Display = %d\n", options.Display);
         } else if (strstr(line, "opt.Step")) {
             sscanf(line, "%*s %lf", &options.Step);
-            printf("setting step = %f\n", options.Step);
+            printf("setting options.Step = %f\n", options.Step);
         } else if (strstr(line, "opt.Lowerbound")) {
             sscanf(line, "%*s %lf", &options.LowerBound);
-            printf("setting step = %f\n", options.LowerBound);
+            printf("setting options.Lowerbound = %f\n", options.LowerBound);
         } else if (strstr(line, "opt.Upperbound")) {
             sscanf(line, "%*s %lf", &options.UpperBound);
-            printf("setting step = %f\n", options.UpperBound);
+            printf("setting options.Upperbound = %f\n", options.UpperBound);
         } else if (strstr(line, "icdump")) {
             sscanf(line, "%*s %d", &icdump);
+            printf("setting icdump = %d\n", icdump);
         } else if (strstr(line, "ifdump")) {
             sscanf(line, "%*s %d", &ifdump);
+            printf("setting ifdump = %d\n", ifdump);
         } else if (strstr(line, "use_local_cov")) {
             sscanf(line, "%*s %d", &use_local_cov);
+            printf("setting use_local_cov = %d\n", use_local_cov);
         } else if (strstr(line, "stealing")) {
             sscanf(line, "%*s %d", &stealing);
+            printf("setting stealing = %d\n", stealing);
         } else if (strstr(line, "restart")) {
             sscanf(line, "%*s %d", &restart);
+            printf("setting restart = %d\n", restart);
         } else if (strstr(line, "Bound")) {
             sscanf(line, "%*s %lf %lf", &lowerbound[idx], &upperbound[idx]);
+            printf("setting bounds = %lf %lf\n", lowerbound[idx], upperbound[idx]);
             idx++;
+        } else if (strstr(line, "MaxChainLength")) {
+            sscanf(line, "%*s %d", &MaxChainLength);
+            printf("setting MaxChainLength = %d\n", MaxChainLength);
+        } else if (strstr(line, "MinChainLength")) {
+            sscanf(line, "%*s %d", &MinChainLength);
+            printf("setting MinChainLength = %d\n", MinChainLength);
         }
 
     }
@@ -126,6 +149,14 @@ data_t::data_t(const char * fname)
 
 }
 
+data_t::~data_t()
+{
+    delete [] lowerbound;
+    delete [] Num;
+    delete [] local_cov[0]; 
+    delete [] local_cov;
+}
+
 void runinfo_t::init(runinfo_t& runinfo, int nth, int maxstages)
 {
 
@@ -150,6 +181,21 @@ void runinfo_t::init(runinfo_t& runinfo, int nth, int maxstages)
         runinfo.meantheta[i] = new double[nth];
     }
 }
+
+
+runinfo_t::~runinfo_t()
+{
+    delete [] CoefVar;
+    delete [] p;
+    delete [] currentuniques;
+    delete [] logselections;
+    delete [] acceptance;
+    delete [] SS[0];
+    delete [] SS;
+    //TODO: delete content of meantheta (DW);
+    delete [] meantheta;
+}
+
 
 void runinfo_t::save(const runinfo_t& runinfo, int nth, int maxstages, const char * fname)
 {

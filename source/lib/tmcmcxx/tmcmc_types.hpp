@@ -23,11 +23,13 @@ struct optim_options {
                                         fzerosearch)*/
     double UpperBound;          /* Upper bound for root finding (fmincon &
                                         fzerosearch)*/
+    double Zdump;               /* Dump fzerosearch  stats to file */
 };
 
 
 typedef struct data_t {
     data_t(const char * fname = "tmcmc.par");
+    ~data_t();
     int Nth;                        /* PROBDIM */
     int MaxStages;                  /* Max number of tmcmc generations */
     int PopSize;                    /* Number of samples */
@@ -43,8 +45,8 @@ typedef struct data_t {
     int    auxil_size;
     double *auxil_data;
 
-    int MinChainLength;
-    int MaxChainLength;
+    int MinChainLength;     /* MinChainLength > 0: setting MinChainLength */
+    int MaxChainLength;     /* MaxChainLength > 0: splitting long chains */
 
     double lb, ub;          /* generic lower and upper bound*/
 
@@ -77,6 +79,7 @@ typedef struct data_t {
 
 
 typedef struct runinfo_t {
+    ~runinfo_t();
     static void init(runinfo_t& runinfo, int nth, int maxstages);
     static void save(const runinfo_t& runinfo, int nth, int maxstages,
                      const char * fname = "runinfo.txt");
