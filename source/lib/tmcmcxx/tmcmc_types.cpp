@@ -153,7 +153,7 @@ data_t::~data_t()
 {
     delete [] lowerbound;
     delete [] Num;
-    delete [] local_cov[0]; 
+    delete [] local_cov[0];
     delete [] local_cov;
 }
 

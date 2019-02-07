@@ -266,7 +266,7 @@ int fminsearch(double const *fj, int fn, double pj, double objTol,
                 printf ("fminsearch: NOT converged but found minimum at\n");
         } else {
             converged = false;
-            if (display) 
+            if (display)
                 printf("fminsearch: NOT converged and did not find minimum.\n");
         }
         if (display) printf ("%3ld x =  %.16lf f() = %.16f size = %.16f\n",

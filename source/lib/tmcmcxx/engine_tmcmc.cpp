@@ -307,7 +307,7 @@ void TmcmcEngine::sample_from_prior()
     printf("sample_from_prior: Generation %d: total elapsed time = %lf sec,\n",
            runinfo.Gen, gt1-t0);
     printf("generation elapsed time = %lf secs for function calls = %d\n",
-        gt1-gt0, g_nfeval);
+           gt1-gt0, g_nfeval);
 
     reset_nfc();
 
@@ -777,7 +777,7 @@ void TmcmcEngine::check_for_exit()
 void TmcmcEngine::precompute_chain_covariances(const cgdbp_t* leader,double** init_mean, double** chain_cov, int newchains)
 {
     bool display = data.options.Display;
-    
+
     printf("Precomputing chain covariances for the current generation...\n");
 
     int D = data.Nth;
@@ -1013,8 +1013,9 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
     double **g_x = new double*[data.Nth];
     for (i = 0; i < data.Nth; ++i) g_x[i] = new double[n];
- 
-    { // calculate uniques & acceptance rate
+
+    {
+        // calculate uniques & acceptance rate
 
         double * uf = new double[n];
         double **uniques = g_x;
@@ -1055,15 +1056,15 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
         runinfo.currentuniques[runinfo.Gen] = un;
         runinfo.acceptance[runinfo.Gen]     = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen]; /* check this*/
-       
+
         if(data.options.Display) {
-            
+
             double meanu[data.Nth], stdu[data.Nth];
             for (p = 0; p < data.Nth; ++p) {
                 meanu[p] = gsl_stats_mean(uniques[p], 1, n);
                 stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
-            }    
-     
+            }
+
             printf("prepare_newgen: CURGEN DB (UNIQUES) %d\n", runinfo.Gen);
             print_matrix("means", meanu, data.Nth);
             print_matrix("std", stdu, data.Nth);
@@ -1073,7 +1074,8 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     } /* end block*/
 
 
-    { // calculate statistics
+    {
+        // calculate statistics
         double *fj = new double[n];
         double t0  = torc_gettime();
         for (i = 0; i < n; ++i)
@@ -1142,7 +1144,7 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     /* setting min chain length */
     //TODO: untested feature (DW)
     if (data.MinChainLength > 0) {
-        int l_threshold = data.MinChainLength; 
+        int l_threshold = data.MinChainLength;
         for (i = 0; i < newchains; ++i) {
             if ((list[i].nsel > 0)&&(list[i].nsel < l_threshold)) {
                 list[i].nsel = l_threshold;

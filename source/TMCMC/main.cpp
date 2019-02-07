@@ -2,7 +2,8 @@
 
 using namespace tmcmc;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
     TmcmcEngine engine;
     engine.run();

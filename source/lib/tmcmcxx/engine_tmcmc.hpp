@@ -59,7 +59,7 @@ private:
     void print_full_db();
     void dump_full_db();
 
-    void init_curgen_db();  
+    void init_curgen_db();
 
     int load_curgen_db();
     void update_curgen_db(double point[], double F, double prior);
@@ -81,7 +81,7 @@ private:
     void check_for_exit();
 
     void precompute_chain_covariances(const cgdbp_t* leader,double** init_mean,
-                                      double** chain_cov, int newchains); 
+                                      double** chain_cov, int newchains);
     int compute_candidate(double candidate[], double chain_mean[], double var);
     int compute_candidate_cov(double candidate[], double chain_mean[], double chain_cov[]);
     void chaintask(double in_tparam[], int *pnsteps, double *out_tparam, int winfo[4],

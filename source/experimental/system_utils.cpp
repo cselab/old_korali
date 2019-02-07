@@ -17,20 +17,22 @@ void decouple(
                                       sol_coupled_sys[i].begin()+nr_equations);
 
         equation_sensitivities[i] = vec_d( sol_coupled_sys[i].begin()+nr_equations,
-                                  sol_coupled_sys[i].end());
+                                           sol_coupled_sys[i].end());
     }
 }
 
-void printvec_s(const char * name, const vec_s & v) {
+void printvec_s(const char * name, const vec_s & v)
+{
     printf("\n");
-    for(int i = 0; i < v.size(); ++i) 
+    for(int i = 0; i < v.size(); ++i)
         printf("%s[%d]: %lf\n", name, i, v[i].val());
     printf("\n");
 }
 
-void printvec_d(const char * name, const vec_d & v) {
+void printvec_d(const char * name, const vec_d & v)
+{
     printf("\n");
-    for(int i = 0; i < v.size(); ++i) 
+    for(int i = 0; i < v.size(); ++i)
         printf("%s[%d]: %lf\n", name, i, v[i]);
     printf("\n");
 }

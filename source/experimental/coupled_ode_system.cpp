@@ -6,8 +6,9 @@
 #include <boost/array.hpp>
 
 
-void CoupledOdeSystem::setObservations (const vec_d & times, 
-    const std::vector<vec_d> & observations) {
+void CoupledOdeSystem::setObservations (const vec_d & times,
+                                        const std::vector<vec_d> & observations)
+{
 
     _ntimes = times.size();
     _times  = vec_d(_ntimes);
@@ -16,7 +17,9 @@ void CoupledOdeSystem::setObservations (const vec_d & times,
     _sim    = std::vector<vec_d>(0);
 
 
-    for(int i = 0; i < _ntimes; ++i) { _times[i] = times[i]; };
+    for(int i = 0; i < _ntimes; ++i) {
+        _times[i] = times[i];
+    };
 
     for(int i = 0; i < _ntimes; ++i) {
         _obs[i]   = vec_d(_obsdim);
@@ -38,7 +41,7 @@ vec_d CoupledOdeSystem::getIC(const vec_d & params) const
             for(size_t i = 0; i < _dim; ++i) {
                 stan::math::set_zero_all_adjoints();
                 ic_s[i].grad();
-                for(size_t j = 0; j < _numparam; ++j) 
+                for(size_t j = 0; j < _numparam; ++j)
                     ic_s[_dim + _numparam * i + j] = params_s[j].adj();
             }
         } catch (const std::exception& e) {
@@ -52,8 +55,9 @@ vec_d CoupledOdeSystem::getIC(const vec_d & params) const
 }
 
 
-void CoupledOdeSystem::observer(const vec_d & state, double t) {
-    
+void CoupledOdeSystem::observer(const vec_d & state, double t)
+{
+
     vec_d sol(state.begin(), state.end());
     _sim.push_back(sol);
 
@@ -66,11 +70,11 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
     printvec_d("z", z);
 
     if(_mala) stan::math::start_nested();
- 
+
     vec_s params_s( _params.begin(), _params.end() );
     vec_s z_s( z.begin(), z.begin()+_dim );
     vec_s model_dot_s(_dim);
-    
+
     evalModel_s(model_dot_s, z_s, params_s, t);
     for(int i =0 ; i< _dim; ++i) dzOut[i] = model_dot_s[i].val();
 
@@ -86,7 +90,7 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
                 GK_trans(&dzOut[_dim], _numparam, _dim);
 
         printvec_s("z_s", z_s);
-        
+
         for(size_t i = 0; i < _dim; ++i) {
             stan::math::set_zero_all_adjoints_nested();
 
@@ -104,12 +108,12 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
         }
 
         stan::math::recover_memory_nested();
-        
+
         GK_trans = S_trans*_A_trans+_B_temp_trans;
     }
 
     printvec_d("dzOut", dzOut);
-    
+
 }
 
 std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
@@ -122,21 +126,23 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
     using boost::numeric::odeint::make_controlled;
     using boost::numeric::odeint::runge_kutta_dopri5;
     using boost::numeric::odeint::max_step_checker;
-    
-    auto systemLambda = [this] (const vec_d & y, vec_d & dy, double t) 
-                            { return this->step(y, dy, t); };
-    
-    auto observerLambda = [this] (const vec_d & x, double t) 
-                            { return this->observer(x, t); };
-   
+
+    auto systemLambda = [this] (const vec_d & y, vec_d & dy, double t) {
+        return this->step(y, dy, t);
+    };
+
+    auto observerLambda = [this] (const vec_d & x, double t) {
+        return this->observer(x, t);
+    };
+
     try {
         boost::numeric::odeint::integrate_times(
             make_controlled( absolute_tolerance, relative_tolerance, runge_kutta_dopri5<vec_d>() ),
-            systemLambda,                           
+            systemLambda,
             y_in,
-            std::begin(_times),                     
-            std::end(_times),     
-            integration_dt,                
+            std::begin(_times),
+            std::end(_times),
+            integration_dt,
             observerLambda,
             max_step_checker(max_num_steps)
         );
@@ -181,8 +187,8 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     std::vector<vec_s> observable_s(_ntimes);
     std::vector<vec_d> equation_solution_d;
     std::vector<vec_d> equation_sensitivity_d;
-    decouple(solution_of_coupled_system, equation_solution_d, 
-                equation_sensitivity_d, _dim, _numparam);
+    decouple(solution_of_coupled_system, equation_solution_d,
+             equation_sensitivity_d, _dim, _numparam);
 
 
     std::vector<vec_s> eq_sol(_ntimes);
@@ -217,7 +223,7 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
 
     double sumVal = llk.val();
     return_type* result = reinterpret_cast<return_type*>(calloc(1, sizeof(return_type)) );
-    
+
     if ( !std::isfinite(sumVal) ) {
         printf("CoupledOdeSystem::fitfun : log likelihood not finite\n");
         result->error_flg   = 1;
@@ -247,7 +253,7 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
         gsl_vector_set(gradient, i, grad_loglike[i] );
         if (!std::isfinite(gsl_vector_get(gradient, i))) grad_err = 1;
     }
-    
+
     double totObs = _ntimes * _obsdim;
     double tmp    = -totObs/sigma + sumVal*invsigma3;
     gsl_vector_set(gradient, indexSigma, tmp);
@@ -352,7 +358,7 @@ return_type * CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info
     gsl_matrix_free(inv_FIM);
     gsl_matrix_free(evec);
     gsl_vector_free(eval);
-    
+
     return result;
 }
 
