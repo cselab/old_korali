@@ -9,31 +9,33 @@ int main(int argc, char* argv[])
     double * out = nullptr;
     
 
-    vec_d theta = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01};
+    vec_d theta = { -0.8, 1, 0.5 };
+    //vec_d theta = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01};
     
-    AutoFitfun af;
+    AutoFitfun af(3,2,true);
     af.setParams(theta);
 
-    vec_d t = { 0.0, 0.5 };
-    std::vector<vec_d> obs(1);
-    obs[0] = { 4.0, 8.0 };
-    
-    af.setObservations(t,obs);
+    vec_d t = { 0.0, 9.0 };
+    //vec_d t = { 12.0, 14.09, 16.17, 18.26, 20.35, 22.43 }; 
+    std::vector<vec_d> obs(t.size());
+    obs[0] = { 2.0 };
+    obs[1] = { 4.0 };
     /*
-    vec_s ic = af.getIC();
-    printvec_s("ic",ic);
-
-    vec_s dzOut(ic.size(),0.0);
-    vec_s ics = { ic[0], ic[1], ic[2], ic[3] };
-    af.step(ics, dzOut, 3.14);
-
-
-    printvec_s("dzOut",dzOut);
+    obs[0] = { 50.17 };
+    obs[1] = { 73.0 };
+    obs[2] = { 80.0 };
+    obs[3] = { 73.0 };
+    obs[4] = { 73.0 };
+    obs[5] = { 70.0 };
     */
+    af.setObservations(t,obs);
 
+    //vec_s tmp = af.getIC();
+    //printvec_s("tmp",tmp);
 
-    double x[8] = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01};
-    return_type * ptr = af.fitfun(x, 8, out, info);
+    double x[4] = { -0.8, 1, 0.5, 0.5 };
+    //double x[9] = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01, 1.0};
+    return_type * ptr = af.fitfun(x, 4, out, info);
  
 
 
