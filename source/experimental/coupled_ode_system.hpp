@@ -26,7 +26,9 @@ public:
     }
 
     return_type * fitfun(double *x, int n, void* output, int *info);
-   
+    void fitfun_initialize(int argc, const  char **argv) {} ;
+    void fitfun_finalize() {};
+
     void setParams(vec_d params) { _params = params; };
     void setObservations (const vec_d & times, const std::vector<vec_d> & observations);
     void step(const vec_d & z, vec_d & dz, double t);
@@ -48,6 +50,7 @@ protected:
     virtual vec_s calculateObservable(const vec_s & solution) const = 0;
     virtual void evalModel_s(vec_s & dyOut, const vec_s & y, const vec_s & params, double t) = 0;
 
+    
 private:
 
     int _ntimes;    

@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     vec_d theta = { -0.8, 1, 0.5 };
     //vec_d theta = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01};
     
-    AutoFitfun af(3,2,false);
+    AutoFitfun af(3,2,true);
     af.setParams(theta);
 
     vec_d t = { 0.0, 9.0 };

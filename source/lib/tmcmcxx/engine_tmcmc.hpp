@@ -47,8 +47,6 @@ private:
 
     priors::Prior prior;
 
-    int EXPERIMENTAL_RESULTS = 0; //TODO: where does this belong? (DW)
-
     void init();
     void evalGen();
 
@@ -61,16 +59,13 @@ private:
     void print_full_db();
     void dump_full_db();
 
-    void init_curgen_db();      // (TODO: check if different funcs are needed for
-    //   full, curgen and curres)
+    void init_curgen_db();  
 
+    int load_curgen_db();
     void update_curgen_db(double point[], double F, double prior);
     void torc_update_curgen_db_task(double point[], double *pF, double *pprior);
     void torc_update_curgen_db(double point[], double F, double prior);
-    //void print_curgen_db();
     void dump_curgen_db();
-    //void display_curgen_db(int gen);
-    int load_curgen_db();
 
     void init_curres_db();
     void dump_curres_db(int gen);

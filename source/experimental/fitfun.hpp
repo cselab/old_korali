@@ -21,6 +21,10 @@ class Fitfun
 
 public:
     virtual return_type* fitfun (double* x, int n, void* output, int* info) = 0;
+    
+    virtual void fitfun_initialize(int argc, const  char **argv) = 0;
+
+    virtual void fitfun_finalize() = 0;
 
 };
 
