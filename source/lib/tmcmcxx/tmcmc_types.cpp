@@ -245,28 +245,28 @@ void runinfo_t::save(const runinfo_t& runinfo, int nth, int maxstages, const cha
     fprintf(f, "Gen=\n");
     fprintf(f, "%d\n", runinfo.Gen);
 
-    fprintf(f, "CoefVar[%d]=\n", maxstages);
-    for (int i = 0; i < maxstages; ++i) fprintf(f, "%.16lf\n", runinfo.CoefVar[i]);
+    fprintf(f, "CoefVar[%d]=\n", runinfo.Gen);
+    for (int i = 0; i < runinfo.Gen; ++i) fprintf(f, "%.16lf\n", runinfo.CoefVar[i]);
 
-    fprintf(f, "p[%d]=\n", maxstages);
+    fprintf(f, "p[%d]=\n", runinfo.Gen);
     for (int i = 0; i < maxstages; ++i) fprintf(f, "%.16lf\n", runinfo.p[i]);
 
-    fprintf(f, "currentuniques[%d]=\n", maxstages);
-    for (int i = 0; i < maxstages; ++i) fprintf(f, "%d\n", runinfo.currentuniques[i]);
+    fprintf(f, "currentuniques[%d]=\n", runinfo.Gen);
+    for (int i = 0; i < runinfo.Gen; ++i) fprintf(f, "%d\n", runinfo.currentuniques[i]);
 
-    fprintf(f, "logselection[%d]=\n", maxstages);
-    for (int i = 0; i < maxstages; ++i) fprintf(f, "%.16lf\n", runinfo.logselections[i]);
+    fprintf(f, "logselection[%d]=\n", runinfo.Gen);
+    for (int i = 0; i < runinfo.Gen; ++i) fprintf(f, "%.16lf\n", runinfo.logselections[i]);
 
-    fprintf(f, "acceptance[%d]=\n", maxstages);
-    for (int i = 0; i < maxstages; ++i) fprintf(f, "%.16lf\n", runinfo.acceptance[i]);
+    fprintf(f, "acceptance[%d]=\n", runinfo.Gen);
+    for (int i = 0; i < runinfo.Gen; ++i) fprintf(f, "%.16lf\n", runinfo.acceptance[i]);
 
     fprintf(f, "SS[%d][%d]=\n", nth, nth);
     for (int i = 0; i < nth; ++i)
         for (int j = 0; j < nth; ++j)
             fprintf(f, "%.16lf\n", runinfo.SS[i][j]);
 
-    fprintf(f, "meantheta[%d][%d]\n", maxstages, nth);
-    for (int i = 0; i < maxstages; ++i)
+    fprintf(f, "meantheta[%d][%d]\n", runinfo.Gen, nth);
+    for (int i = 0; i < runinfo.Gen; ++i)
         for (int j = 0; j < nth; ++j)
             fprintf(f, "%.16lf\n", runinfo.meantheta[i][j]);
 
@@ -286,19 +286,19 @@ bool runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fn
     fscanf(f, "%d", &runinfo.Gen);
 
     fscanf(f, "%s", header);
-    for (int i = 0; i < maxstages; ++i) fscanf(f, "%lf\n", &runinfo.CoefVar[i]);
+    for (int i = 0; i < runinfo.Gen; ++i) fscanf(f, "%lf\n", &runinfo.CoefVar[i]);
 
     fscanf(f, "%s", header);
-    for (int i = 0; i < maxstages; ++i) fscanf(f, "%lf\n", &runinfo.p[i]);
+    for (int i = 0; i < runinfo.Gen; ++i) fscanf(f, "%lf\n", &runinfo.p[i]);
 
     fscanf(f, "%s", header);
-    for (int i = 0; i < maxstages; ++i) fscanf(f, "%d\n", &runinfo.currentuniques[i]);
+    for (int i = 0; i < runinfo.Gen; ++i) fscanf(f, "%d\n", &runinfo.currentuniques[i]);
 
     fscanf(f, "%s", header);
-    for (int i = 0; i < maxstages; ++i) fscanf(f, "%lf\n", &runinfo.logselections[i]);
+    for (int i = 0; i < runinfo.Gen; ++i) fscanf(f, "%lf\n", &runinfo.logselections[i]);
 
     fscanf(f, "%s", header);
-    for (int i = 0; i < maxstages; ++i) fscanf(f, "%lf\n", &runinfo.acceptance[i]);
+    for (int i = 0; i < runinfo.Gen; ++i) fscanf(f, "%lf\n", &runinfo.acceptance[i]);
 
     fscanf(f, "%s", header);
     for (int i = 0; i < nth; ++i)
@@ -306,7 +306,7 @@ bool runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fn
             fscanf(f, "%lf\n", &runinfo.SS[i][j]);
 
     fscanf(f, "%s", header);
-    for (int i = 0; i < maxstages; ++i)
+    for (int i = 0; i < runinfo.Gen; ++i)
         for (int j = 0; j < nth; ++j)
             fscanf(f, "%lf\n", &runinfo.meantheta[i][j]);
 
