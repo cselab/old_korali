@@ -172,7 +172,8 @@ data_t::data_t(const char * fname)
     }
 
     moptions.chi2 = gsl_cdf_chisq_Pinv(moptions.conf,Nth);
-    moptions.elbds = new double(Nth);
+    moptions.elbds = new double[Nth];
+    moptions.eubds = new double[Nth];
     for(int i = 0; i < Nth; ++i) {
         moptions.elbds[i] = lowerbound[i];
         moptions.eubds[i] = upperbound[i];
@@ -188,6 +189,9 @@ data_t::data_t(const char * fname)
 data_t::~data_t()
 {
     delete [] lowerbound;
+    delete [] upperbound;
+    delete [] moptions.elbds;
+    delete [] moptions.eubds;
     delete [] Num;
     delete [] local_cov[0];
     delete [] local_cov;
