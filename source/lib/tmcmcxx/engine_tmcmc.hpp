@@ -66,6 +66,10 @@ private:
 
     int load_curgen_db();
     void update_curgen_db(double point[], double F, double prior);
+    void update_curgen_db_manifold(
+            double point[], double F, double prior, 
+            int error_flg, double gradient[], double cov[], 
+            double Evec[], double eVal[]);
     void torc_update_curgen_db_task(double point[], double *pF, double *pprior);
     void torc_update_curgen_db(double point[], double F, double prior);
     void dump_curgen_db();

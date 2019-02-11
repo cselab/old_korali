@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <limits>
 
+#include <gsl/gsl_cdf.h>
+
 #include "tmcmc_types.hpp"
 
 namespace tmcmc
@@ -29,6 +31,13 @@ data_t::data_t(const char * fname)
     options.LowerBound = 0.0;
     options.UpperBound = 1.0;
     options.Zdump      = 0;
+
+
+    moptions.use_ebds = false;
+    moptions.conf     = 0.68;
+    moptions.pct_elb  = 0.0;
+    moptions.pct_eub  = 0.0;
+    moptions.eps      = 0.1;
 
     load_from_file = 0;
 
@@ -123,6 +132,21 @@ data_t::data_t(const char * fname)
         } else if (strstr(line, "MinChainLength")) {
             sscanf(line, "%*s %d", &MinChainLength);
             printf("setting MinChainLength = %d\n", MinChainLength);
+        } else if (strstr(line, "moptions.eps")) {
+            sscanf(line, "%*s %lf", &moptions.eps);
+            printf("setting manifold options epsilon = %lf\n", moptions.eps);
+        } else if (strstr(line, "moptions.use_ebds")) {
+            sscanf(line, "%*s %d", &moptions.use_ebds);
+            printf("setting manifold options use_ebds = %d\n", moptions.use_ebds);
+        } else if (strstr(line, "moptions.conf")) {
+            sscanf(line, "%*s %lf", &moptions.conf);
+            printf("setting manifold options conf = %lf\n", moptions.conf);
+        }  else if (strstr(line, "moptions.pct_elb")) {
+            sscanf(line, "%*s %lf", &moptions.pct_elb);
+            printf("setting manifold options pct_elb = %lf\n", moptions.pct_elb);
+        } else if (strstr(line, "moptions.pct_eub")) {
+            sscanf(line, "%*s %lf", &moptions.pct_eub);
+            printf("setting manifold options.pct_eub = %lf\n", moptions.pct_eub);
         }
 
     }
@@ -145,6 +169,18 @@ data_t::data_t(const char * fname)
         local_cov[pos] = LCmem + pos*Nth*Nth;
         for (int i=0; i<Nth; ++i)
             local_cov[pos][i*Nth+i] = 1;
+    }
+
+    moptions.chi2 = gsl_cdf_chisq_Pinv(moptions.conf,Nth);
+    moptions.elbds = new double(Nth);
+    for(int i = 0; i < Nth; ++i) {
+        moptions.elbds[i] = lowerbound[i];
+        moptions.eubds[i] = upperbound[i];
+        if (moptions.use_ebds) {
+            double width = upperbound[i] - lowerbound[i];
+            moptions.elbds[i] -= width;
+            moptions.eubds[i] += width;
+        }
     }
 
 }

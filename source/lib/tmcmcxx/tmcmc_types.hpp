@@ -27,6 +27,16 @@ struct optim_options {
 };
 
 
+struct manifold_options {
+    double eps;                 // TODO: what is it? (DW)
+    double conf;                /* confidence region to fit bounds (or ebds) */
+    double chi2;                /* chi square value calcualted from conf and dim */
+    bool use_ebds;              /* use extended bounds for cov adaption? */
+    double pct_elb, pct_eub;    /* extended bounds in pct of domain widths */
+    double *elbds, *eubds;      /* actual values for extended bounds ([PROBDIM]) */
+};
+
+
 typedef struct data_t {
     data_t(const char * fname = "tmcmc.par");
     ~data_t();
@@ -45,20 +55,21 @@ typedef struct data_t {
     int    auxil_size;
     double *auxil_data;
 
-    int MinChainLength;     /* MinChainLength > 0: setting MinChainLength */
-    int MaxChainLength;     /* MaxChainLength > 0: splitting long chains */
+    int MinChainLength;         /* MinChainLength > 0: setting MinChainLength */
+    int MaxChainLength;         /* MaxChainLength > 0: splitting long chains */
 
-    double lb, ub;          /* generic lower and upper bound*/
+    double lb, ub;              /* generic lower and upper bound*/
 
-    double TolCOV;          /* Target coefficient of variation of weights */
-    double MinStep;         /* Min update of rho */
-    double bbeta;           /* Covariance scaling parameter */
+    double TolCOV;              /* Target coefficient of variation of weights */
+    double MinStep;             /* Min update of rho */
+    double bbeta;               /* Covariance scaling parameter */
     long   seed;
-    int    burn_in;         /* Number of burn in iterations */
+    int    burn_in;             /* Number of burn in iterations */
 
-    optim_options options;  /* Optimization options (see above) */
+    optim_options options;      /* Optimization options (see above) */
+    manifold_options moptions;  /* Options for mTMCMC (see above) */
 
-    int prior_type;         /* 0: uniform, 1: gaussian, 3: composite */
+    int prior_type;             /* 0: uniform, 1: gaussian, 3: composite */
     int load_from_file;
 
     int icdump;
@@ -70,7 +81,7 @@ typedef struct data_t {
     double **init_mean;     /* [DATANUM][PROBDIM] */
 
     double **local_cov;     /* [DATANUM][PROBDIM*PROBDIM] */
-    int    use_local_cov;
+    bool use_local_cov;
     double local_scale;
 
     int stealing;
@@ -87,31 +98,52 @@ typedef struct runinfo_t {
                      const char * fname = "runinfo.txt");
     int    Gen;
     double *CoefVar;        /*[MAXGENS];*/
-    double *p;            /*[MAXGENS];        // cluster-wide*/
-    int    *currentuniques;    /*[MAXGENS];*/
-    double *logselections;        /*[MAXGENS];*/
-    double *acceptance;        /*[MAXGENS];*/
-    double **SS;            /*[PROBDIM][PROBDIM];    // cluster-wide*/
-    double **meantheta;         /*[MAXGENS][PROBDIM]*/
+    double *p;              /*[MAXGENS];*/
+    int    *currentuniques; /*[MAXGENS];*/
+    double *logselections;  /*[MAXGENS];*/
+    double *acceptance;     /*[MAXGENS];*/
+    double **SS;            /*[PROBDIM][PROBDIM];*/
+    double **meantheta;     /*[MAXGENS][PROBDIM]*/
 } runinfo_t;
 
 
 typedef struct cgdbp_s {
-    double *point; /*[PROBDIM];*/
+    double *point;  /*[PROBDIM];*/
     double F;
     double prior;
 
     int counter;    /* not used (?)*/
-    int nsel;    /* for selection of leaders only*/
-    int queue;    /* for submission of leaders only*/
-    int surrogate;
-    double error;
+    int nsel;       /* for selection of leaders only*/
+    int queue;      /* for submission of leaders only*/
+    int surrogate;  //TODO: used? (DW)
+    double error;   //TODO: used? (DW)
 } cgdbp_t;
 
 
+typedef struct cgdbpm_s {
+    double *point;      /*[PROBDIM];*/
+    double F;
+    double prior;
+
+    int counter;        /* not used (?)*/
+    int nsel;           /* for selection of leaders only*/
+    int queue;          /* for submission of leaders only*/
+    int surrogate;      //TODO: used? (DW)
+    double error;       //TODO: used? (DW)
+
+    int error_flg; 
+    int posdef;         //TODO: can we combine this with error_flg? (DW)
+    double *gradient;   /*[PROBDIM]*/
+    double *cov;        /*[PROBDIM]*/
+    double *Evec;       /*[PROBDIM][PROBDIM]*/
+    double *eVal;       /*[PROBDIM]*/
+} cgdbpm_t;
+
+
+
 typedef struct cgdb_s {
-    int     entries;
-    cgdbp_t *entry; /*[MAX_DB_ENTRIES];*/
+    int     entries;    
+    cgdbp_t *entry;     /*[MAX_DB_ENTRIES];*/
     pthread_mutex_t m;
 } cgdb_t;
 
