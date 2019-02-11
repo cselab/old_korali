@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     obs[0] = { 2.0 };
     obs[1] = { 4.0 };
 
-    AutoFitfun af(3,2,false); //false := no MALA
+    AutoFitfun af(3,2,true); //false := no MALA
     af.setParams(theta);
     af.setObservations(t,obs);
 
