@@ -1,10 +1,12 @@
 #include "coupled_ode_system.hpp"
+#include "fitfun.hpp"
 #include "system_utils.hpp"
 
 #include <boost/numeric/odeint.hpp>
 #include <boost/bind.hpp>
 #include <boost/array.hpp>
 
+namespace fitfun {
 
 void CoupledOdeSystem::setObservations (const vec_d & times,
                                         const std::vector<vec_d> & observations)
@@ -66,8 +68,8 @@ void CoupledOdeSystem::observer(const vec_d & state, double t)
 
 void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
 {
-    printf("t %lf\n",t);
-    printvec_d("z", z);
+    //printf("t %lf\n",t);
+    //printvec_d("z", z);
 
     if(_mala) stan::math::start_nested();
 
@@ -89,7 +91,7 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
         Eigen::Map<Eigen::Matrix<double,-1,-1, Eigen::ColMajor>>
                 GK_trans(&dzOut[_dim], _numparam, _dim);
 
-        printvec_s("z_s", z_s);
+        //printvec_s("z_s", z_s);
 
         for(size_t i = 0; i < _dim; ++i) {
             stan::math::set_zero_all_adjoints_nested();
@@ -112,7 +114,7 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
         GK_trans = S_trans*_A_trans+_B_temp_trans;
     }
 
-    printvec_d("dzOut", dzOut);
+    //printvec_d("dzOut", dzOut);
 
 }
 
@@ -155,7 +157,7 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
 }
 
 
-double CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
+double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *info)
 {
     const int indexSigma = n-1;
 
@@ -195,7 +197,7 @@ double CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
     std::vector<vec_s> eq_sol(_ntimes);
     vec_d gradients;
     for(size_t i = 0; i < _ntimes; ++i) {
-        printvec_d("equation_solution_d", equation_solution_d[i]);
+        //printvec_d("equation_solution_d", equation_solution_d[i]);
         if(_mala) {
             eq_sol[i]    = vec_s(_dim, 0.0);
             for(size_t j = 0; j < _dim; ++j) {
@@ -288,10 +290,13 @@ double CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
     Eigen::MatrixXd eigInv_FIM =
         eigFIM.fullPivHouseholderQr().solve(I)*sigma2; // TODO: check, we scale here and some lines below again?? (DW)
 
-    bool a_solution_exists = (eigFIM*eigInv_FIM).isApprox(I*sigma2, 1e-2);
-    double relative_error  = (eigFIM*eigInv_FIM - I*sigma2).norm() / I.norm(); // norm() is L2 norm
-    printf("CoupledOdeSystem::fitfun: eigFIM inversion succesfull: %d (rel error: %lf)\n", a_solution_exists, relative_error);
-
+    // TODO: pass display through info array? (DW)
+    // if (display>2) {
+    // bool a_solution_exists = (eigFIM*eigInv_FIM).isApprox(I*sigma2, 1e-2);
+    // double relative_error  = (eigFIM*eigInv_FIM - I*sigma2).norm() / I.norm(); // norm() is L2 norm
+    // printf("CoupledOdeSystem::fitfun: eigFIM inversion succesfull: %d (rel error: %lf)\n", a_solution_exists, relative_error);
+    // }
+    
     gsl_matrix * inv_FIM  = gsl_matrix_calloc(n, n);
     for(std::size_t i = 0; i< n; ++i) {
         for(std::size_t j = 0; j<n; ++j) {
@@ -362,4 +367,4 @@ double CoupledOdeSystem::fitfun(double *x, int n, void* output, int *info)
     return result->loglike;
 }
 
-
+}//namespace fitfun

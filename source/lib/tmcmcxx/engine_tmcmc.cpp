@@ -14,16 +14,20 @@ using namespace priors;
 namespace tmcmc
 {
 
-TmcmcEngine::TmcmcEngine() : data(data_t()),
+TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr) : 
+    data(data_t()),
     nchains(data.Num[0]),
     out_tparam(new double[data.PopSize]),
     leaders(new cgdbp_t[data.PopSize]),
-    prior("priors.par")
+    prior("priors.par"),
+    ifitfun_ptr_(ifitfun_ptr)
 {
     for (int i = 0; i< data.PopSize; ++i)
         leaders[i].point = new double[data.Nth];
 
     curres_db.entries = 0;
+
+    ifitfun_ptr_->initialize(0, NULL);
 }
 
 TmcmcEngine::~TmcmcEngine()
@@ -35,6 +39,7 @@ TmcmcEngine::~TmcmcEngine()
 
     for(int i = 0; i< data.MaxStages; ++i) delete [] runinfo.meantheta[i];
 
+    ifitfun_ptr_->finalize();
     //TODO: what else needs to be deleted?? (DW)
 }
 
@@ -82,7 +87,6 @@ void TmcmcEngine::run()
         system(cmd);
     }
 
-    fitfun::fitfun_finalize();
     printf("total function calls = %d\n", get_tfc());
 #if defined(_USE_TORC_)
     torc_finalize();
@@ -532,7 +536,10 @@ void TmcmcEngine::taskfun(const double *x, int *pN, double *res, int winfo[4])
 
     inc_nfc();
 
-    f = fitfun::fitfun(x, N, (void *)NULL, winfo);
+    // TODO: this belongs somewher else for mTMCMC (DW)
+    fitfun::return_type *out = new fitfun::return_type;
+    
+    f = ifitfun_ptr_->evaluate(x, N, out, winfo);
 #if (EXPERIMENTAL_RESULTS > 0)    /* peh: decide about this (results should be passed as argument to fitfun) */
     double results[EXPERIMENTAL_RESULTS];
     for (int i = 0; i < EXPERIMENTAL_RESULTS; ++i) {
@@ -544,6 +551,7 @@ void TmcmcEngine::taskfun(const double *x, int *pN, double *res, int winfo[4])
     torc_update_curres_db(results, f);
 #endif
 
+    delete out;
     *res = f;
     return;
 }

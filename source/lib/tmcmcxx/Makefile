@@ -26,8 +26,6 @@ CXXFLAGS += -DCHECK_POSDEF
 
 all: $(TARGET)
 
-libtmcmcxx.a: engine_tmcmc.o tmcmc_obj_fmin.o tmcmc_utils.o tmcmc_types.o
-
 engine_tmcmc.o: engine_tmcmc.cpp engine_tmcmc.hpp
 
 tmcmc_stats.o: tmcmc_obj_fmin.cpp tmcmc_obj_fmin.hpp
@@ -35,6 +33,8 @@ tmcmc_stats.o: tmcmc_obj_fmin.cpp tmcmc_obj_fmin.hpp
 tmcmc_utils.o: tmcmc_utils.cpp tmcmc_utils.hpp
 
 tmcmc_types.o: tmcmc_types.cpp tmcmc_types.hpp
+
+libtmcmcxx.a: engine_tmcmc.o tmcmc_obj_fmin.o tmcmc_utils.o tmcmc_types.o
 
 clean:; rm -rf $(TARGET) *.o *.a
 

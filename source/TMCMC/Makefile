@@ -8,12 +8,12 @@ DIR_FITFUN   ?= ../likelihoods
 DIR_FITFUNXX ?= ../likelihoodsxx
 TARGET       ?= engine_tmcmc
 
-DIR_STAN     ?= ../../lib/stan
+DIR_STAN     ?= ../../lib/
 DIR_EIGEN    ?= ../../lib/stan/lib/eigen_3.3.3
 DIR_BOOST    ?= ../../lib/stan/lib/boost_1.66.0
 DIR_SUNDIALS ?= ../../lib/stan/lib/sundials_3.1.0/include
 
-all: $(TARGET) tmcmcxx
+all: tmcmcxx_autodiff_example tmcmcxx_rosenbrock_example $(TARGET)
 
 L=../lib
 DIR_PRIORS   = $L/priors
@@ -40,18 +40,27 @@ STANINCLUDES += -I$(DIR_EIGEN)
 STANINCLUDES += -I$(DIR_BOOST)
 STANINCLUDES += -I$(DIR_SUNDIALS)
 
+CXXFLAGS += $(STANINCLUDES) -Wfatal-errors 
+
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
 	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
-	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
+#	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o) $^ $(LDLIBS)
 
-tmcmcxx:
+tmcmcxx_autodiff_example:
 	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
 	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
+
+tmcmcxx_rosenbrock:
+	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
+	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
+	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
+	$(LINK.o.xx) $^ $(LDXLIBS)
+
 
 # dependencies
 
@@ -61,14 +70,16 @@ $(TARGET): tmcmc_run.o \
 	tmcmc_aux.o \
 	tmcmc_engine.o \
 
-tmcmcxx: main.o
+tmcmcxx_autodiff_example: main_autodiff_example.o
+tmcmcxx_rosenbrock_example: main_rosenbrock_example.o
 
 tmcmc_run.o: tmcmc_run.c
 tmcmc_stats.o: tmcmc_stats.c
 tmcmc_db.o: tmcmc_db.c 
 tmcmc_aux.o: tmcmc_aux.c
 tmcmc_engine.o: tmcmc_engine.c
-main.o: main.cpp
+main_autodiff_example.o: main_autodiff_example.cpp
+main_rosenbrock_example.o: main_rosenbrock_example.cpp
 
 clean:; rm -rf  $(TARGET) tmcmcxx *.o
 	(cd $(DIR_PRIORS); make clean)

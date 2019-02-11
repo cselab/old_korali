@@ -4,16 +4,12 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
-#include <stan/math.hpp>
+#include "system_utils.hpp"
+#include "Ifitfun.hpp"
 
-#include "fitfun.hpp"
+namespace fitfun {
 
-typedef stan::math::var scalar_t;
-
-typedef std::vector<double>  vec_d;
-typedef std::vector<scalar_t>  vec_s;
-
-class CoupledOdeSystem : public Fitfun
+class CoupledOdeSystem : public IFitfun
 {
 
 public:
@@ -25,9 +21,9 @@ public:
         _B_temp_trans = Eigen::MatrixXd::Zero(_numparam, _dim);
     }
 
-    double fitfun(double *x, int n, void* output, int *info);
-    void fitfun_initialize(int argc, const  char **argv) {} ;
-    void fitfun_finalize() {};
+    double evaluate(const double *x, int n, void* output, int *info);
+    void initialize(int argc, const  char **argv) {};
+    void finalize() {};
 
     void setParams(vec_d params)
     {
@@ -75,5 +71,6 @@ private:
 
 };
 
+}//namespace fitfun
 
 #endif// _COUPLED_ODE_SYSTEM_HPP_

@@ -6,7 +6,7 @@
 int main(int argc, char* argv[])
 {
     int info[1] = {0};
-    double * out = nullptr;
+    void * out = static_cast<void*>(new return_type);
 
 
     vec_d theta = { -0.8, 1, 0.5 };
@@ -32,11 +32,12 @@ int main(int argc, char* argv[])
 
     double x[4] = { -0.8, 1, 0.5, 0.5 };
     //double x[9] = {0.1, 0.15, 0.47, 1.4, 0.95, 2.0, 1.1, 0.01, 1.0};
-    return_type * ptr = af.fitfun(x, 4, out, info);
+    double llk =  af.fitfun(x, 4, out, info);
 
+    return_type* retval = static_cast<return_type*>(out);
 
-
-    printf("loglike: %lf\n", ptr->loglike);
+    printf("llk: %lf\n", llk);
+    printf("loglike: %lf\n", retval->loglike);
 
     return 0;
 }

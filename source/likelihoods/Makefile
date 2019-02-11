@@ -14,7 +14,7 @@ all: $(LIBS)
 
 L=../lib
 CFLAGS += -I$L/priors
-# for <fitfun.h>
+
 CFLAGS += -I.
 
 OBJ_THETA_INT = fitfun_theta_fast.o loglike_theta_fast.o

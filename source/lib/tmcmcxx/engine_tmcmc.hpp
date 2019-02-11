@@ -15,6 +15,7 @@
 #define ENGINE_TMCMC_HPP
 
 #include "myrand.hpp"
+#include "Ifitfun.hpp"
 #include "tmcmc_utils.hpp"
 
 namespace tmcmc
@@ -24,7 +25,7 @@ class TmcmcEngine
 {
 
 public:
-    TmcmcEngine();
+    TmcmcEngine(fitfun::IFitfun * Ifitfun_ptr);
     ~TmcmcEngine();
 
     void run();
@@ -46,6 +47,8 @@ private:
     cgdbp_t *leaders;
 
     priors::Prior prior;
+
+    fitfun::IFitfun * ifitfun_ptr_;
 
     void init();
     void evalGen();
