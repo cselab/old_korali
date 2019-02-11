@@ -55,7 +55,7 @@ tmcmcxx_autodiff_example:
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
-tmcmcxx_rosenbrock:
+tmcmcxx_rosenbrock_example:
 	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
 	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
