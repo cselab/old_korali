@@ -35,10 +35,10 @@ data_t::data_t(const char * fname)
     options.Zdump      = 0;
 
 
-    moptions.use_ebds = false;
+    moptions.use_ebds = true;
     moptions.conf     = 0.68;
-    moptions.pct_elb  = 0.0;
-    moptions.pct_eub  = 0.0;
+    moptions.pct_elb  = 0.2;
+    moptions.pct_eub  = 0.2;
     moptions.eps      = 0.1;
 
     load_from_file = 0;

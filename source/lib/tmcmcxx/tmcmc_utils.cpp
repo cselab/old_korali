@@ -32,7 +32,7 @@ int compar_desc(const void* p1, const void* p2)
 
     if (s1->nsel < s2->nsel) return dir;
     if (s1->nsel > s2->nsel) return -dir;
-    /*    if (s1->nsel == s2->nsel) return 0;*/
+
     return 0;
 }
 
@@ -60,7 +60,7 @@ void compute_mat_product_vect(double *mat/*2D*/, double vect[], double res_vect[
 
 	for(row=0; row<dim; ++row){
 		current_dot_product = 0.0;
-        for(column=0; column<dim; ++column) current_dot_product += mat[row*dim+column] * vect[column]; //row
+        for(column=0; column<dim; ++column) current_dot_product += mat[row*dim+column] * vect[column];
         res_vect[row] = coef * current_dot_product;
     }
     return;
