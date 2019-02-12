@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
     obs[4] = { -0.7374 };
 
     AutoFitfun af(3,2,false); //false := no MALA
-    //af.setParams(theta);
     af.setObservations(t,obs);
 
     TmcmcEngine engine(&af);
