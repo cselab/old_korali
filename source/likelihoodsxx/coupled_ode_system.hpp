@@ -34,9 +34,11 @@ public:
 
     vec_d getIC(const vec_d & params) const;
 
+    inline int getDim() const { return _dim; };
+    inline int getObsDim() const { return _obsdim; };
+
 protected:
 
-    int _obsdim;
 
     std::vector<vec_d> _obs; // [_obsdim] x [_ntimes]
     std::vector<vec_d> _sim; // [_dim] x [_ntimes]
@@ -48,6 +50,8 @@ protected:
 
 private:
 
+    int _obsdim;
+    
     const int _numparam;
     const int _dim;
     

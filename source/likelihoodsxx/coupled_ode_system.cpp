@@ -13,15 +13,10 @@ void CoupledOdeSystem::setObservations (const vec_d & times,
 {
 
     _ntimes = times.size();
-    _times  = vec_d(_ntimes);
+    _times  = vec_d(times.begin(), times.end());
     _obsdim = observations.begin()->size();
     _obs    = std::vector<vec_d>(_ntimes);
     _sim    = std::vector<vec_d>(0);
-
-
-    for(int i = 0; i < _ntimes; ++i) {
-        _times[i] = times[i];
-    };
 
     for(int i = 0; i < _ntimes; ++i) {
         _obs[i]   = vec_d(_obsdim);

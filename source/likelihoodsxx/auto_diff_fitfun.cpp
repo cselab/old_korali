@@ -8,7 +8,7 @@ namespace fitfun {
 vec_s AutoFitfun::getModelIC_s(const vec_s & params) const
 {
     // here IC is independent of theta
-    vec_s ic = vec_s(params.size());
+    vec_s ic = vec_s(getDim());
     
     // Simple Model
     ic[0] = params[1];
@@ -43,7 +43,7 @@ void AutoFitfun::evalModel_s(vec_s & dy_out, const vec_s & y_in, const vec_s & p
 vec_s AutoFitfun::calculateObservable(const vec_s & equation_solution) const
 {
     // here implement observable calculation to match data
-    vec_s observable(_obsdim);
+    vec_s observable(getObsDim());
     
     // Simple Model
     observable[0] = equation_solution[0] + equation_solution[1];
