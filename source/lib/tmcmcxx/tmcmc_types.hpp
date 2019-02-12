@@ -14,6 +14,11 @@
 namespace tmcmc
 {
 
+enum Method {
+    Standard,
+    Manifold
+};
+
 struct optim_options {
     int    MaxIter;             /* Max number of search iterations */
     double Tol;                 /* Tolerance for root finding */
@@ -28,7 +33,7 @@ struct optim_options {
 
 
 struct manifold_options {
-    double eps;                 // TODO: what is it? (DW)
+    double eps;                 /* manifold time step discretization */
     double conf;                /* confidence region to fit bounds (or ebds) */
     double chi2;                /* chi square value calcualted from conf and dim */
     bool use_ebds;              /* use extended bounds for cov adaption? */
@@ -108,19 +113,6 @@ typedef struct runinfo_t {
 
 
 typedef struct cgdbp_s {
-    double *point;  /*[PROBDIM];*/
-    double F;
-    double prior;
-
-    int counter;    /* not used (?)*/
-    int nsel;       /* for selection of leaders only*/
-    int queue;      /* for submission of leaders only*/
-    int surrogate;  //TODO: used? (DW)
-    double error;   //TODO: used? (DW)
-} cgdbp_t;
-
-
-typedef struct cgdbpm_s {
     double *point;      /*[PROBDIM];*/
     double F;
     double prior;
@@ -135,10 +127,9 @@ typedef struct cgdbpm_s {
     int posdef;         //TODO: can we combine this with error_flg? (DW)
     double *gradient;   /*[PROBDIM]*/
     double *cov;        /*[PROBDIM]*/
-    double *Evec;       /*[PROBDIM][PROBDIM]*/
-    double *eVal;       /*[PROBDIM]*/
-} cgdbpm_t;
-
+    double *evec;       /*[PROBDIM][PROBDIM]*/
+    double *eval;       /*[PROBDIM]*/
+} cgdbp_t;
 
 
 typedef struct cgdb_s {

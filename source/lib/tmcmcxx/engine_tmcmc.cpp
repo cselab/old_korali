@@ -1,6 +1,10 @@
+#include <math.h>
 #include <cmath>
 #include <numeric>
+#include <algorithm>
 
+#include <gsl/gsl_eigen.h>
+#include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_statistics.h>
@@ -14,7 +18,8 @@ using namespace priors;
 namespace tmcmc
 {
 
-TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr) : 
+TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method) : 
+    _method(method),
     data(data_t()),
     nchains(data.Num[0]),
     out_tparam(new double[data.PopSize]),
@@ -24,6 +29,15 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr) :
 {
     for (int i = 0; i< data.PopSize; ++i)
         leaders[i].point = new double[data.Nth];
+
+    if (_method == Manifold) {
+        for (int i = 0; i< data.PopSize; ++i) {
+            leaders[i].gradient = new double[data.Nth];
+            leaders[i].cov      = new double[data.Nth*data.Nth];
+            leaders[i].evec     = new double[data.Nth*data.Nth];
+            leaders[i].eval     = new double[data.Nth];
+        }
+    }
 
     curres_db.entries = 0;
 
@@ -35,6 +49,16 @@ TmcmcEngine::~TmcmcEngine()
     delete [] out_tparam;
 
     for (int i = 0; i< data.PopSize; ++i) delete[] leaders[i].point;
+
+    if (_method == Manifold) {
+        for (int i = 0; i< data.PopSize; ++i) {
+            delete[] leaders[i].gradient;
+            delete[] leaders[i].cov;
+            delete[] leaders[i].evec;
+            delete[] leaders[i].eval;
+        }
+    }
+
     delete[] leaders;
 
     for(int i = 0; i< data.MaxStages; ++i) delete [] runinfo.meantheta[i];
@@ -375,6 +399,66 @@ void TmcmcEngine::torc_update_full_db(double point[], double F, double *G, int n
 }
 
 
+void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double prior, int error_flg, int posdef, double gradient[], double cov[], double evec[], double eval[])
+{
+	int i, pos;
+
+	pthread_mutex_lock(&curgen_db.m);
+	pos = curgen_db.entries;
+	curgen_db.entries++;
+	pthread_mutex_unlock(&curgen_db.m);
+
+	if (curgen_db.entry[pos].point == NULL) curgen_db.entry[pos].point = new double[data.Nth];
+
+	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].point[i] = point[i];
+	curgen_db.entry[pos].F = F;
+	curgen_db.entry[pos].prior = prior;
+
+	curgen_db.entry[pos].error_flg = error_flg;
+	curgen_db.entry[pos].posdef = posdef;
+
+	if (curgen_db.entry[pos].gradient == NULL) curgen_db.entry[pos].gradient = new double[data.Nth];
+	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].gradient[i] = gradient[i];
+
+	if (curgen_db.entry[pos].cov == NULL) curgen_db.entry[pos].cov = new double[data.Nth*data.Nth];
+	for (i = 0; i < data.Nth*data.Nth; ++i) curgen_db.entry[pos].cov[i] = cov[i];
+
+	if (curgen_db.entry[pos].evec == NULL) curgen_db.entry[pos].evec = new double[data.Nth*data.Nth];
+	for (i = 0; i < data.Nth*data.Nth; ++i) curgen_db.entry[pos].evec[i] = evec[i];
+
+	if (curgen_db.entry[pos].eval == NULL) curgen_db.entry[pos].eval = new double[data.Nth];
+	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].eval[i] = eval[i];
+
+    return;
+}
+
+
+void TmcmcEngine::torc_update_manifold_curgen_db(double point[], double F, double prior, int error_flg, int posdef, double gradient[], double cov[], double evec[], double eval[])
+{
+	if (torc_node_id() == 0) {
+		update_manifold_curgen_db(point, F, prior, error_flg, posdef, gradient, cov, evec, eval);
+		return;
+	}
+
+#ifdef _USE_TORC_
+	torc_create_direct(0, torc_update_curgen_db_mala_task, 9,		/* message to the database manager (separate process?) or direct execution by server thread */
+		data.Nth, MPI_DOUBLE, CALL_BY_COP,
+		1, MPI_DOUBLE, CALL_BY_COP,
+		1, MPI_DOUBLE, CALL_BY_COP,
+		1, MPI_INT, CALL_BY_COP,
+		1, MPI_INT, CALL_BY_COP,
+		data.Nth, MPI_DOUBLE, CALL_BY_COP,		// VAL...
+		data.Nth*data.Nth, MPI_DOUBLE, CALL_BY_COP,
+		data.Nth*data.Nth, MPI_DOUBLE, CALL_BY_COP,
+		data.Nth, MPI_DOUBLE, CALL_BY_COP,
+		point, &F, &prior, &error_flg, &posdef, gradient, cov, evec, eval);
+	torc_waitall3();	/* wait without releasing the worker */
+#endif
+}
+
+
+
+
 void TmcmcEngine::print_full_db()
 {
     int i;
@@ -528,55 +612,77 @@ void TmcmcEngine::init_curres_db()
     curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize];
 }
 
-
-void TmcmcEngine::taskfun(const double *x, int *pN, double *res, int winfo[4])
-{
-    double f;
-    int N = *pN;
-
-    inc_nfc();
-
-    // TODO: this belongs somewher else for mTMCMC (DW)
-    fitfun::return_type *out = new fitfun::return_type;
-    
-    f = ifitfun_ptr_->evaluate(x, N, out, winfo);
-#if (EXPERIMENTAL_RESULTS > 0)    /* peh: decide about this (results should be passed as argument to fitfun) */
-    double results[EXPERIMENTAL_RESULTS];
-    for (int i = 0; i < EXPERIMENTAL_RESULTS; ++i) {
-        if (i < data.Nth)
-            results[i] = x[i];
-        else
-            results[i] = 0.0;
-    }
-    torc_update_curres_db(results, f);
-#endif
-
-    delete out;
-    *res = f;
-    return;
-}
-
-
 void TmcmcEngine::evaluate_F(double point[], double *Fval, int worker_id,
                              int gen_id, int chain_id, int step_id, int ntasks)
 {
-    double F;
-    int winfo[4];
-    int dim = data.Nth;
-
-    winfo[0] = gen_id;
-    winfo[1] = chain_id;
-    winfo[2] = step_id;
-    winfo[3] = 0;
+    int winfo[4] = { gen_id, chain_id, step_id, 0 };
 
 #if VERBOSE
     printf("running on worker %d\n", worker_id);
 #endif
 
-    taskfun(point, &dim, &F, winfo);
+    inc_nfc();
 
-    *Fval = F;
+    // TODO: this belongs somewher else for mTMCMC (DW)
+    // also not very efficient
+    fitfun::return_type *out = new fitfun::return_type;
+
+    *Fval = ifitfun_ptr_->evaluate(point, data.Nth, out, winfo);
+    
+    delete out;
+
+    return;
 }
+
+
+void TmcmcEngine::manifold_evaluate_candidate(double point[], double *Fval, int *perr, 
+                                      int *pposdef, double grad[], double cov[], 
+                                      double evec[], double eval[], int worker_id, 
+                                      int gen_id, int chain_id, int step_id, int ntasks)
+{
+    int Nth = data.Nth;
+    int winfo[4] = { gen_id, chain_id, step_id, 0 };
+
+#if VERBOSE
+    printf("running on worker %d\n", worker_id);
+#endif
+
+    inc_nfc();
+
+    // TODO: this belongs somewher else for mTMCMC (DW)
+    fitfun::return_type *result = new fitfun::return_type;
+    
+    ifitfun_ptr_->evaluate(point, Nth, result, winfo);
+    
+    *Fval    = result->loglike;
+    *perr    = result->error_flg;
+    *pposdef = result->posdef;
+
+    if (result->grad != nullptr) 
+        std::copy(result->grad->data, result->grad->data+Nth, grad);
+    else 
+        std::memset(grad, 0, Nth*sizeof(double));
+
+	if (result->eval != nullptr) 
+		std::copy(result->eval->data, result->eval->data+Nth, eval);
+	else
+		std::memset(eval, 0, Nth*sizeof(double));
+
+	if (result->evec != nullptr)
+		std::copy(result->evec->data, result->evec->data+Nth*Nth, evec);
+	else 
+		std::memset(evec, 0, Nth*Nth*sizeof(double));
+	
+    if (result->cov != nullptr)
+        std::copy(result->cov->data, result->cov->data+Nth*Nth, cov);
+	else
+		std::memset(cov, 0, Nth*Nth*sizeof(double));
+
+    delete result;
+
+    return;
+}
+
 
 void TmcmcEngine::initchaintask(double in_tparam[], double *out_tparam, int winfo[4])
 {
@@ -882,7 +988,7 @@ void TmcmcEngine::precompute_chain_covariances(const cgdbp_t* leader,double** in
 }
 
 
-int TmcmcEngine::compute_candidate(double candidate[], double chain_mean[], double var)
+bool TmcmcEngine::compute_candidate(double candidate[], double chain_mean[])
 {
     double bSS[data.Nth*data.Nth];
 
@@ -896,37 +1002,230 @@ int TmcmcEngine::compute_candidate(double candidate[], double chain_mean[], doub
     int idx = 0;
     for (; idx < data.Nth; ++idx) {
         if (isnan(candidate[idx])) {
-            printf("!!!!  isnan in candidate point!\n");
+            printf("!!!!  compute_candidate: isnan in candidate point!\n");
             break;
         }
         if ((candidate[idx] < data.lowerbound[idx]) ||
                 (candidate[idx] > data.upperbound[idx])) break;
     }
 
-    if (idx < data.Nth) return -1;
+    if (idx < data.Nth) return false;
 
-    return 0;// all good
+    return true;// all good
 }
 
 
-int TmcmcEngine::compute_candidate_cov(double candidate[], double chain_mean[],
+bool TmcmcEngine::compute_candidate_cov(double candidate[], double chain_mean[],
                                        double chain_cov[])
 {
 
     mvnrnd(chain_mean, (double *)chain_cov, candidate, data.Nth);
     for (int i = 0; i < data.Nth; ++i) {
         if (isnan(candidate[i])) {
-            printf("!!!!  isnan in candidate point!\n");
+            printf("!!!!  compute_candidate_cov: isnan in candidate point!\n");
             break;
         }
-        if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) return -1;
+        if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) return false;
     }
-    return 0;// all good
+    return true; // all good
 }
 
 
-void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam, int winfo[4],
-                            double *init_mean, double *chain_cov)
+bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[], double eps, double *SIG, double *grad, int posdef)
+{
+	int i;
+	double epsSIG[data.Nth*data.Nth];
+
+	for (i = 0; i < data.Nth*data.Nth; ++i)
+		epsSIG[i]= eps*SIG[i];
+
+	double tmp[data.Nth];
+	double theta[data.Nth];
+
+	compute_mat_product_vect( SIG, grad, tmp, 0.5*eps, data.Nth);
+
+	for(i = 0; i<data.Nth; ++i)
+		theta[i] = leader[i] + tmp[i];
+
+	// propose with multivariate Normal distribution
+	mvnrnd( theta, epsSIG, candidate, data.Nth);
+
+
+	for (i = 0; i < data.Nth; ++i) {
+		if (isnan(candidate[i])) {
+			printf("!!!!  compute_manifold_candidate: isnan in candidate point (%d) and posdef =%d!\n", i, posdef);
+			break;
+		}
+
+		if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) return false;	// out of bounds
+	}
+	return true; // all good
+}
+
+
+double TmcmcEngine::accept_ratio( double lnfo_lik, double lnfo_pri, double lnfc_lik, double lnfc_pri) 
+{
+    return exp( runinfo.p[runinfo.Gen]*(lnfc_lik-lnfo_lik) + (lnfc_pri-lnfo_pri));
+}
+
+
+double TmcmcEngine::manifold_accept_ratio( double lnfo_lik, double lnfo_pri, double lnfc_lik, double lnfc_pri, double eps, double* thetao, double* thetac, double* gradiento, double* gradientc, double* SIGo)
+{
+    int Nth = data.Nth;
+   	double p = runinfo.p[runinfo.Gen];
+  	double tmpc[Nth];
+  	double tmpo[Nth];
+    
+    double o, c;
+	int i, k;
+	for (i=0; i<Nth; ++i)
+	{
+		o = 0;
+		c = 0;
+		for(k=0; k<Nth; ++k)
+		{
+			o += SIGo[i*Nth+k]*gradiento[k];
+			c += SIGo[i*Nth+k]*gradientc[k];
+		}
+
+		tmpc[i] = thetac[i] - thetao[i] - 0.5*eps*o;
+		tmpo[i] = thetao[i] - thetac[i] - 0.5*eps*c;
+	}
+
+	double inv_SIGo[Nth*Nth];
+
+	inv_matrix(SIGo, inv_SIGo, Nth);
+
+   	double tmp2c[Nth];
+	double tmp2o[Nth];
+
+	compute_mat_product_vect( inv_SIGo, tmpc, tmp2c, 1.0, Nth );
+	compute_mat_product_vect( inv_SIGo, tmpo, tmp2o, 1.0, Nth );
+
+	double qc = -0.5*compute_dot_product(tmpc,tmp2c,Nth) / eps;
+	double qo = -0.5*compute_dot_product(tmpo,tmp2o,Nth) / eps;
+
+	return exp( p*(lnfc_lik-lnfo_lik) + (lnfc_pri-lnfo_pri) + qo-qc );  
+}
+
+
+void TmcmcEngine::manifold_calculate_grad(const double* grad, double* gradOut)
+{
+    for (int i = 0; i < data.Nth; ++i) gradOut[i] = runinfo.p[runinfo.Gen]*grad[i];
+    return;
+}
+
+
+int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, int posdef, double eval[], double evec[], const double* pos)
+{
+    int i, j, l;
+	int Nth = data.Nth;
+    double p = runinfo.p[runinfo.Gen];
+
+	gsl_vector *gsl_eval = gsl_vector_alloc(Nth);
+    std::copy(eval, eval+Nth, gsl_eval->data);
+
+	// correct negative eigenvalues
+	if (!posdef)
+	{
+		gsl_permutation *idx = gsl_permutation_alloc(data.Nth);
+		gsl_sort_vector_index(idx, gsl_eval);
+
+		/* TODO: move this part in main, calculating eval and evecs of sample cov must only be calculated once */
+		gsl_matrix *SS = gsl_matrix_alloc(data.Nth, data.Nth);
+		for (i = 0; i < Nth; ++i)
+			for (j = 0; j < Nth; ++j)
+				gsl_matrix_set(SS, i, j, runinfo.SS[i][j]);
+
+		gsl_vector *evalSS = gsl_vector_alloc(Nth);
+		gsl_matrix *evecSS = gsl_matrix_alloc(Nth, Nth);
+		gsl_eigen_symmv_workspace *w = gsl_eigen_symmv_alloc(Nth);
+
+		//evaluate and sort eigenvalues of SS
+		gsl_eigen_symmv(SS, evalSS, evecSS, w);
+		gsl_eigen_symmv_sort(evalSS, evecSS, GSL_EIGEN_SORT_VAL_ASC);
+
+		gsl_eigen_symmv_free(w);
+
+		// replacing negative eigenvalues by evals from sample cov (ascending order)
+		for (i=0; i<Nth; ++i)
+		{
+			if ( gsl_vector_get(gsl_eval, idx->data[i])<=0 )  
+                //smallest eigenvalue of SS
+				gsl_vector_set(gsl_eval, idx->data[i], data.bbeta*evalSS->data[0]);
+			else  
+                //scale positive eigs
+				gsl_vector_set( gsl_eval, idx->data[i], gsl_vector_get(gsl_eval, idx->data[i])/p );
+		}
+		gsl_vector_free(evalSS);
+		gsl_matrix_free(evecSS);
+		gsl_permutation_free(idx);
+		gsl_matrix_free(SS);
+	}
+	else
+	{
+		for(int i = 0; i<Nth; ++i)
+            //scale all positive eigs
+            gsl_vector_set(gsl_eval, i, gsl_vector_get(gsl_eval, i)/p);
+	}
+
+	// make eval adaption to ebds (if necessary)
+	// const double chi2 = gsl_cdf_chisq_Qinv(data.conf,data.Nth);	//TODO: check chi2 value if chisq_Pinv is correct choice (chi2 = 9.2704 for Nth = 8)
+
+	gsl_matrix *out_lik_evec = gsl_matrix_alloc (Nth, Nth);
+    std::copy(evec, evec+Nth*Nth, out_lik_evec->data);
+
+	gsl_vector *eigv = gsl_vector_alloc (Nth);
+
+	for (l=0; l<Nth; ++l)
+	{
+		double sc = sqrt(gsl_vector_get(gsl_eval,l)*data.moptions.chi2);
+		// correct eigenvectors to extended bounds
+		gsl_matrix_get_col (eigv, out_lik_evec, l);
+		sc = scale_to_box(pos,  sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
+		sc = scale_to_box(pos, -sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
+		gsl_vector_set(gsl_eval, l, sc*sc/data.moptions.chi2);
+	}
+	gsl_vector_free(eigv);
+
+	gsl_matrix *tmp_mat = gsl_matrix_alloc(Nth, Nth);
+	for (i = 0; i < Nth; ++i)
+    		for (j = 0; j < Nth; ++j)
+      			gsl_matrix_set(tmp_mat, i, j, gsl_matrix_get(out_lik_evec,i,j)*gsl_vector_get(gsl_eval, j));
+
+
+	gsl_matrix *SIGMA = gsl_matrix_alloc(Nth, Nth);
+	gsl_matrix_set_zero(SIGMA);
+	int c = gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, tmp_mat, out_lik_evec, 1.0, SIGMA);
+	(void)c;
+
+    // TEST AFTER ADAPTION
+	gsl_matrix *cSIGMA = gsl_matrix_alloc(Nth, Nth);
+    std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  cSIGMA->data); // XXX is this OK? vector-matrix
+	
+    int err_flg;
+	err_flg = gsl_linalg_cholesky_decomp(cSIGMA);
+	
+    if (err_flg == GSL_EDOM) {
+		printf("manifold_calculate_Sig: correcton failed, SIGMA not posdef!!!\n");
+	} else{
+        std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  pSIGMA); // XXX is this OK? vector-matrix
+	}
+
+	// clean memory
+	gsl_matrix_free(tmp_mat);
+	gsl_matrix_free(cSIGMA);
+	gsl_matrix_free(SIGMA);
+	gsl_matrix_free(out_lik_evec);
+	gsl_vector_free(gsl_eval);
+
+	return err_flg;
+}
+
+
+
+void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam, 
+                            int winfo[4], double *init_mean, double *chain_cov)
 {
 
     int nsteps   = *pnsteps;
@@ -954,22 +1253,19 @@ void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam
         else
             for (int i = 0; i < data.Nth; ++i) chain_mean[i] = leader[i];
 
-        //printf("---> %d -  %ld/%d   ---  %p  \n", chain_id, me, torc_i_num_workers(), priors ); fflush(NULL);
-
 #if 0
         int fail = compute_candidate_cov(candidate, chain_mean, chain_cov);
 #else
-        int fail = compute_candidate(candidate, chain_mean, 1); // I keep this for the moment, for performance reasons
+        bool candidate_inbds = compute_candidate(candidate, chain_mean); // I keep this for the moment, for performance reasons
 #endif
 
-        if (!fail) {
+        if (candidate_inbds) {
 
             evaluate_F(candidate, &loglik_candidate, me, gen_id, chain_id, step, 1);    // this can spawn many tasks
 
             if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglik_candidate, NULL, 0, 0);
             // last argument should be 1 if it is a surrogate
 
-            // decide
             logprior_candidate = prior.eval_logpdf(candidate);
             double L = exp((logprior_candidate-logprior_leader)+(loglik_candidate-loglik_leader)*pj);
 
@@ -977,32 +1273,154 @@ void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam
             if (L > 1) L = 1;
             else P = uniformrand(0,1);
             if (P < L) {
-                // new leader
+                /* accept new leader */
                 for (int i = 0; i < data.Nth; ++i) leader[i] = candidate[i];
                 loglik_leader = loglik_candidate;
-                if (step >= burn_in) {
-                    logprior_leader = prior.eval_logpdf(leader);
-                    torc_update_curgen_db(leader, loglik_leader, logprior_leader);
-                }
-            } else {
-                // increase counter or add the leader again in curgen_db
-                if (step >= burn_in) {
-                    logprior_leader = prior.eval_logpdf(leader);
-                    torc_update_curgen_db(leader, loglik_leader, logprior_leader);
-                }
-
+        
             }
-        } else {
-            // increase counter or add the leader again in curgen_db
-            if (step >= burn_in) {
-                logprior_leader = prior.eval_logpdf(leader);
-                torc_update_curgen_db(leader, loglik_leader, logprior_leader);
-            }
+        }
+            
+        /* increase counter or add the leader again in curgen_db */
+        if (step >= burn_in) {
+            logprior_leader = prior.eval_logpdf(leader);
+            torc_update_curgen_db(leader, loglik_leader, logprior_leader);
         }
     }
 
     return;
 }
+
+
+//TODO: remove pointers where not needed
+void TmcmcEngine::manifold_chaintask(double in_tparam[], int *pnsteps, double *out_tparam, 
+                                    int *t_err, int *t_posdef, double *t_grad, 
+                                    double *t_cov, double *t_evec, double *t_eval, int winfo[4]) 
+{
+    int nsteps   = *pnsteps;
+    int gen_id   = winfo[0];
+    int chain_id = winfo[1];
+
+    long me = torc_worker_id();
+
+    double leader[data.Nth], loglik_leader;             /* old */
+    double candidate[data.Nth], loglike_candidate;      /* new */
+
+    int l_err, l_posdef;
+    double l_grad[data.Nth], l_grad_scaled[data.Nth];
+	double l_cov[data.Nth*data.Nth];
+	double l_evec[data.Nth*data.Nth];
+	double l_eval[data.Nth];
+    
+    int c_err, c_posdef;
+    double c_grad[data.Nth], c_grad_scaled[data.Nth];
+    double c_cov[data.Nth*data.Nth];
+    double c_evec[data.Nth*data.Nth];
+    double c_eval[data.Nth];
+
+    double logprior_leader, logprior_candidate;
+
+    /* get initial leader and its values */
+    int i, step;
+	for (i = 0; i < data.Nth; i++) leader[i] = in_tparam[i];
+	loglik_leader = *out_tparam;
+
+	l_err    = *t_err;
+	l_posdef = *t_posdef;
+	for ( i=0; i < data.Nth; i++)			l_grad[i] = t_grad[i];
+	for ( i=0; i < data.Nth*data.Nth; i++)	l_cov[i]  = t_cov[i];
+	for ( i=0; i < data.Nth*data.Nth; i++)	l_evec[i] = t_evec[i];
+	for ( i=0; i < data.Nth; i++)			l_eval[i] = t_eval[i];
+
+    int burn_in = data.burn_in;
+
+    /* sigma to be calculated */
+    double l_SIG[data.Nth*data.Nth];
+    
+    for (step = 0; step < nsteps + burn_in; ++step) {
+        bool candidate_inbds = false;
+        int s_err = 1;
+
+        if (l_err == 0) {
+                manifold_calculate_grad(l_grad, l_grad_scaled);
+                s_err = manifold_calculate_Sig(l_SIG, l_posdef, l_eval, l_evec, leader);
+
+                if (s_err == 0)
+				    candidate_inbds = compute_manifold_candidate(candidate, leader, data.moptions.eps, l_SIG, l_grad_scaled, l_posdef);
+			    else
+				    candidate_inbds = compute_candidate(candidate, leader);
+
+        } else {
+        			candidate_inbds = compute_candidate(candidate, leader);
+        }
+
+        if (!candidate_inbds) continue; /* go to next step */
+
+        /* candidate in bounds */
+        manifold_evaluate_candidate(candidate, &loglike_candidate, &c_err, &c_posdef, c_grad, c_cov, c_evec, c_eval, me, gen_id, chain_id, step, 1);
+
+        if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglike_candidate, NULL, 0, 0); //TODO: not the manifold update version? (DW)
+    
+    	logprior_candidate = prior.eval_logpdf(candidate);
+		logprior_leader    = prior.eval_logpdf(leader);
+    
+        double L = 0;
+        if( l_err > 0)
+            L = accept_ratio(loglik_leader, logprior_leader, loglike_candidate, logprior_candidate);
+        else 
+        {
+            if( c_err == 0 ){ 
+                /* BASIS */
+				if( s_err ==0 ){
+                    /* mMALA */
+					manifold_calculate_grad(c_grad, c_grad_scaled);
+					L = manifold_accept_ratio(loglik_leader, logprior_leader, loglike_candidate, logprior_candidate, data.moptions.eps, leader, candidate, l_grad_scaled, c_grad_scaled, l_SIG);
+				}
+				else if( s_err > 0 )
+					L = accept_ratio(loglik_leader, logprior_leader, loglike_candidate, logprior_candidate);
+			}
+			else if(c_err == 1){ 
+                    /* reject (ODE failed && grad not available) */
+                    L = 0.0;
+			}
+			else if(c_err == 2){ 
+                    /* mMALA */
+                    manifold_calculate_grad(c_grad, c_grad_scaled);
+                    L = manifold_accept_ratio(loglik_leader, logprior_leader, loglike_candidate, logprior_candidate, data.moptions.eps, leader, candidate, l_grad_scaled, c_grad_scaled, l_SIG);
+			}
+        }
+
+        double P = uniformrand(0,1);
+
+        if (P < L) {
+            /* accept new leader */
+			for (i = 0; i < data.Nth; i++) leader[i] = candidate[i];
+
+			/* update everything */
+			loglik_leader = loglike_candidate;
+			l_err = c_err;
+			l_posdef = c_posdef;
+			for (i = 0; i < data.Nth; i++) l_grad[i] = c_grad[i];
+			for (i = 0; i < data.Nth; i++) l_grad_scaled[i] = c_grad_scaled[i];
+
+			if( c_err == 0 ){
+				for (i = 0; i < data.Nth*data.Nth; i++)	l_cov[i]  = c_cov[i];
+				for (i = 0; i < data.Nth*data.Nth; i++)	l_evec[i] = c_evec[i];
+				for (i = 0; i < data.Nth; i++)			l_eval[i] = c_eval[i];
+			}
+
+		}        
+    }
+ 
+    /* increase counter or add the leader again in curgen_db*/
+    if (step >= burn_in) {
+        logprior_leader = prior.eval_logpdf(leader);
+        torc_update_manifold_curgen_db(leader, loglik_leader, logprior_leader, l_err, l_posdef, l_grad, l_cov, l_evec, l_eval);
+    }
+    
+    return;
+
+}
+
 
 int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 {
@@ -1022,9 +1440,9 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     double **g_x = new double*[data.Nth];
     for (i = 0; i < data.Nth; ++i) g_x[i] = new double[n];
 
+    
+    /* calculate uniques & acceptance rate */
     {
-        // calculate uniques & acceptance rate
-
         double * uf = new double[n];
         double **uniques = g_x;
         int un = 0, unflag, j;
@@ -1076,14 +1494,13 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             printf("prepare_newgen: CURGEN DB (UNIQUES) %d\n", runinfo.Gen);
             print_matrix("means", meanu, data.Nth);
             print_matrix("std", stdu, data.Nth);
-
         }
+    } 
+    /* end block*/
 
-    } /* end block*/
 
-
+    /* calculate statistics */
     {
-        // calculate statistics
         double *fj = new double[n];
         double t0  = torc_gettime();
         for (i = 0; i < n; ++i)

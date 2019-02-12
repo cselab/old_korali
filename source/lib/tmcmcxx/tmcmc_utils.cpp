@@ -1,6 +1,9 @@
 #include <cassert>
 #include <math.h>
 #include <limits>
+
+#include <gsl/gsl_permutation.h>
+#include <gsl/gsl_linalg.h>
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_eigen.h>
@@ -38,6 +41,68 @@ double compute_sum(double *v, int n)
     double s = 0;
     for (int i = 0; i < n; i++) s += v[i];
     return s;
+}
+
+
+double compute_dot_product(double row_vector[], double vector[], int dim)
+{
+	double sum = 0.0;
+	for(int row=0; row<dim; row++) sum += row_vector[row] * vector[row];
+  
+	return sum;
+}
+
+
+void compute_mat_product_vect(double *mat/*2D*/, double vect[], double res_vect[], double coef, int dim)
+{
+    int row, column;
+    double current_dot_product;
+
+	for(row=0; row<dim; ++row){
+		current_dot_product = 0.0;
+        for(column=0; column<dim; ++column) current_dot_product += mat[row*dim+column] * vect[column]; //row
+        res_vect[row] = coef * current_dot_product;
+    }
+    return;
+}
+
+
+void inv_matrix(double *current_hessian/*2D*/, double *inv_hessian/*2D*/, int dim)
+{
+    gsl_matrix_view m   = gsl_matrix_view_array(current_hessian, dim, dim);
+    gsl_matrix_view inv = gsl_matrix_view_array(inv_hessian, dim, dim);
+    gsl_permutation * p = gsl_permutation_alloc (dim);
+
+    int s;
+    gsl_linalg_LU_decomp (&m.matrix, p, &s);
+    gsl_linalg_LU_invert (&m.matrix, p, &inv.matrix);
+
+    gsl_permutation_free (p);
+    return;
+}
+
+
+double scale_to_box(const double* point, double sc, const double* add_vec, const double *elbds, const double *eubds, int dims)
+{
+	double pp[dims];
+	for(int i=0; i<dims; ++i) pp[i] = point[i]+sc*add_vec[i];
+
+	sc = fabs(sc);
+	double c;
+	for (int l=0; l<dims; l++)
+	{
+		if (pp[l]<elbds[l])
+		{
+			c = fabs( (elbds[l]-point[l]) / add_vec[l] );
+			sc = fmin(sc,c);
+		}
+		if (pp[l]>eubds[l])
+		{
+			c = fabs( (point[l]-eubds[l]) / add_vec[l] );
+			sc = fmin(sc,c);
+		}
+	}
+	return sc;
 }
 
 

@@ -25,11 +25,15 @@ class TmcmcEngine
 {
 
 public:
-    TmcmcEngine(fitfun::IFitfun * Ifitfun_ptr);
+    
+    TmcmcEngine(fitfun::IFitfun * Ifitfun_ptr, Method method = Standard);
     ~TmcmcEngine();
     void run();
 
 private:
+    
+    Method _method;
+
     data_t    data;
     runinfo_t runinfo;
 
@@ -66,14 +70,19 @@ private:
 
     int load_curgen_db();
     void update_curgen_db(double point[], double F, double prior);
-    void update_curgen_db_manifold(
-            double point[], double F, double prior, 
-            int error_flg, double gradient[], double cov[], 
-            double Evec[], double eVal[]);
     void torc_update_curgen_db_task(double point[], double *pF, double *pprior);
     void torc_update_curgen_db(double point[], double F, double prior);
     void dump_curgen_db();
 
+    void update_manifold_curgen_db(
+            double point[], double F, double prior, 
+            int error_flg, int posdef, double gradient[], double cov[], 
+            double evec[], double eval[]);
+    void torc_update_manifold_curgen_db(
+            double point[], double F, double prior, 
+            int error_flg, int posdef, double gradient[], double cov[], 
+            double evec[], double eval[]);
+    
     void init_curres_db();
     void dump_curres_db(int gen);
 
@@ -81,18 +90,36 @@ private:
                               unsigned int sel[]);
 
 
-    void taskfun(const double *x, int *pN, double *res, int winfo[4]);
     void evaluate_F(double point[], double *Fval, int worker_id, int gen_id,
                     int chain_id, int step_id, int ntasks);
+    
+    void manifold_evaluate_candidate(double point[], double *Fval, int *perr, 
+                             int *pposdef, double grad[], double cov[], 
+                             double evec[], double eval[], int worker_id, 
+                             int gen_id, int chain_id, int step_id, int ntasks);
+    
     void initchaintask(double in_tparam[], double *out_tparam, int winfo[4]);
     void check_for_exit();
 
     void precompute_chain_covariances(const cgdbp_t* leader,double** init_mean,
                                       double** chain_cov, int newchains);
-    int compute_candidate(double candidate[], double chain_mean[], double var);
-    int compute_candidate_cov(double candidate[], double chain_mean[], double chain_cov[]);
+
+    double accept_ratio( double lnfo_lik, double lnfo_pri, double lnfc_lik, double lnfc_pri);
+    double manifold_accept_ratio( double lnfo_lik, double lnfo_pri, double lnfc_lik, double lnfc_pri, double eps, double* thetao, double* thetac, double* gradiento, double* gradientc, double* SIGo);
+   
+    void manifold_calculate_grad(const double* grad, double* gradOut);
+    int manifold_calculate_Sig(double *pSIGMA, int posdef, double eval[], double evec[], const double* pos);
+    
+    bool compute_candidate(double candidate[], double chain_mean[]);
+    bool compute_candidate_cov(double candidate[], double chain_mean[], double chain_cov[]);
+    bool compute_manifold_candidate(double candidate[], double leader[], double eps, double *SIG, double *grad, int posdef);
     void chaintask(double in_tparam[], int *pnsteps, double *out_tparam, int winfo[4],
                    double *init_mean, double *chain_cov);
+    void manifold_chaintask(double in_tparam[], int *pnsteps, double *out_tparam, 
+                            int *t_err, int *t_posdef, double *t_grad, 
+                            double *t_cov, double *t_evec, double *t_eval, int winfo[4]);
+
+
     int prepare_newgen(int nchains, cgdbp_t *leaders);
 
 

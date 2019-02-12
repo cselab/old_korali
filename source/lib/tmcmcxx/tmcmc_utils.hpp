@@ -84,12 +84,22 @@ int compar_desc(const void *p1, const void *p2);
 
 double compute_sum(double *v, int n);
 
+double compute_dot_product(double row_vector[], double vector[], int dim);
+
+void compute_mat_product_vect(double *mat/*2D*/, double vect[], double res_vect[], double coef, int dim);
+
+void inv_matrix(double *current_hessian/*2D*/, double *inv_hessian/*2D*/, int dim);
+
+double scale_to_box(const double* point, double sc, const double* add_vec, const double *elbds, const double *eubds, int dims);
+
 int in_rect(double *v1, double *v2, double *diam, double sc, int D);
 
 int make_posdef(double *mat, int dim, int method);
 
 void print_matrix(const char *name, double *x, int n);
+
 void print_matrix_i(char *name, int *x, int n);
+
 void print_matrix_2d(const char *name, double **x, int n1, int n2);
 
 } // namespace tmcmc
