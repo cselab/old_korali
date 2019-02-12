@@ -9,16 +9,18 @@ using namespace fitfun;
 
 int main(int argc, char *argv[])
 {
-    vec_d theta = {-0.8, 1, 0.5};
     
-    vec_d t = { 0.0, 9.0 };
+    vec_d t = { 0.0, 9.0, 12.0, 17.0, 25.0 };
     
     std::vector<vec_d> obs(t.size());
-    obs[0] = { 2.0 };
-    obs[1] = { 4.0 };
+    obs[0] = { 0.8650 };
+    obs[1] = { 1.0846 };
+    obs[2] = { 1.0532 };
+    obs[3] = { 0.8838 };
+    obs[4] = { -0.7374 };
 
     AutoFitfun af(3,2,true); //false := no MALA
-    af.setParams(theta);
+    //af.setParams(theta);
     af.setObservations(t,obs);
 
     TmcmcEngine engine(&af);

@@ -27,8 +27,8 @@ class TmcmcEngine
 public:
     TmcmcEngine(fitfun::IFitfun * Ifitfun_ptr);
     ~TmcmcEngine();
-
     void run();
+
 private:
     data_t    data;
     runinfo_t runinfo;

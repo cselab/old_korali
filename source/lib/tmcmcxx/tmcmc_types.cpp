@@ -23,6 +23,8 @@ data_t::data_t(const char * fname)
     bbeta   = -1;
     seed    = 280675;
     burn_in = -1;
+    
+    use_local_cov = false;
 
     options.MaxIter    = -1;
     options.Tol        = -1;
