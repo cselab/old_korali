@@ -3,13 +3,13 @@
 #------------------------ GENERAL PARAMETERS ----------------------------------
 Nth		        4
 MaxStages	    100
-PopSize		    30000
+PopSize		    10000
 TolCOV	        1
 MinStep         1e-3
 Bound           -6 6
 Bound           -6 6
 Bound           -6 6
-Bound           -6 6
+Bound           0 12
 #------------------------------ MCMC OPTIONS -----------------------------------
 use_local_cov   0
 bbeta		    0.04
