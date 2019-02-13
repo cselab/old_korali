@@ -389,7 +389,7 @@ int fzerofind(double const *fj, int fn, double pj, double objTol,
             x_lo = min - 10*step;
             if (x_lo < 0) x_lo = opt.LowerBound;
             x_hi = min + 10*step;
-            if (x_hi > 4) x_hi = opt.Upperbound;
+            if (x_hi > 4) x_hi = opt.UpperBound;
             step *= 0.1;
             if (display) printf("fzerofind (%e): m=%.16f fm=%.16f iter=%ld, time=%lf s\n",
                                     step, min, fm, niters, t1-t0);

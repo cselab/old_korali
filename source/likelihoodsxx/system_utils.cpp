@@ -27,7 +27,7 @@ void printvec_s(const char * name, const vec_s & v)
 {
     printf("\n");
     for(size_t i = 0; i < v.size(); ++i)
-        printf("%s[%d]: %lf\n", name, i, v[i].val());
+        printf("%s[%zu]: %lf\n", name, i, v[i].val());
     printf("\n");
 }
 
@@ -35,7 +35,7 @@ void printvec_d(const char * name, const vec_d & v)
 {
     printf("\n");
     for(size_t i = 0; i < v.size(); ++i)
-        printf("%s[%d]: %lf\n", name, i, v[i]);
+        printf("%s[%zu]: %lf\n", name, i, v[i]);
     printf("\n");
 }
 
