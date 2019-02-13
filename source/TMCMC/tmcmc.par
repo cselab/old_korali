@@ -32,7 +32,7 @@ opt.Tol		    1e-12
 opt.Display	    1
 opt.Step	    1e-4
 opt.Lowerbound  0.0
-opt.Upperbound  1.5
+opt.Upperbound  4.0
 
 icdump		    1
 ifdump		    0

@@ -98,7 +98,6 @@ void density_factory_func(const char *file, Density **out_densities, int &out_di
             }
 
             if( strcmp(pch,"uniform")==0 || strcmp(pch,"uni")==0 ) {
-                check_n(N);
                 double * par_ = new double[2];
                 par_[0] = atof ( strtok (nullptr, BLANKS) );
                 par_[1] = atof ( strtok (nullptr, BLANKS) );
@@ -109,7 +108,6 @@ void density_factory_func(const char *file, Density **out_densities, int &out_di
 
 
             if( strcmp(pch,"normal")==0 || strcmp(pch,"gaussian")==0 ) {
-                check_n(N);
                 double * par_ = new double[2];
                 par_[0] = atof ( strtok (nullptr, BLANKS) );
                 par_[1] = atof ( strtok (nullptr, BLANKS) );
@@ -119,7 +117,6 @@ void density_factory_func(const char *file, Density **out_densities, int &out_di
             }
 
             if( strcmp(pch, "exp")==0 || strcmp(pch,"exponential")==0  ) {
-                check_n(N);
                 double * par_ = new double[1];
                 par_[0] = atof ( strtok (nullptr, BLANKS) );
                 densities[cnt].init("exponential", &exp_pdf, &exp_log_pdf, &exp_rnd, par_, 1);
@@ -128,7 +125,6 @@ void density_factory_func(const char *file, Density **out_densities, int &out_di
             }
 
             if( strcmp(pch, "gam")==0 || strcmp(pch,"gamma")==0  ) {
-                check_n(N);
                 double * par_ = new double[2];
                 par_[0] = atof ( strtok (nullptr, BLANKS) );
                 par_[1] = atof ( strtok (nullptr, BLANKS) );
@@ -142,6 +138,11 @@ void density_factory_func(const char *file, Density **out_densities, int &out_di
             exit(EXIT_FAILURE);
 
         }
+    }
+
+    if ( N != cnt ) {
+        printf("\nNumber of priors does not match prior definition count. Exit...\n");
+        exit(EXIT_FAILURE);
     }
 
     fclose(fp);
