@@ -10,8 +10,8 @@ vec_s AutoFitfun::getModelIC_s(const vec_s & params) const
     vec_s ic = vec_s(getDim());
     
     /* Simple Model */
-    ic[0] = params[1];
-    ic[1] = 0;
+    ic[0] = 50.0; //params[1];
+    ic[1] = 50.0; //0;
     
     return ic;
 }
@@ -19,8 +19,8 @@ vec_s AutoFitfun::getModelIC_s(const vec_s & params) const
 void AutoFitfun::evalModel_s(vec_s & dy_out, const vec_s & y_in, const vec_s & params, double t )
 {
     /* Simple Model */
-    dy_out[0] = params[0] * stan::math::cos(t) - 2.0*params[1]*params[2]*y_in[1];
-    dy_out[1] = 2.0*params[2]*(y_in[0]-params[0]*stan::math::sin(t))/params[1];   
+    dy_out[0] = -params[0]*y_in[0]; //params[0] * stan::math::cos(t) - 2.0*params[1]*params[2]*y_in[1];
+    dy_out[1] = params[1]*y_in[1];  //2.0*params[2]*(y_in[0]-params[0]*stan::math::sin(t))/params[1];   
 
     return;
 }

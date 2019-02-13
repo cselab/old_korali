@@ -10,19 +10,20 @@ using namespace fitfun;
 int main(int argc, char *argv[])
 {
     
-    vec_d t = { 0.0, 9.0, 12.0, 17.0, 25.0 };
+    //vec_d t = { 0.0, 9.0, 12.0, 17.0, 25.0 };
+    vec_d t = { 1.0, 2.0, 3.0, 4.0, 5.0 };
     
     std::vector<vec_d> obs(t.size());
-    obs[0] = { 0.8650 };
-    obs[1] = { 1.0846 };
-    obs[2] = { 1.0532 };
-    obs[3] = { 0.8838 };
-    obs[4] = { -0.7374 };
-
-    AutoFitfun af(0.0, 3, 2, false); //false := no MALA
+    obs[0] = { 114.46 };
+    obs[1] = { 148.65 };
+    obs[2] = { 193.09 };
+    obs[3] = { 269.63 };
+    obs[4] = { 386.05 };
+    
+    AutoFitfun af(0.0, 2, 2, true); //false := no MALA
     af.setObservations(t,obs);
 
-    TmcmcEngine engine(&af, Standard);
+    TmcmcEngine engine(&af, Manifold);
     engine.run();
     return 0;
 }
