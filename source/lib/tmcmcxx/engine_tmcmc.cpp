@@ -782,6 +782,8 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
 
     delete [] flcp;
 
+    //TODO: logselections[gen+1] or ..[gen]? (DW)
+    //logselection is log(Sj), what is logselections[0] if we switch to former?
     double sum_weight = std::accumulate(weight, weight+curgen_db.entries, 0.0);
     logselections[gen]  = log(sum_weight) + fjmax - log(curgen_db.entries);
     if (display) print_matrix("logselections", logselections, gen);

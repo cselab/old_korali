@@ -10,8 +10,7 @@ void decouple(
     int nr_equations,
     int parameter_dimension)
 {
-
-    int total_nrObservations = sol_coupled_sys.size();
+    size_t total_nrObservations = sol_coupled_sys.size();
     equation_sensitivities.resize(total_nrObservations);
     equation_solution.resize(total_nrObservations);
 

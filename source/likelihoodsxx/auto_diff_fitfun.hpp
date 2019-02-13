@@ -10,8 +10,8 @@ class AutoFitfun :  public CoupledOdeSystem
 
 public:
 
-    AutoFitfun(int numparam, int odedim, int mala) :
-        CoupledOdeSystem (numparam, odedim, mala) {};
+    AutoFitfun(double t0, int numparam, int odedim, int mala) :
+        CoupledOdeSystem (t0, numparam, odedim, mala) {};
 
 private:
 

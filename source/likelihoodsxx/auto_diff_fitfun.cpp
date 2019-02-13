@@ -21,6 +21,8 @@ void AutoFitfun::evalModel_s(vec_s & dy_out, const vec_s & y_in, const vec_s & p
     /* Simple Model */
     dy_out[0] = params[0] * stan::math::cos(t) - 2.0*params[1]*params[2]*y_in[1];
     dy_out[1] = 2.0*params[2]*(y_in[0]-params[0]*stan::math::sin(t))/params[1];   
+
+    return;
 }
 
 vec_s AutoFitfun::calculateObservable(const vec_s & equation_solution) const

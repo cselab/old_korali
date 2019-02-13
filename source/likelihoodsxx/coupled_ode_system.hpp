@@ -14,8 +14,8 @@ class CoupledOdeSystem : public IFitfun
 
 public:
 
-    CoupledOdeSystem(int numparam, int odedim, bool mala)
-        : _obsdim(0), _numparam(numparam),  _dim(odedim),  _mala(mala)
+    CoupledOdeSystem(double t0, int numparam, int odedim, bool mala)
+        : _t0(t0), _obsdim(0), _numparam(numparam),  _dim(odedim),  _mala(mala)
     {
         _A_trans      = Eigen::MatrixXd::Zero(_dim, _dim);
         _B_temp_trans = Eigen::MatrixXd::Zero(_numparam, _dim);
@@ -25,17 +25,14 @@ public:
     void initialize(int argc, const  char **argv) {};
     void finalize() {};
 
-    void setParams(vec_d params)
-    {
-        _params = params;
-    };
+    void setParams(const vec_d & params) { _params.assign (params.begin(), params.end()); };
     void setObservations (const vec_d & times, const std::vector<vec_d> & observations);
     void step(const vec_d & z, vec_d & dz, double t);
 
     vec_d getIC(const vec_d & params) const;
 
-    inline int getDim() const { return _dim; };
-    inline int getObsDim() const { return _obsdim; };
+    inline size_t getDim() const { return _dim; };
+    inline size_t getObsDim() const { return _obsdim; };
 
 protected:
 
@@ -50,12 +47,13 @@ protected:
 
 private:
 
-    int _obsdim;
+    double _t0;
+    size_t _obsdim;
     
-    const int _numparam;
-    const int _dim;
+    const size_t _numparam;
+    const size_t _dim;
     
-    int _ntimes;
+    size_t _ntimes;
     vec_d _times;
 
     vec_d _params;

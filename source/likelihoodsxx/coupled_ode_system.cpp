@@ -16,11 +16,10 @@ void CoupledOdeSystem::setObservations (const vec_d & times,
     _times  = vec_d(times.begin(), times.end());
     _obsdim = observations.begin()->size();
     _obs    = std::vector<vec_d>(_ntimes);
-    _sim    = std::vector<vec_d>(0);
 
     for(int i = 0; i < _ntimes; ++i) {
         _obs[i]   = vec_d(_obsdim);
-        for(int j = 0; j < _ntimes; ++j) _obs[i][j] = observations[i][j];
+        for(int j = 0; j < _obsdim; ++j) _obs[i][j] = observations[i][j];
     }
 
 }
@@ -54,10 +53,8 @@ vec_d CoupledOdeSystem::getIC(const vec_d & params) const
 
 void CoupledOdeSystem::observer(const vec_d & state, double t)
 {
-
     vec_d sol(state.begin(), state.end());
     _sim.push_back(sol);
-
 }
 
 
@@ -110,7 +107,7 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
     }
 
     //printvec_d("dzOut", dzOut);
-
+    return;
 }
 
 std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
@@ -124,6 +121,8 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
     using boost::numeric::odeint::runge_kutta_dopri5;
     using boost::numeric::odeint::max_step_checker;
 
+    //TODO: can we work with plain lambdas without the step and observer
+    //function? (DW) (and maybe get rid of _sim)
     auto systemLambda = [this] (const vec_d & y, vec_d & dy, double t) {
         return this->step(y, dy, t);
     };
@@ -132,23 +131,50 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
         return this->observer(x, t);
     };
 
+    int idx;
+    vec_d t(2);
+    _sim = std::vector<vec_d>(0);
+    std::vector<vec_d> sol(_times.size());
+
     try {
-        boost::numeric::odeint::integrate_times(
-            make_controlled( absolute_tolerance, relative_tolerance, runge_kutta_dopri5<vec_d>() ),
-            systemLambda,
-            y_in,
-            std::begin(_times),
-            std::end(_times),
-            integration_dt,
-            observerLambda,
-            max_step_checker(max_num_steps)
-        );
+
+        if(_t0 < _times[0]) {
+            idx  = 0;
+            t[0] = _t0;
+            t[1] = _times[0];
+        } else { 
+            idx    = 1;
+            t[0]   = _times[0];
+            sol[0] = y_in;
+        }
+        
+        for( ; idx < _times.size(); ++idx) {
+    
+            t[1] = _times[idx];
+                   
+            boost::numeric::odeint::integrate_times(
+                make_controlled( absolute_tolerance, relative_tolerance, runge_kutta_dopri5<vec_d>() ),
+                systemLambda,
+                y_in,
+                std::begin(t),
+                std::end(t),
+                integration_dt,
+                observerLambda,
+                max_step_checker(max_num_steps)
+            );
+
+            t[0]     = _times[idx];
+            y_in     = _sim.back();
+            sol[idx] = _sim.back();
+        }
+
     } catch (std::exception& e) {
         printf("CoupledOdeSystem::integrate_boost: \
                 Exception caught in integrate_times: %s", e.what());
-        return std::make_pair(_sim, false);
+        return std::make_pair(sol, false);
     }
-    return std::make_pair(_sim,true);
+
+    return std::make_pair(sol,true);
 }
 
 
@@ -183,26 +209,26 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
 
     vec_s params_s(params.begin(), params.end());
     std::vector<vec_s> observable_s(_ntimes);
-    std::vector<vec_d> equation_solution_d;
-    std::vector<vec_d> equation_sensitivity_d;
-    decouple(solution_of_coupled_system, equation_solution_d,
-             equation_sensitivity_d, _dim, _numparam);
+    std::vector<vec_d> equation_solution;
+    std::vector<vec_d> equation_sensitivity;
+    decouple(solution_of_coupled_system, equation_solution,
+             equation_sensitivity, _dim, _numparam);
 
 
     std::vector<vec_s> eq_sol(_ntimes);
     vec_d gradients;
     for(size_t i = 0; i < _ntimes; ++i) {
-        //printvec_d("equation_solution_d", equation_solution_d[i]);
+        //printf("i: %zu\n", i); printvec_d("equation_solution", equation_solution[i]);
         if(_mala) {
             eq_sol[i]    = vec_s(_dim, 0.0);
             for(size_t j = 0; j < _dim; ++j) {
-                gradients    = vec_d(equation_sensitivity_d[i].begin()+j*_numparam,
-                                     equation_sensitivity_d[i].begin()+(j+1)*_numparam);
+                gradients    = vec_d(equation_sensitivity[i].begin()+j*_numparam,
+                                     equation_sensitivity[i].begin()+(j+1)*_numparam);
                 eq_sol[i][j] = stan::math::precomputed_gradients(
-                                   equation_solution_d[i][j], params_s, gradients);
+                                   equation_solution[i][j], params_s, gradients);
             }
         } else {
-            eq_sol[i] = vec_s(equation_solution_d[i].begin(), equation_solution_d[i].end());
+            eq_sol[i] = vec_s(equation_solution[i].begin(), equation_solution[i].end());
         }
         observable_s[i] = calculateObservable(eq_sol[i]);
     }
