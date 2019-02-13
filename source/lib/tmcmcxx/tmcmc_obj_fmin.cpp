@@ -383,13 +383,13 @@ int fzerofind(double const *fj, int fn, double pj, double objTol,
         double t1 = torc_gettime();
 
         if (converged) {
-            if (display) printf("fzerofind: m=%.16f fm=%.16f iter=%ld, time=%lf s\n",
+            if (display) printf("fzerofind converged: m=%.16f fm=%.16f iter=%ld, time=%lf s\n",
                                     min, fm, niters, t1-t0);
         } else {
             x_lo = min - 10*step;
-            if (x_lo < 0) x_lo = 0.0;
+            if (x_lo < 0) x_lo = opt.LowerBound;
             x_hi = min + 10*step;
-            if (x_hi > 4) x_hi = 1.0;
+            if (x_hi > 4) x_hi = opt.Upperbound;
             step *= 0.1;
             if (display) printf("fzerofind (%e): m=%.16f fm=%.16f iter=%ld, time=%lf s\n",
                                     step, min, fm, niters, t1-t0);

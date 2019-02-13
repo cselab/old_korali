@@ -17,9 +17,9 @@ void CoupledOdeSystem::setObservations (const vec_d & times,
     _obsdim = observations.begin()->size();
     _obs    = std::vector<vec_d>(_ntimes);
 
-    for(int i = 0; i < _ntimes; ++i) {
+    for(size_t i = 0; i < _ntimes; ++i) {
         _obs[i]   = vec_d(_obsdim);
-        for(int j = 0; j < _obsdim; ++j) _obs[i][j] = observations[i][j];
+        for(size_t j = 0; j < _obsdim; ++j) _obs[i][j] = observations[i][j];
     }
 
 }
@@ -70,7 +70,7 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
     vec_s model_dot_s(_dim);
 
     evalModel_s(model_dot_s, z_s, params_s, t);
-    for(int i =0 ; i< _dim; ++i) dzOut[i] = model_dot_s[i].val();
+    for(size_t i =0 ; i< _dim; ++i) dzOut[i] = model_dot_s[i].val();
 
     if (_mala) {
 
@@ -319,8 +319,8 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
     // }
     
     gsl_matrix * inv_FIM  = gsl_matrix_calloc(n, n);
-    for(std::size_t i = 0; i< n; ++i) {
-        for(std::size_t j = 0; j<n; ++j) {
+    for(int i = 0; i< n; ++i) {
+        for(int j = 0; j<n; ++j) {
             gsl_matrix_set(inv_FIM, i, j, eigInv_FIM(i,j));
         }
     }
@@ -333,9 +333,9 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
     gsl_matrix *evec = gsl_matrix_calloc(n, n);
     gsl_vector *eval = gsl_vector_calloc(n);
 
-    for(std::size_t i = 0; i < n; ++i) {
-        gsl_vector_set(eval,i, eigInvEigenValues(i));
-        for(std::size_t j = 0; j < n; ++j) {
+    for(int i = 0; i < n; ++i) {
+        gsl_vector_set(eval, i, eigInvEigenValues(i));
+        for(int j = 0; j < n; ++j) {
             gsl_matrix_set(evec, i, j, eigInvEigenVectors(i,j));
         }
     }
