@@ -60,8 +60,8 @@ void CoupledOdeSystem::observer(const vec_d & state, double t)
 
 void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
 {
-    //printf("t %lf\n",t);
-    //printvec_d("z", z);
+    printf("t %lf\n",t);
+    printvec_d("z", z);
 
     if(_mala) stan::math::start_nested();
 
@@ -106,7 +106,7 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
         GK_trans = S_trans*_A_trans+_B_temp_trans;
     }
 
-    //printvec_d("dzOut", dzOut);
+    printvec_d("dzOut", dzOut);
     return;
 }
 
@@ -218,7 +218,6 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
     std::vector<vec_s> eq_sol(_ntimes);
     vec_d gradients;
     for(size_t i = 0; i < _ntimes; ++i) {
-        //printf("i: %zu\n", i); printvec_d("equation_solution", equation_solution[i]);
         if(_mala) {
             eq_sol[i]    = vec_s(_dim, 0.0);
             for(size_t j = 0; j < _dim; ++j) {
@@ -233,14 +232,16 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
         observable_s[i] = calculateObservable(eq_sol[i]);
     }
 
-    scalar_t llk = 0;
+    scalar_t sse = 0;
     for(size_t i = 0; i < _ntimes; ++i) {
         for(size_t j = 0; j < _obsdim; ++j) {
-            llk += (_obs[i][j]-observable_s[i][j]) *
+            sse += (_obs[i][j]-observable_s[i][j]) *
                    (_obs[i][j]-observable_s[i][j]);
         }
     }
 
+    double sseVal = sse.val();
+    scalar_t llk = sse;
     llk /= sigma2;
     llk += _obsdim*(std::log(2 * M_PI) + std::log(sigma2));
     llk *= -0.5;
@@ -262,6 +263,7 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
 
     /* FOR MALA BELOW */
 
+    // calculate gradients
     int grad_err = 0;
     gsl_vector *gradient = gsl_vector_alloc(n);
     vec_d grad_loglike(_numparam);
@@ -270,16 +272,13 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
     llk.grad();
     for(size_t i = 0; i < _numparam; ++i) {
         grad_loglike[i] = params_s[i].adj();
-    }
-
-    for (size_t i = 0; i < _numparam; ++i) {
         gsl_vector_set(gradient, i, grad_loglike[i] );
         if (!std::isfinite(gsl_vector_get(gradient, i))) grad_err = 1;
     }
 
     double totObs = _ntimes * _obsdim;
-    double tmp    = -totObs/sigma + llkVal*invsigma3;
-    gsl_vector_set(gradient, indexSigma, tmp);
+    double dSigma = -totObs/sigma + sseVal*invsigma3;
+    gsl_vector_set(gradient, indexSigma, dSigma);
     if (!std::isfinite(gsl_vector_get(gradient, indexSigma))) grad_err = 1;
 
     if (grad_err != 0) {
@@ -291,7 +290,10 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
         return result->loglike;
     }
 
-    // find Fischer Matrix
+    result->grad = gradient;
+    gsl_vector_free(gradient);
+    
+    // calculate Fischer Matrix, evec, evals and inverse
     Eigen::MatrixXd eigS(_numparam, _obsdim);
     Eigen::MatrixXd eigFIM = Eigen::MatrixXd::Zero(n,n);
 
@@ -299,40 +301,20 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
         stan::math::set_zero_all_adjoints_nested();
         observable_s[i][0].grad();
         for(size_t j = 0; j < _numparam; ++j) {
-            eigS(j,i) = grad_loglike[j];
+            eigS(j,i) = params_s[j].adj();
         }
     }
-
-    // S*S^T = S2
+    
     eigFIM.block(0, 0, _numparam, _numparam) = eigS*eigS.transpose();
     eigFIM(indexSigma,indexSigma)  = 2*totObs;
 
-    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(n,n);
-    Eigen::MatrixXd eigInv_FIM =
-        eigFIM.fullPivHouseholderQr().solve(I)*sigma2; // TODO: check, we scale here and some lines below again?? (DW)
-
-    // TODO: pass display through info array? (DW)
-    // if (display>2) {
-    // bool a_solution_exists = (eigFIM*eigInv_FIM).isApprox(I*sigma2, 1e-2);
-    // double relative_error  = (eigFIM*eigInv_FIM - I*sigma2).norm() / I.norm(); // norm() is L2 norm
-    // printf("CoupledOdeSystem::fitfun: eigFIM inversion succesfull: %d (rel error: %lf)\n", a_solution_exists, relative_error);
-    // }
-    
-    gsl_matrix * inv_FIM  = gsl_matrix_calloc(n, n);
-    for(int i = 0; i< n; ++i) {
-        for(int j = 0; j<n; ++j) {
-            gsl_matrix_set(inv_FIM, i, j, eigInv_FIM(i,j));
-        }
-    }
-
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigEs(n);
-    eigEs.compute(eigFIM);
+    eigEs.compute(eigFIM); 
     Eigen::VectorXd eigInvEigenValues  = eigEs.eigenvalues().cwiseInverse()*sigma2; //scaling of matrix is scaling of eigenvalues
-    Eigen::MatrixXd eigInvEigenVectors = eigEs.eigenvectors(); //A^(-1)^(-1) = A from FIM = ADA^(-1)
+    Eigen::MatrixXd eigInvEigenVectors = eigEs.eigenvectors();     
 
     gsl_matrix *evec = gsl_matrix_calloc(n, n);
     gsl_vector *eval = gsl_vector_calloc(n);
-
     for(int i = 0; i < n; ++i) {
         gsl_vector_set(eval, i, eigInvEigenValues(i));
         for(int j = 0; j < n; ++j) {
@@ -340,20 +322,38 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
         }
     }
 
-    bool posdef = (gsl_vector_min(eval) > 0.0);
+    result->posdef = (gsl_vector_min(eval) > 0.0);
+    
+    Eigen::MatrixXd eigInvFIM;
+    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(n,n);
+      
+    /* Choose one solver below, 
+     * experienced strong impact on accuracy (and performance)
+     *
+     * extended list here:
+     * https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html */
 
-    result->grad      = gradient;
-    result->posdef    = posdef;
-    result->error_flg = 0; // error_flg = false
+    //eigInvFIM = eigFIM.fullPivHouseholderQr().solve(I)*sigma2;
+    //eigInvFIM = eigFIM.completeOrthogonalDecomposition().solve(I)*sigma2;
+    //eigInvFIM = eigFIM.colPivHouseholderQr().solve(I)*sigma2;
+    //eigInvFIM = eigFIM.ldlt().solve(I)*sigma2; /* only for posdef */
+    eigInvFIM = eigFIM.householderQr().solve(I)*sigma2;
 
-    gsl_vector_free(gradient);
+    //Eigen::MatrixXd tmp = eigInv_FIM * eigFIM; (for debug)
+
+    gsl_matrix * invFIM  = gsl_matrix_calloc(n, n);
+    for(int i = 0; i< n; ++i) {
+        for(int j = 0; j<n; ++j) {
+            gsl_matrix_set(invFIM, i, j, eigInvFIM(i,j));
+        }
+    }
 
     for (int i = 0; i< n; ++i) {
         if (!std::isfinite(gsl_vector_get(eval, i))) {
             printf("CoupledOdeSystem::fitfun: Eval not finite. \n");
             result->error_flg = 2;
             stan::math::recover_memory_nested();
-            gsl_matrix_free(inv_FIM);
+            gsl_matrix_free(invFIM);
             gsl_matrix_free(evec);
             gsl_vector_free(eval);
             return result->loglike;
@@ -361,29 +361,29 @@ double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *inf
     }
 
     result->eval = eval;
+    gsl_vector_free(eval);
 
     for (int i = 0; i<n; ++i) {
         for (int j = 0; j<n; ++j) {
             if (!std::isfinite(gsl_matrix_get(evec, i, j)) ||
-                    !std::isfinite(gsl_matrix_get(inv_FIM, i, j)) )  {
-                printf("CoupledOdeSystem::fitfun: Evec or inv_FIM not finite. \n");
+                    !std::isfinite(gsl_matrix_get(invFIM, i, j)) )  {
+                printf("CoupledOdeSystem::fitfun: Evec or invFIM not finite. \n");
                 result->error_flg = 2;
                 stan::math::recover_memory_nested();
-                gsl_matrix_free(inv_FIM);
+                gsl_matrix_free(invFIM);
                 gsl_matrix_free(evec);
-                gsl_vector_free(eval);
                 return result->loglike;
             }
         }
     }
 
-    result->cov  = inv_FIM;
-    result->evec = evec;
+    result->cov       = invFIM;
+    result->evec      = evec;
+    result->error_flg = 0; //all good
 
     stan::math::recover_memory_nested();
-    gsl_matrix_free(inv_FIM);
+    gsl_matrix_free(invFIM);
     gsl_matrix_free(evec);
-    gsl_vector_free(eval);
 
     return result->loglike;
 }
