@@ -46,7 +46,7 @@ vec_d CoupledOdeSystem::getIC(const vec_d & params) const
     }
 
     vec_d ic(ic_s.size());
-    for(int i = 0; i < ic_s.size(); ++i) ic[i] = ic_s[i].val();
+    for(size_t i = 0; i < ic_s.size(); ++i) ic[i] = ic_s[i].val();
     return ic;
 }
 
@@ -60,8 +60,8 @@ void CoupledOdeSystem::observer(const vec_d & state, double t)
 
 void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
 {
-    printf("t %lf\n",t);
-    printvec_d("z", z);
+    //printf("t %lf\n",t);
+    //printvec_d("z", z);
 
     if(_mala) stan::math::start_nested();
 
@@ -106,7 +106,7 @@ void CoupledOdeSystem::step(const vec_d & z, vec_d & dzOut, double t)
         GK_trans = S_trans*_A_trans+_B_temp_trans;
     }
 
-    printvec_d("dzOut", dzOut);
+    //printvec_d("dzOut", dzOut);
     return;
 }
 
@@ -131,7 +131,7 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
         return this->observer(x, t);
     };
 
-    int idx;
+    size_t idx;
     vec_d t(2);
     _sim = std::vector<vec_d>(0);
     std::vector<vec_d> sol(_times.size());
