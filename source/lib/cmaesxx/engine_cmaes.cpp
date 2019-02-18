@@ -13,8 +13,7 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 		  priors_par_(priors_par),
 		  restart_(restart),
 		  step_(0), 
-		  stt_(0.0),
-		  fitfun_(fun) {
+		  stt_(0.0) {
 
 		if (!GetCurrentDir(exeDir_, sizeof(exeDir_))) {
 			throw std::runtime_error("Current directory could not be localized.");
@@ -37,7 +36,9 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 
 		gt0_ = get_time();
 		
-		arFunvals_ = cmaes_init(&evo_, 0, NULL, NULL, 0, 0,
+		CmaesEngine::fitfun_ = fun;
+		
+        arFunvals_ = cmaes_init(&evo_, 0, NULL, NULL, 0, 0,
 						cmaes_par_.c_str());
 		
 		printf("%s\n", cmaes_SayHello(&evo_));
@@ -57,8 +58,10 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 		}
 
 #if defined(_USE_TORC_)
-	    torc_register_task(taskfun_);
-		//torc_init(argc, argv, MODE_MS); 
+	    torc_register_task(CmaesEngine::taskfun_);
+        int argc = 0; //dummy (TODO)
+        char **argv;  //dummy (TODO)
+		torc_init(argc, argv, MODE_MS); 
 #endif
 
 		if (ChangeDir(exeDir_) != 0) {
@@ -69,6 +72,12 @@ CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
 
 CmaesEngine::~CmaesEngine(){
     cmaes_exit(&evo_); /* release memory */
+
+/* (TODO: do we still need this?)
+#if defined(_USE_TORC_)
+    torc_finalize();
+#endif
+*/
 }
 
 cmaes_t* CmaesEngine::getEvo() {
@@ -95,25 +104,31 @@ double CmaesEngine::evaluate_population( cmaes_t *evo, double *arFunvals,
         info[0] = 0; info[1] = 0; info[2] = step; info[3] = i;     /* gen, chain, step, task */
 		
 #if defined(_USE_TORC_)
-        torc_create( -1, taskfun, 4,
+
+        torc_create( -1, CmaesEngine::taskfun_, 4,
                      dim_, MPI_DOUBLE, CALL_BY_VAL,
                      1, MPI_INT, CALL_BY_COP,
                      1, MPI_DOUBLE, CALL_BY_RES,
                      4, MPI_INT, CALL_BY_COP,
-                     &pop_[i], &dim_, &arFunvals_[i], info);
+                     pop_[i], &dim_, &arFunvals_[i], info);
+
 #else
-        taskfun_(pop_[i], &dim_, &arFunvals_[i], info);
+        CmaesEngine::taskfun_(pop_[i], &dim_, &arFunvals_[i], info);
 #endif
     }
 	
 #if defined(_USE_TORC_)
+
 #if defined(_STEALING_)
     torc_enable_stealing();
 #endif
+
     torc_waitall();
+
 #if defined(_STEALING_)
     torc_disable_stealing();
 #endif
+
 #endif
 
     // subtract the log-prior from the log-likelohood
@@ -188,11 +203,7 @@ double CmaesEngine::run() {
     printf("Funtion Evaluation time = %.3lf  seconds\n", stt_);
     printf("Finalization time       = %.3lf  seconds\n", gt3_-gt2_);
 
-#if defined(_USE_TORC_)
-    torc_finalize();
-#endif
-   
-	if (ChangeDir(exeDir_) != 0) {
+    if (ChangeDir(exeDir_) != 0) {
 		printf("Could not return to exe dir '%s'. \
 			Exit with exit(1)...\n", exeDir_);
 		exit(1);
@@ -200,10 +211,12 @@ double CmaesEngine::run() {
 	return 0.0;
 }
 
+double (*CmaesEngine::fitfun_) (double*, int, void*, int*);
+
 void CmaesEngine::taskfun_(double *x, int *n, double *res, 
 	int /* deprecated */ *info) {
 	
-    (*res) = - fitfun_(x, *n, (void*)NULL, info);    // minus for minimization
+    (*res) = - CmaesEngine::fitfun_(x, *n, (void*)NULL, info);    // minus for minimization
 	
 	return;
 }

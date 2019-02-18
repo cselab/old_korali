@@ -18,10 +18,15 @@ runs/
 doc/mkdocs/site/
 
 # CMA test relevant files
-cma
-source/CMAES/test/*/*.par
 source/CMAES/test/*/*.dat
 source/CMAES/test/*/*.err
+source/CMAES/test/*/*.par
 
 # Torc libs
-lib/torc_lite
+lib/torc_lite/
+
+# Executables
+source/CMAES/cma
+source/CMAES/test/*/cma
+source/CMAES/test/testxx
+

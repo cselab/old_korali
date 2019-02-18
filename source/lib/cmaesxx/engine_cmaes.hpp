@@ -29,8 +29,9 @@ extern "C" {
 
 #if defined(_USE_TORC_)
 
-#include <mpi.h>
-#include <torc.h>
+extern "C" {
+    #include <torc.h>
+}
 
 #endif
 
@@ -39,7 +40,6 @@ extern "C" {
 #define _IODUMP_ 1
 
 class CmaesEngine {
-
 
 public:
 	CmaesEngine(double (*fun) (double*, int, void*, int*), 
@@ -56,7 +56,6 @@ public:
 	cmaes_t* getEvo();
 	double   getBestFunVal();
 	double*  getBestEver();
-
 
 private:
 
@@ -79,9 +78,9 @@ private:
 	double *const*pop_;
     double *arFunvals_; 
 
-	double (*fitfun_) (double*, int, void*, int*);
-	void taskfun_(double *x, int *no, double* res, int *info);
-	double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
+	static double (*fitfun_) (double*, int, void*, int*);
+	static void taskfun_(double *x, int *no, double* res, int *info);
+    double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
 };
 
 #endif //ENGINE_CMAES_HPP
