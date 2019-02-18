@@ -1,0 +1,172 @@
+\documentclass[fleqn]{article}
+
+\usepackage[left=2.5cm,top=2.5cm,right=2.5cm,bottom=2.5cm,bindingoffset=0.5cm]{geometry}
+
+%\usepackage{epstopdf}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{verbatim}
+
+
+\newcommand*{\vertbar}{\rule[-1ex]{0.5pt}{2.5ex}}
+\newcommand*{\horzbar}{\rule[.5ex]{2.5ex}{0.5pt}}
+
+
+\usepackage{proof}
+\usepackage{color}
+\usepackage{xcolor,colortbl}
+\usepackage{bm}
+
+\usepackage{mhchem}
+
+\usepackage{tabularx,booktabs}
+\setlength{\heavyrulewidth}{\lightrulewidth}
+\setlength{\aboverulesep}{4pt}% choose
+\setlength{\belowrulesep}{4pt}% choose
+
+
+\usepackage{url}
+
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{commath}% for differentials
+
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcommand{\NL}{\\ \midrule} % new line
+
+
+
+\title{Covariance functions for libgp}
+% \author{Georgios Arampatzis}
+
+
+\begin{document}
+
+\setlength{\mathindent}{0.0pt}
+
+
+\maketitle
+
+\section{Linear Covariance}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+name & \verb|cov_linear_one| \NL 
+ %
+ formula & $f = \vartheta^2 (1+\bm{x}\cdot \bm{y}) $ \NL
+% 
+parameters & $\vartheta$  \NL
+% 
+log-parameters & $\varphi = -\log \vartheta$  \NL
+%
+$\displaystyle \od{f}{\varphi}$ & $ -2\vartheta^2 (1+\bm{x}\cdot \bm{y}) $ \NL 
+%
+\end{tabularx}
+
+
+
+
+
+
+\section{Linear Covariance with Automatic Relevance Determination}
+
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+name & \verb|cov_linear_ard|  \NL
+ %
+ formula &  $\displaystyle  f = \sum_{i=1}^d \frac{ {x}_i {y}_i }{ \lambda_i } $  \NL
+% 
+parameters & $\lambda_1,\ldots,\lambda_d$ \NL
+% 
+log-parameters & $\varphi_i = \log \lambda_i$  \NL
+%
+$\displaystyle \od{f}{\varphi_i}$ & $ \displaystyle -2 \frac{ {x}_i {y}_i }{ \lambda_i } $ \NL 
+%
+\end{tabularx}
+
+
+
+
+
+
+
+\section{Squared exponential covariance function with isotropic distance measure}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+name & \verb|cov_se_iso|  \NL
+ %
+ formula &  $\alpha^2 \exp\left( -\frac{1}{2} \|  \frac{\bm{x}-\bm{y}}{\lambda}  \|^2 \right) $,  \NL
+% 
+parameters &  $\lambda$, $\alpha$  \NL
+% 
+log-parameters & $\varphi_1 = \log \lambda$, $\varphi_2 = \log \alpha $ \NL
+%
+$\displaystyle \od{f}{\varphi_1}$ & $\displaystyle \frac{1}{\lambda^2} \|x-y\|^2 f$ \NL
+$\displaystyle \od{f}{\varphi_2}$ & $2f$ \NL
+%
+\end{tabularx}
+
+
+
+
+\section{Squared exponential covariance function with Automatic Relevance Determination}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+name & \verb|cov_se_ard|  \NL
+ %
+ formula &  $\displaystyle \alpha^2 \exp\left( -\frac{1}{2} \sum_{i=1}^d  \frac{(x_i-y_i)^2}{\lambda_i^2} \right) $,  \NL
+% 
+parameters & $\lambda_1,\ldots,\lambda_d$, $\alpha$  \NL
+% 
+log-parameters & $ \begin{aligned} & \varphi_i = \log \lambda_i, \quad i=1,\ldots,d \\  & \varphi_{d+1} = \log \alpha \end{aligned} $ \NL
+%
+$\displaystyle \od{f}{\varphi_i} , \quad i=1,\ldots,d $ & $\displaystyle \frac{1}{\lambda_{i}^2} \|x-y\|^2 f$ \NL
+$\displaystyle \od{f}{\varphi_{d+1}}$ & $2f$ \NL
+%
+\end{tabularx}
+
+
+
+
+
+
+
+
+\section{Independent covariance function (white noise)}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+ name & \verb|cov_noise|  \NL
+ %
+ formula &  $\alpha^2 \delta(\|\bm{x}-\bm{y}\|) $  \NL
+% 
+parameters & $\alpha$  \NL
+% 
+log-parameters & $\varphi = \log \alpha $ \NL
+%
+$\displaystyle \od{f}{\varphi}$ & $2\alpha^2 \delta(\|\bm{x}-\bm{y}\|)$ \NL
+%
+\end{tabularx}
+
+
+
+
+
+
+
+\end{document}
