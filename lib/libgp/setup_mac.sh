@@ -45,14 +45,6 @@ mkdir -p lib
 cp build/libgp.a lib/.
 
 
-# run a test
-cd gpreg
-if make ; then
-	echo "OK"
-else
-	exit 1
-fi
-./mytest 100 10 ./data/sincos.txt
 
 )
 
