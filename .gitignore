@@ -10,8 +10,8 @@ tags
 .tags
 .tags1
 
-*.txt
 *.err
+*.txt
 
 build/
 runs/

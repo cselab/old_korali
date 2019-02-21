@@ -97,8 +97,8 @@ int main (int argc, char const *argv[])
   gp.covf().set_loghyper( params );
 
   RProp rprop;
-  rprop.init();
-  rprop.maximize(&gp, 1e-4, 100, 1);
+  rprop.init(1e-8);
+  rprop.maximize(&gp, 100, 1);
 
 
   // write data to file

@@ -11,18 +11,19 @@
 
 namespace libgp {
 
-void RProp::init(double eps_stop, double Delta0, double Deltamin, double Deltamax, double etaminus, double etaplus) 
+void RProp::init(double dif_tol, double eps_stop, double Delta0, double Deltamin, double Deltamax, double etaminus, double etaplus) 
 {
   this->Delta0   = Delta0;
   this->Deltamin = Deltamin;
   this->Deltamax = Deltamax;
   this->etaminus = etaminus;
   this->etaplus  = etaplus;
-  this->eps_stop = eps_stop;
+  this->eps_stop = eps_stop; //XXX sometimes the norm of the derivative is zero
+  this->dif_tol  = dif_tol;
 
 }
 
-void RProp::maximize( GaussianProcess * gp, double RelTol, size_t n, bool verbose )
+void RProp::maximize( GaussianProcess * gp, size_t n, bool verbose )
 {
   int param_dim = gp->covf().get_param_dim();
   Eigen::VectorXd Delta = Eigen::VectorXd::Ones(param_dim) * Delta0;
@@ -32,10 +33,10 @@ void RProp::maximize( GaussianProcess * gp, double RelTol, size_t n, bool verbos
   double best = log(0);
 
 
-  double diff = 100;
   int cnt = 1;
+  double diff = 100;
 
-  while( diff > RelTol && cnt < n ){
+  while( cnt <= n ){
 
     Eigen::VectorXd grad = -gp->log_likelihood_gradient();
     grad_old = grad_old.cwiseProduct(grad);
@@ -48,8 +49,13 @@ void RProp::maximize( GaussianProcess * gp, double RelTol, size_t n, bool verbos
       } 
       params(j) += -Utils::sign(grad(j)) * Delta(j);
     }
+
     grad_old = grad;
-    if (grad_old.norm() < eps_stop) break;
+    if (grad_old.norm() < eps_stop){
+      printf("\nStop due to norm of gradient %.10le  <  %le\n\n",grad.norm(),eps_stop);
+      break;
+    }
+
     gp->covf().set_loghyper(params);
     double lik = gp->log_likelihood();
     
@@ -60,13 +66,19 @@ void RProp::maximize( GaussianProcess * gp, double RelTol, size_t n, bool verbos
       best_params = params;
     }
 
+   if( diff < dif_tol ){ 
+      printf("\nStop due to norm of difference in parameters %.10le  <  %le\n\n", diff, dif_tol );
+      break;
+   }
     if (verbose) 
-      printf("%d)  %.10le    (%.10le)\n ", cnt, -lik, diff);
+      printf("%d)  %.5le    (%.5le, %.5le)\n ", cnt, -lik, diff, grad.norm());
 
     cnt ++;
   }
   
   gp->covf().set_loghyper(best_params);
+
+  printf("\nStop due to max iterations: %lu\n\n",n);
 
 }
 

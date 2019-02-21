@@ -52,6 +52,11 @@ namespace libgp {
      *  @return predicted value */
     virtual double f(const double x[]);
     
+    /** gradient of the mean GP at given input.
+     *  @param x input vector
+     *  @return gradient of mean */
+    virtual Eigen::VectorXd dfdx(const double x[]);
+
     /** Predict variance of prediction for given input.
      *  @param x input vector
      *  @return predicted variance */
