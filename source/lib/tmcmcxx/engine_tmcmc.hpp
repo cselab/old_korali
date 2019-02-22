@@ -26,7 +26,10 @@ class TmcmcEngine
 
 public:
     
-    TmcmcEngine(fitfun::IFitfun * Ifitfun_ptr, Method method = Standard);
+    TmcmcEngine(fitfun::IFitfun * Ifitfun_ptr, 
+                Method method = Standard, 
+                const char * ftmcmcpar = "tmcmc.par",
+                const char * fpriorpar = "priors.par");
     ~TmcmcEngine();
     void run();
 

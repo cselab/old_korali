@@ -53,7 +53,7 @@ data_t::data_t(const char * fname)
 
     FILE *f = fopen(fname, "r");
     if (f == NULL) {
-        printf("\nThe input file 'tmcmc.par' is missing. Exit...\n");
+        printf("\nThe input file '%s' is missing. Exit...\n", fname);
         exit(EXIT_FAILURE);
     }
 
