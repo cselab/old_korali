@@ -19,13 +19,13 @@ using namespace priors;
 namespace tmcmc
 {
 
-TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method) : 
+TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const char * ftmcmcpar, const char * fpriorpar ) : 
     _method(method),
-    data(data_t()),
+    data(data_t(ftmcmcpar)),
     nchains(data.Num[0]),
     out_tparam(new double[data.PopSize]),
     leaders(new cgdbp_t[data.PopSize]),
-    prior("priors.par"),
+    prior(fpriorpar),
     ifitfun_ptr_(ifitfun_ptr)
 {
     for (int i = 0; i< data.PopSize; ++i)

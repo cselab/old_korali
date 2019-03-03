@@ -13,7 +13,11 @@ DIR_EIGEN    ?= ../../lib/stan/lib/eigen_3.3.3
 DIR_BOOST    ?= ../../lib/stan/lib/boost_1.66.0
 DIR_SUNDIALS ?= ../../lib/stan/lib/sundials_3.1.0/include
 
-all: main_autodiff_example main_rosenbrock_example $(TARGET)
+DIR_LIBGP    ?= ../../lib/libgp/libgp/
+LIB_LIBGP    ?= gp
+DIR_LIBGPLIB ?= $(DIR_LIBGP)lib
+
+all: main_autodiff_example main_rosenbrock_example main_gp_rosenbrock_example $(TARGET)
 
 L=../lib
 DIR_PRIORS   = $L/priors
@@ -40,12 +44,14 @@ STANINCLUDES += -I$(DIR_EIGEN)
 STANINCLUDES += -I$(DIR_BOOST)
 STANINCLUDES += -I$(DIR_SUNDIALS)
 
-CXXFLAGS += $(STANINCLUDES) -Wfatal-errors 
+CXXFLAGS += $(STANINCLUDES)
+CXXFLAGS += -I$(DIR_LIBGP)
+LDXLIBS  += -L$(DIR_LIBGPLIB) -l$(LIB_LIBGP)
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)
 	(cd $(DIR_FITFUN); make lib$(LIB_FITFUN).a)
-#	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
+	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o) $^ $(LDLIBS)
 
@@ -56,6 +62,12 @@ main_autodiff_example:
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
 main_rosenbrock_example:
+	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
+	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
+	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
+	$(LINK.o.xx) $^ $(LDXLIBS)
+
+main_gp_rosenbrock_example:
 	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
 	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
@@ -72,6 +84,7 @@ $(TARGET): tmcmc_run.o \
 
 main_autodiff_example: main_autodiff_example.o
 main_rosenbrock_example: main_rosenbrock_example.o
+main_gp_rosenbrock_example: main_gp_rosenbrock_example.o
 
 tmcmc_run.o: tmcmc_run.c
 tmcmc_stats.o: tmcmc_stats.c
@@ -80,8 +93,9 @@ tmcmc_aux.o: tmcmc_aux.c
 tmcmc_engine.o: tmcmc_engine.c
 main_autodiff_example.o: main_autodiff_example.cpp
 main_rosenbrock_example.o: main_rosenbrock_example.cpp
+main_gp_rosenbrock_example.o: main_gp_rosenbrock_example.cpp
 
-clean:; rm -rf  $(TARGET) main_autodiff_example main_rosenbrock_example *.o
+clean:; rm -rf  $(TARGET) main_autodiff_example main_rosenbrock_example  main_gp_rosenbrock_example *.o
 	(cd $(DIR_PRIORS); make clean)
 	(cd $(DIR_PRIORSXX); make clean)
 	(cd $(DIR_FITFUNXX); make clean)
