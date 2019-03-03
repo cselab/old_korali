@@ -15,7 +15,7 @@ namespace libgp
 
   /** Covariance function base class.
    *  @author Manuel Blum
-   *  @ingroup cov_group 
+   *  @ingroup cov_group
    *  @todo implement more covariance functions */
   class CovarianceFunction
   {
@@ -26,15 +26,15 @@ namespace libgp
       /** Destructor. */
       virtual ~CovarianceFunction() {};
 
-      /** Initialization method for atomic covariance functions. 
+      /** Initialization method for atomic covariance functions.
        *  @param input_dim dimensionality of the input vectors */
-      virtual bool init(int input_dim) 
-      { 
+      virtual bool init(int input_dim)
+      {
         return false;
       };
 
-      /** Initialization method for compound covariance functions. 
-       *  @param input_dim dimensionality of the input vectors 
+      /** Initialization method for compound covariance functions.
+       *  @param input_dim dimensionality of the input vectors
        *  @param first first covariance function of compound
        *  @param second second covariance function of compound */
       virtual bool init(int input_dim, CovarianceFunction * first, CovarianceFunction * second)
@@ -63,8 +63,8 @@ namespace libgp
        *  @param x1 first input vector
        *  @param x2 second input vector
        *  @param grad covariance gradient */
-      void gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad);
-      
+      virtual void gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad) = 0;
+
       /** Update parameter vector.
        *  @param p new parameter vector */
       virtual void set_loghyper(const Eigen::VectorXd &p);
@@ -111,6 +111,6 @@ namespace libgp
 
 #endif /* __COV_H__ */
 
-/** Covariance functions available for Gaussian process models. 
- *  There are atomic and composite covariance functions. 
+/** Covariance functions available for Gaussian process models.
+ *  There are atomic and composite covariance functions.
  *  @defgroup cov_group Covariance Functions */

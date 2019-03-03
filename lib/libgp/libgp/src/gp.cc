@@ -12,6 +12,9 @@
 #include <iomanip>
 #include <ctime>
 
+#include <Eigen/Eigenvalues>
+
+
 namespace libgp {
 
   const double log2pi = log(2*M_PI);
@@ -81,6 +84,10 @@ namespace libgp {
       std::cerr << "fatal error while reading " << filename << std::endl;
       exit(EXIT_FAILURE);
     }
+
+    //XXX
+    cf->loghyper_changed = true;
+
     delete [] x;
   }
 
@@ -142,21 +149,18 @@ namespace libgp {
 
 
   Eigen::VectorXd GaussianProcess::dfdx(const double xd[]){
-    
+
     Eigen::Map<const Eigen::VectorXd> x(xd, input_dim);
     Eigen::VectorXd grad = Eigen::VectorXd::Constant(input_dim,NAN);
     if (sampleset->empty()) return grad;
 
-    Eigen::VectorXd g(input_dim);
 
     int n = sampleset->size();
-
-
     Eigen::MatrixXd  D = Eigen::MatrixXd::Zero(input_dim,n);
 
-
+    Eigen::VectorXd g(input_dim);
     for(size_t j = 0; j < n; ++j){
-      //cf->gradx( x, sampleset->x(j), g );
+      cf->gradx( x, sampleset->x(j), g );
       D.col(j) = g;
     }
 
@@ -164,7 +168,11 @@ namespace libgp {
     update_alpha();
 
     grad = D*alpha;
-  
+
+    // std::cout << D << "\n---\n";
+    // std::cout << alpha << "\n---\n";
+    // std::cout << grad << "\n---\n";
+
     return grad;
   }
 
@@ -182,17 +190,27 @@ namespace libgp {
 
     // resize L if necessary XXX: resize when?
     if (n > L.rows()) L.resize(n + initial_L_size, n + initial_L_size);
-    
+
     // compute kernel matrix (lower triangle)
     for(size_t i = 0; i < sampleset->size(); ++i) {
       for(size_t j = 0; j <= i; ++j) {
         L(i, j) = cf->get(sampleset->x(i), sampleset->x(j));
       }
     }
+
+    //XXX for test. should be removed. checks eigenvalues
+    // Eigen::VectorXd eig = L.topLeftCorner(n, n).selfadjointView<Eigen::Lower>().eigenvalues();
+    // std::cout << "min: " << eig.minCoeff() << "  max: " << eig.maxCoeff() << std::endl ;
+
     // perform cholesky factorization
     //solver.compute(K.selfadjointView<Eigen::Lower>());
     L.topLeftCorner(n, n) = L.topLeftCorner(n, n).selfadjointView<Eigen::Lower>().llt().matrixL();
     alpha_needs_update = true;
+
+
+
+
+
   }
 
 
@@ -215,7 +233,7 @@ namespace libgp {
 
     alpha_needs_update = false;
     alpha.resize(sampleset->size());
-    
+
     // Map target values to VectorXd
     const std::vector<double>& targets = sampleset->y();
     Eigen::Map<const Eigen::VectorXd> y(&targets[0], sampleset->size());

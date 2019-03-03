@@ -7,11 +7,11 @@
 
 namespace libgp
 {
-  
+
   CovPeriodicMatern3iso::CovPeriodicMatern3iso() {}
-  
+
   CovPeriodicMatern3iso::~CovPeriodicMatern3iso() {}
-  
+
   bool CovPeriodicMatern3iso::init(int n)
   {
     input_dim = n;
@@ -21,20 +21,30 @@ namespace libgp
     sqrt3 = sqrt(3);
     return true;
   }
-  
+
   double CovPeriodicMatern3iso::get(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2)
   {
     double s = sqrt3*fabs((sin(M_PI * (x1-x2).norm() / T) / ell));
     return sf2*(1+s)*exp(-s);
   }
-  
+
   void CovPeriodicMatern3iso::grad(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
   {
     double k = M_PI * (x1-x2).norm() / T;
     double s = sqrt3*fabs((sin(k) / ell));
     grad << sf2*s*s*exp(-s), 2*sf2*(1+s)*exp(-s), sf2*exp(-s)*s*sqrt3*k*cos(k)/ell/T;
   }
-  
+
+
+  void CovPeriodicMatern3iso::gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
+  {
+    double k =  (x1-x2).norm();
+    double s = sqrt3*fabs( sin( M_PI *k/T ) / ell );
+    grad << (sqrt3*M_PI/ell/T) * sf2 * s * exp(-s) * cos( M_PI*k/T ) * (x2-x1) / k;
+  }
+
+
+
   void CovPeriodicMatern3iso::set_loghyper(const Eigen::VectorXd &p)
   {
     CovarianceFunction::set_loghyper(p);
@@ -42,10 +52,10 @@ namespace libgp
     sf2 = exp(2*loghyper(1));
     T = loghyper(2);
   }
-  
+
   std::string CovPeriodicMatern3iso::to_string()
   {
     return "CovPeriodicMatern3iso";
   }
-  
+
 }

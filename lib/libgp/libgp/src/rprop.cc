@@ -11,7 +11,7 @@
 
 namespace libgp {
 
-void RProp::init(double dif_tol, double eps_stop, double Delta0, double Deltamin, double Deltamax, double etaminus, double etaplus) 
+void RProp::init(double dif_tol, double eps_stop, double Delta0, double Deltamin, double Deltamax, double etaminus, double etaplus)
 {
   this->Delta0   = Delta0;
   this->Deltamin = Deltamin;
@@ -42,43 +42,44 @@ void RProp::maximize( GaussianProcess * gp, size_t n, bool verbose )
     grad_old = grad_old.cwiseProduct(grad);
     for (int j=0; j<grad_old.size(); ++j) {
       if (grad_old(j) > 0) {
-        Delta(j) = std::min(Delta(j)*etaplus, Deltamax);        
+        Delta(j) = std::min(Delta(j)*etaplus, Deltamax);
       } else if (grad_old(j) < 0) {
         Delta(j) = std::max(Delta(j)*etaminus, Deltamin);
         grad(j) = 0;
-      } 
+      }
       params(j) += -Utils::sign(grad(j)) * Delta(j);
     }
 
     grad_old = grad;
-    if (grad_old.norm() < eps_stop){
+    if(  grad_old.norm()<eps_stop  &&  verbose ){
       printf("\nStop due to norm of gradient %.10le  <  %le\n\n",grad.norm(),eps_stop);
       break;
     }
 
     gp->covf().set_loghyper(params);
     double lik = gp->log_likelihood();
-    
-    
+
+
     if (lik > best) {
       best = lik;
       diff = (best_params-params).norm();
       best_params = params;
     }
 
-   if( diff < dif_tol ){ 
+   if( diff < dif_tol  && diff > 0 && verbose ){
       printf("\nStop due to norm of difference in parameters %.10le  <  %le\n\n", diff, dif_tol );
       break;
    }
-    if (verbose) 
+    if (verbose)
       printf("%d)  %.5le    (%.5le, %.5le)\n ", cnt, -lik, diff, grad.norm());
 
     cnt ++;
   }
-  
+
   gp->covf().set_loghyper(best_params);
 
-  printf("\nStop due to max iterations: %lu\n\n",n);
+  if( cnt > n && verbose )
+    printf("\nStop due to max iterations: %lu\n\n",n);
 
 }
 
