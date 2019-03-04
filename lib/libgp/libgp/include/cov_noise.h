@@ -9,8 +9,8 @@
 
 namespace libgp
 {
-  
-  /** Independent covariance function (white noise). 
+
+  /** Independent covariance function (white noise).
    *  Parameters: signal noise, \f$\sigma^2\f$
    *  @author Manuel Blum
    *  @ingroup cov_group
@@ -23,6 +23,7 @@ namespace libgp
     bool init(int n);
     double get(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2);
     void grad(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad);
+    void gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad);
     void set_loghyper(const Eigen::VectorXd &p);
     virtual std::string to_string();
     virtual double get_threshold();
@@ -30,7 +31,7 @@ namespace libgp
   private:
     double s2;
   };
-  
+
 }
 
 #endif /* __COV_NOISE_H__ */

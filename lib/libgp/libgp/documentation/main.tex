@@ -1,4 +1,6 @@
-\documentclass[fleqn]{article}
+%\documentclass[fleqn]{article}
+\documentclass{article}
+
 
 \usepackage[left=2.5cm,top=2.5cm,right=2.5cm,bottom=2.5cm,bindingoffset=0.5cm]{geometry}
 
@@ -14,7 +16,6 @@
 \usepackage{mathtools}
 \usepackage{bm}
 \usepackage{verbatim}
-
 
 \newcommand*{\vertbar}{\rule[-1ex]{0.5pt}{2.5ex}}
 \newcommand*{\horzbar}{\rule[.5ex]{2.5ex}{0.5pt}}
@@ -48,31 +49,110 @@
 
 
 
+\newcommand{\bx}{\bm{x}}
+\newcommand{\bX}{\bm{X}}
+\newcommand{\by}{\bm{y}}
+\newcommand{\bz}{\bm{z}}
+\newcommand{\bk}{\bm{k}}
+\newcommand{\bC}{\bm{C}}
+\newcommand{\btheta}{\bm{\vartheta}}
+\newcommand{\bphi}{\bm{\varphi}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\NORMAL}{\mathcal{N}}
+
 \title{Covariance functions for libgp}
 % \author{Georgios Arampatzis}
 
 
 \begin{document}
 
-\setlength{\mathindent}{0.0pt}
+%\setlength{\mathindent}{0.0pt}
 
 
 \maketitle
 
-\section{Linear Covariance}
+\section{Gaussian Process}
+
+We are given $\bX=\{\bx_i\}_{i=1}^n$ and $\bz=(z_1,\ldots,z_n)$ with $\bx_i \in \R^d$ and $z_i \in \R$. 
+The joint distribution of $\bz$ is given by,
+%
+\begin{equation}
+p(\bz) \,=\, \NORMAL \left( \bz \,|\,  0, \bC_n  \right)
+\end{equation}
+%
+where $\bC_n$ is a matrix with elements $(\bC_n)_{i,j} = k(\bx_i,\bx_j)$ and $k: \R^d \times \R^d \rightarrow \R$ is the covariance function of the Gaussian process. It should hold that $k(\bx,\by) = k(\by,\bx)$
+%
+
+
+Given a new point $(\bx_{n+1},z_{n+1})$, the conditional distribution of $z_{n+1}$ on $\bX$ and $\bz$ is given by,
+%
+\begin{equation}
+p(z_{n+1} \,|\, \bX,\bz,\bx_{n+1}) \,=\, \NORMAL \left( z_{n+1} \,|\,  \mu(\bx_{n+1}), \sigma^2(\bx_{n+1})  \right) \, ,
+\end{equation}
+%
+where
+%
+\begin{equation}
+ \mu(\bx_{n+1}) = \bk^\top \bC_n^{-1} \bz \, ,
+\end{equation}
+%
+and
+%
+\begin{equation}
+\sigma^2(\bx_{n+1}) \, = \,  c - \bk^\top \bC_n^{-1} \bk	\, .
+\end{equation}
+%
+Here, $(\bk)_i = k(\bx_{i},\bx_{n+1}), \, i=1,\ldots,n$ and $c = k(\bx_{n+1},\bx_{n+1})$ and satisfy,
+%
+\begin{equation}
+\bC_{n+1} = 
+ \begin{pmatrix}
+  \bC_{n} & \bk ^\top  \\
+  \bk & c
+ \end{pmatrix} \, .
+\end{equation}
+
+
+
+\subsection{Derivatives of the Gaussian process w.r.t. state variables}
+
+We are interested in calculating derivatives of $\mu(\bx)$ w.r.t. the state variable $\bx$. Thus
+%
+\begin{equation}
+\od{\mu(\bx)}{\bx} \, = \, \od{\bk^\top}{\bx} \bC_n \bz \, ,
+\end{equation}
+%
+where the matrix $ \od{\bk^\top}{\bx}$ has elements,
+%
+\begin{equation}
+\left ( \od{\bk^\top}{\bx} \right )_{i,j} = \od{k(\bx, \bx_i)}{x_j} \, ,
+\end{equation}
+%
+for $i=1,\ldots,n$ and $j=1,\ldots,d$.
+
+
+
+
+
+
+
+\section{Covariance Functions}
+
+\subsection{Linear Covariance}
 
 \begin{tabularx}{\textwidth}{@{} X X @{}}
 %
 name & \verb|cov_linear_one| \NL 
  %
- formula & $f = \vartheta^2 (1+\bm{x}\cdot \bm{y}) $ \NL
+ formula & $ k(\bx,\by) = \vartheta^2 (1+\bm{x}\cdot \bm{y}) $ \NL
 % 
 parameters & $\vartheta$  \NL
 % 
-log-parameters & $\varphi = -\log \vartheta$  \NL
+log-parameters & $\varphi = \log \vartheta$  \NL
 %
-$\displaystyle \od{f}{\varphi}$ & $ -2\vartheta^2 (1+\bm{x}\cdot \bm{y}) $ \NL 
+$\displaystyle \od{k}{\varphi}(\vartheta)$ & $ 2\vartheta^2 (1+\bm{x}\cdot \bm{y}) $ \NL 
 %
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ & $ \vartheta^2 \by $ \NL 
 \end{tabularx}
 
 
@@ -80,21 +160,23 @@ $\displaystyle \od{f}{\varphi}$ & $ -2\vartheta^2 (1+\bm{x}\cdot \bm{y}) $ \NL
 
 
 
-\section{Linear Covariance with Automatic Relevance Determination}
+\subsection{Linear Covariance with Automatic Relevance Determination}
 
 
 \begin{tabularx}{\textwidth}{@{} X X @{}}
 %
 name & \verb|cov_linear_ard|  \NL
  %
- formula &  $\displaystyle  f = \sum_{i=1}^d \frac{ {x}_i {y}_i }{ \lambda_i } $  \NL
+ formula &  $\displaystyle  k(\bx,\by) = \sum_{i=1}^d \frac{ {x}_i {y}_i }{ \lambda_i^2 } $  \NL
 % 
-parameters & $\lambda_1,\ldots,\lambda_d$ \NL
+parameters & $\bm{\vartheta} = \bm{\lambda}=( \lambda_1,\ldots,\lambda_d ) $ \NL
 % 
-log-parameters & $\varphi_i = \log \lambda_i$  \NL
+log-parameters & $\bphi= \log \btheta$  \NL
 %
-$\displaystyle \od{f}{\varphi_i}$ & $ \displaystyle -2 \frac{ {x}_i {y}_i }{ \lambda_i } $ \NL 
+$\displaystyle \od{k}{\varphi_i}(\btheta)$ & $ \displaystyle -2 \,  \bx \odot \by \odot  \bm{\lambda}^{-2}  $ \NL 
 %
+%
+$\displaystyle \od{k(\bx, \by)}{x_j}$ & $  \displaystyle    \by \odot  \bm{\lambda}^{-1} $ \NL 
 \end{tabularx}
 
 
@@ -103,40 +185,43 @@ $\displaystyle \od{f}{\varphi_i}$ & $ \displaystyle -2 \frac{ {x}_i {y}_i }{ \la
 
 
 
-\section{Squared exponential covariance function with isotropic distance measure}
+\subsection{Squared exponential covariance function with isotropic distance measure}
 
 \begin{tabularx}{\textwidth}{@{} X X @{}}
 %
 name & \verb|cov_se_iso|  \NL
  %
- formula &  $\alpha^2 \exp\left( -\frac{1}{2} \|  \frac{\bm{x}-\bm{y}}{\lambda}  \|^2 \right) $,  \NL
+ formula &  $\displaystyle k(\bx,\by) = \alpha^2 \exp\left( -\frac{1}{2\lambda^2} \|\bm{x}-\bm{y}  \|^2 \right) $,  \NL
 % 
-parameters &  $\lambda$, $\alpha$  \NL
+parameters &  $\btheta = ( \lambda$, $\alpha)$ \NL
 % 
-log-parameters & $\varphi_1 = \log \lambda$, $\varphi_2 = \log \alpha $ \NL
+log-parameters & $\bphi  = \log \btheta $ \NL
 %
-$\displaystyle \od{f}{\varphi_1}$ & $\displaystyle \frac{1}{\lambda^2} \|x-y\|^2 f$ \NL
-$\displaystyle \od{f}{\varphi_2}$ & $2f$ \NL
+$\displaystyle \od{k}{\varphi_1}(\btheta)$ & $\displaystyle \frac{1}{\lambda^2}\,  \|\bx-\by\|^2 \, k(\bx,\by)$ \NL
+$\displaystyle \od{k}{\varphi_2}(\btheta)$ & $2 k(\bx,\by)$ \NL
 %
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ & $  \displaystyle  \lambda^{-2} \,  k(\bx,\by) \, (\by-\bx)  $ \NL 
 \end{tabularx}
 
 
 
 
-\section{Squared exponential covariance function with Automatic Relevance Determination}
+\subsection{Squared exponential covariance function with Automatic Relevance Determination}
 
 \begin{tabularx}{\textwidth}{@{} X X @{}}
 %
 name & \verb|cov_se_ard|  \NL
  %
- formula &  $\displaystyle \alpha^2 \exp\left( -\frac{1}{2} \sum_{i=1}^d  \frac{(x_i-y_i)^2}{\lambda_i^2} \right) $,  \NL
+ formula &  $ k(\bx,\by) = \displaystyle \alpha^2 \exp\left( -\frac{1}{2} \sum_{i=1}^d  \frac{(x_i-y_i)^2}{\lambda_i^2} \right) $,  \NL
 % 
-parameters & $\lambda_1,\ldots,\lambda_d$, $\alpha$  \NL
+parameters & $ \btheta = (\lambda_1,\ldots,\lambda_d,\alpha) =  (\bm\lambda,\alpha)  $\NL
 % 
-log-parameters & $ \begin{aligned} & \varphi_i = \log \lambda_i, \quad i=1,\ldots,d \\  & \varphi_{d+1} = \log \alpha \end{aligned} $ \NL
+log-parameters & $ \bphi = \log \btheta$ \NL
 %
-$\displaystyle \od{f}{\varphi_i} , \quad i=1,\ldots,d $ & $\displaystyle \frac{1}{\lambda_{i}^2} \|x-y\|^2 f$ \NL
-$\displaystyle \od{f}{\varphi_{d+1}}$ & $2f$ \NL
+$\displaystyle \od{k}{\varphi_i}(\btheta) $ & $\displaystyle \frac{1}{\lambda_{i}^2}  \, \|\bx-\by\|^2 \, k(\bx,\by) , \quad i=1,\ldots,d$ \NL
+$\displaystyle \od{k}{\varphi_{d+1}}(\btheta)$ & $2k(\bx,\by)$ \NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ & $  \displaystyle    k(\bx,\by) \,  \bm\lambda^{-2} \odot (\by-\bx)  $ \NL 
 %
 \end{tabularx}
 
@@ -147,23 +232,178 @@ $\displaystyle \od{f}{\varphi_{d+1}}$ & $2f$ \NL
 
 
 
-\section{Independent covariance function (white noise)}
+\subsection{Independent covariance function (white noise)}
 
 \begin{tabularx}{\textwidth}{@{} X X @{}}
 %
  name & \verb|cov_noise|  \NL
  %
- formula &  $\alpha^2 \delta(\|\bm{x}-\bm{y}\|) $  \NL
+ formula &  $k(\bx,\by) = \alpha^2 \delta(\|\bm{x}-\bm{y}\|) $  \NL
 % 
-parameters & $\alpha$  \NL
+parameters & $\vartheta = \alpha$  \NL
 % 
-log-parameters & $\varphi = \log \alpha $ \NL
+log-parameters & $\varphi = \log \vartheta $ \NL
 %
-$\displaystyle \od{f}{\varphi}$ & $2\alpha^2 \delta(\|\bm{x}-\bm{y}\|)$ \NL
+$\displaystyle \od{k}{\varphi}(\vartheta)$ & $2\alpha^2 \delta(\|\bm{x}-\bm{y}\|)$ \NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ & undefined \NL 
 %
 \end{tabularx}
 
 
+
+
+
+
+\subsection{Periodic covariance function}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+ name & \verb|cov_periodic|  \NL
+ %
+ formula &  $\displaystyle k(\bx,\by) = \sigma_f^2 \exp \left ( -2  \lambda^{-2} \,\,\, \sin^2 z   \right), \, z=\frac{\pi \|\bm{x}-\bm{y}\|}{T}$  \NL
+% 
+parameters & $\btheta = (\alpha, \sigma_f, T )$  \NL
+% 
+log-parameters & $\displaystyle \bphi = \log \btheta $ \NL
+%
+$\displaystyle \od{k}{\varphi_1}(\btheta)$ &   $\displaystyle 4 \,  k(\bx,\by) \, \lambda^{-2} \, \sin^2 z   $ \NL
+$\displaystyle \od{k}{\varphi_2}(\btheta)$ & $\displaystyle 2 \,  k(\bx,\by)  $ \NL
+$\displaystyle \od{k}{\varphi_3}(\btheta)$ &  $\displaystyle 4 \,  k(\bx,\by) \, \lambda^{-2} \beta \,  \sin z \cos z $   \NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ &  $\displaystyle  \frac{(2\lambda\pi)^2}{T^2} \,  k(\bx,\by) \,   z^{-1} \sin z \, \cos z \, (\by-\bx) $
+%
+\end{tabularx}
+
+
+
+
+
+
+\subsection{Matern $\nu = \frac{3}{2}$}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+ name & \verb|cov_matern3|  \NL
+ %
+ formula &  $\displaystyle k(\bx,\by) = \sigma_f^2 \, (1+z) \exp \left ( -z\right), \quad z = \frac{\sqrt{3}}{\lambda}\| \bx-\by \| $ \NL
+% 
+parameters & $\btheta = (\lambda, \sigma_f )$  \NL
+% 
+log-parameters & $\displaystyle \bphi = \log \btheta $ \NL
+%
+$\displaystyle \od{k}{\varphi_1}(\btheta)$ &   $\displaystyle \sigma_f^2 \,  z^2  \,\exp \left ( -z\right)  $ \NL
+$\displaystyle \od{k}{\varphi_2}(\btheta)$ &   $\displaystyle 2  \,k(\bx,\by)  $\NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ &  $\displaystyle   \sigma_f^2   \, \exp(-z) \, (\by-\bx) $   \NL 
+%
+\end{tabularx}
+
+
+
+
+
+
+
+
+
+
+\subsection{Matern $\nu = \frac{5}{2}$}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+ name & \verb|cov_matern5|  \NL
+ %
+ formula &  $\displaystyle k(\bx,\by) = \sigma_f^2 \, (1+z+\frac{1}{3}z^2) \exp \left ( -z\right), z = \frac{\sqrt{5}}{\lambda}\| \bx-\by \| $ \NL
+% 
+parameters & $\btheta = (\lambda, \sigma_f )$  \NL
+% 
+log-parameters & $\displaystyle \bphi = \log \btheta $ \NL
+%
+$\displaystyle \od{k}{\varphi_1}(\btheta)$ &   $\displaystyle \sigma_f^2 \, \frac{ z^2 }{3}(1+z)\,  \exp \left ( -z\right) $ \NL
+$\displaystyle \od{k}{\varphi_2}(\btheta)$ & $\displaystyle 2  \,k(\bx,\by) $ \NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$  &  $\displaystyle   \, \sigma^2_f \, (1+z) \, \exp(-z) \, (\by-\bx) $    \NL 
+%
+\end{tabularx}
+
+
+
+\subsection{Matern general}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+ name &   \NL
+ %
+ formula &  $\displaystyle k(\bx,\by) = \sigma_f^2 \, p(z)  \exp \left ( -z\right), \,\,\, z = \frac{\alpha}{\lambda}\| \bx-\by \| $ \NL
+% 
+parameters & $\btheta = (\lambda, \sigma_f )$  \NL
+% 
+log-parameters & $\displaystyle \bphi = \log \btheta $ \NL
+%
+$\displaystyle \od{k}{\varphi_1}(\btheta)$ &  $\displaystyle   \, \sigma^2  \, z \left( p(z) -  p^{\prime}(z)  \right) \, \exp(-z) $   \NL
+$\displaystyle \od{k}{\varphi_2}(\btheta)$ & $\displaystyle 2  \,k(\bx,\by) $   \NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$  &  $\displaystyle   \, \frac{\alpha^2\sigma^2}{\lambda^2}  \, z^{-1} \left( p(z) -  p^{\prime}(z)  \right) \, \exp(-z) \, (\by-\bx) $    \NL 
+%
+\end{tabularx}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Isotropic rational quadratic covariance function}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+ name &    \verb|cov_rq_iso|   \NL
+ %
+ formula &  $\displaystyle k(\bx,\by) = \sigma_f^2 \left(     1+\frac{1}{2\alpha}z  \right)^{-\alpha}, \,\,\,\, z = \|  \frac{\bx-\by}{\lambda}  \|  $ \NL
+% 
+parameters & $\btheta = (\lambda, \sigma_f , \alpha)$  \NL
+% 
+log-parameters & $\displaystyle \bphi = \log \btheta $ \NL
+%
+$\displaystyle \od{k}{\varphi_1}(\btheta)$ &     \NL
+$\displaystyle \od{k}{\varphi_2}(\btheta)$ &     \NL
+$\displaystyle \od{k}{\varphi_3}(\btheta)$ &     \NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ &  $\displaystyle   \, \frac{\sigma_f^2}{\alpha^2}   \, \left(     1+\frac{1}{2\alpha}z  \right)^{-\alpha-1}  \, (\by-\bx) $    \NL 
+%
+\end{tabularx}
+
+
+
+
+%    double s = sqrt3*fabs((s[in(M_PI * (x1-x2).norm() / T) / ell));
+%    return sf2*(1+s)*exp(-s);
+\subsection{Periodic Matern $\nu = \frac{3}{2}$}
+
+\begin{tabularx}{\textwidth}{@{} X X @{}}
+%
+ name &    \verb|cov_periodic_matern3_iso|   \NL
+ %
+ formula &   $\displaystyle k(\bx,\by) = \sigma_f^2 \, (1+z)\, \textrm{e}^{-z}, \,\,\, z = \frac{\sqrt{3}}{\lambda} \sin( \frac{\pi}{T}\| \bx-\by \| ) $ \NL
+% 
+parameters & $\btheta = (\lambda, \sigma_f , T)$  \NL
+% 
+log-parameters & $\displaystyle \bphi = \log \btheta $ \NL
+%
+$\displaystyle \od{k}{\varphi_1}(\btheta)$ &     \NL
+$\displaystyle \od{k}{\varphi_2}(\btheta)$ &     \NL
+$\displaystyle \od{k}{\varphi_3}(\btheta)$ &     \NL
+%
+$\displaystyle \nabla_{\bx} k(\bx, \by)$ &  $\displaystyle   \, \frac{\sigma_f^2}{\alpha^2}   \, \left(     1+\frac{1}{2\alpha}z  \right)^{-\alpha-1}  \, (\by-\bx) $    \NL 
+%
+\end{tabularx}
 
 
 

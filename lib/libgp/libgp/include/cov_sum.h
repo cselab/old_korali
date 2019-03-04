@@ -10,7 +10,7 @@
 namespace libgp
 {
   /** Sums of covariance functions.
-   *  @author Manuel Blum 
+   *  @author Manuel Blum
    *  @ingroup cov_group */
   class CovSum : public CovarianceFunction
   {
@@ -20,6 +20,7 @@ namespace libgp
     bool init(int n, CovarianceFunction * first, CovarianceFunction * second);
     double get(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2);
     void grad(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad);
+    void gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad);
     void set_loghyper(const Eigen::VectorXd &p);
     virtual std::string to_string();
   private:
@@ -28,7 +29,7 @@ namespace libgp
     CovarianceFunction * first;
     CovarianceFunction * second;
   };
-  
+
 }
 
 #endif /* __COV_SUM_H__ */

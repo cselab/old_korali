@@ -7,17 +7,17 @@
 
 namespace libgp
 {
-  
+
   CovProd::CovProd()
   {
   }
-  
+
   CovProd::~CovProd()
   {
     delete first;
     delete second;
   }
-  
+
   bool CovProd::init(int n, CovarianceFunction * first, CovarianceFunction * second)
   {
     this->input_dim = n;
@@ -30,12 +30,12 @@ namespace libgp
     loghyper.setZero();
     return true;
   }
-  
+
   double CovProd::get(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2)
   {
     return first->get(x1, x2) * second->get(x1, x2);
   }
-  
+
   void CovProd::grad(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
   {
     Eigen::VectorXd grad_first(param_dim_first);
@@ -45,14 +45,28 @@ namespace libgp
     grad.head(param_dim_first) = grad_first * second->get(x1, x2);
     grad.tail(param_dim_second) = grad_second * first->get(x1, x2);
   }
-  
+
+
+  void CovProd::gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad){
+
+    Eigen::VectorXd grad_first  = Eigen::VectorXd::Constant(input_dim,NAN);
+    Eigen::VectorXd grad_second = Eigen::VectorXd::Constant(input_dim,NAN);
+
+    first->gradx(x1, x2, grad_first);
+    second->gradx(x1, x2, grad_second);
+
+    grad << grad_first * second->get(x1, x2)  +  first->get(x1, x2) * grad_second;
+  }
+
+
+
   void CovProd::set_loghyper(const Eigen::VectorXd &p)
   {
     CovarianceFunction::set_loghyper(p);
     first->set_loghyper(p.head(param_dim_first));
     second->set_loghyper(p.tail(param_dim_second));
   }
-  
+
   std::string CovProd::to_string()
   {
     return "CovProd("+first->to_string()+", "+second->to_string()+")";

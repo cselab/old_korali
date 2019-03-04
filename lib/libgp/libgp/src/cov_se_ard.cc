@@ -7,11 +7,11 @@
 
 namespace libgp
 {
-  
+
   CovSEard::CovSEard() {}
-  
+
   CovSEard::~CovSEard() {}
-  
+
   bool CovSEard::init(int n)
   {
     input_dim = n;
@@ -20,31 +20,42 @@ namespace libgp
     loghyper.resize(param_dim);
     return true;
   }
-  
+
   double CovSEard::get(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2)
-  {  
+  {
     double z = (x1-x2).cwiseQuotient(ell).squaredNorm();
     return sf2*exp(-0.5*z);
   }
-  
+
   void CovSEard::grad(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
   {
-    Eigen::VectorXd z = (x1-x2).cwiseQuotient(ell).array().square();  
+    Eigen::VectorXd z = (x1-x2).cwiseQuotient(ell).array().square();
     double k = sf2*exp(-0.5*z.sum());
     grad.head(input_dim) = z * k;
     grad(input_dim) = 2.0 * k;
   }
-  
+
+
+
+
+  void CovSEard::gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
+  {
+    double k = get(x1,x2);
+    Eigen::VectorXd v = ell.array().square();
+    grad << k * (x2-x1).cwiseQuotient(v);
+  }
+
+
+
   void CovSEard::set_loghyper(const Eigen::VectorXd &p)
   {
     CovarianceFunction::set_loghyper(p);
     for(size_t i = 0; i < input_dim; ++i) ell(i) = exp(loghyper(i));
     sf2 = exp(2*loghyper(input_dim));
   }
-  
+
   std::string CovSEard::to_string()
   {
     return "CovSEard";
   }
 }
-

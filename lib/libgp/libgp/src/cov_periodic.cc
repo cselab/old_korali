@@ -34,8 +34,21 @@ namespace libgp
     // why is the last elements 0?
     // the commented derivative corresponds to derivative w.r.t. log(T)
     grad << 4*sf2*exp(-2*s*s)*s*s, 2*sf2*exp(-2*s*s), 0;// 4*sf2/ell*exp(-2*s*s)*s*cos(k)*k;
+    // grad << 4*sf2*exp(-2*s*s)*s*s, 2*sf2*exp(-2*s*s), 4*sf2/ell*exp(-2*s*s)*s*cos(k)*k;
 
   }
+
+
+  void CovPeriodic::gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
+  {
+    double c = 2*ell*M_PI/T;
+    double z = M_PI * (x1-x2).norm() / T ;
+    double f = sf2*exp(-2*z*z);
+    double k = c*c*f*sin(z)*cos(z)/z;
+    grad << k*(x2-x1);
+  }
+
+
 
   void CovPeriodic::set_loghyper(const Eigen::VectorXd &p)
   {

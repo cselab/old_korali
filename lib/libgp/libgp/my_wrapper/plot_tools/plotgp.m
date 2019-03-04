@@ -1,10 +1,13 @@
 clc; clear;
 
+gp_file  =  '../data/gp1.dat';
+out_file = '../data/out1.dat';
+
 addpath('./shplot')
 
 k = 1; 
 
-yt = load('out.txt'); 
+yt = load(out_file); 
 
 [~,ind]=sort(yt(:,k));
 indt = abs(yt(:,end-1))<1e-12;
@@ -17,11 +20,10 @@ yt(indt,end-1) = 0;
 
 
 % load train data set
-t = readtable('gp.txt', 'HeaderLines', 12, 'ReadVariableNames', false,'Delimiter',' ');
+t = readtable( gp_file, 'HeaderLines', 12, 'ReadVariableNames', false,'Delimiter',' ');
 train = table2array(t(:,1:end));
 
-
-fig = figure(1); clf
+fig = figure(); clf
 
 grid on; hold on
 
@@ -31,9 +33,9 @@ opt = {'Color', [0.9290    0.6940    0.1250] };
 H = shplot( yt(ind,k), yt(ind,end-2), sqrt(yt(ind,end-1)) , opt{:});
 H.line.LineWidth = 3;
 
-p3 = scatter( yt(ind,k), yt(ind,end-2) , 100, 'o' );
-p3.MarkerFaceColor = [0.9290    0.6940    0.1250];
-p3.MarkerFaceAlpha = .5;
+% p3 = scatter( yt(ind,k), yt(ind,end-2) , 100, '.' );
+% p3.MarkerFaceColor = [0.9290    0.6940    0.1250];
+% p3.MarkerFaceAlpha = .5;
 
 
 
