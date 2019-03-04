@@ -78,8 +78,6 @@ void RProp::maximize( GaussianProcess * gp, size_t n, bool verbose )
   
   gp->covf().set_loghyper(best_params);
 
-  printf("\nStop due to max iterations: %lu\n\n",n);
-
 }
 
 

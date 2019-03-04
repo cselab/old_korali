@@ -1,9 +1,9 @@
 # This file has the priors.
 # First we define the number of priors to be read
 
-N 3
+N 2
 
 uniform  -3 3
 uniform  -3 3
-uniform  -3 3
+#uniform  -3 3
 #uniform  0.0 12
