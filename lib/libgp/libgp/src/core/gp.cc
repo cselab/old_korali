@@ -312,14 +312,6 @@ namespace libgp {
 
 
 
-
-
-
-
-
-
-
-
   void GaussianProcess::write(const char * filename)
   {
     // output

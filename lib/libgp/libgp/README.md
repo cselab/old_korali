@@ -1,12 +1,13 @@
 # Getting started
 
-libgp is a C++ library for Gaussian process regression. A Gaussian process defines a distribution over functions and inference takes place directly in function space. It is fully specified by a mean function and a positive definite covariance function. This library uses two types of covariance functions, simple and composite. Composite functions can be composed of other composite functions, allowing flexible structures. 
+libgp is a C++ library for Gaussian process regression. A Gaussian process defines a distribution over functions and inference takes place directly in function space. It is fully specified by a mean function and a positive definite covariance function. This library uses two types of covariance functions, simple and composite. Composite functions can be composed of other composite functions, allowing flexible structures.
 
 ## Building the code
+First download eigen3 and place it at the same level as libgp.
 Follow the standard CMake method of building:
 
     mkdir build; cd $_
-    cmake ..
+    cmake ../ -DCMAKE_BUILD_TYPE=Release   -DEIGEN3_INCLUDE_DIR=../eigen3 -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=ON
     make
 
 ### Testing the build
@@ -38,12 +39,12 @@ If you want a pdf, go into latex and run:
 ### Simple covariance functions
 
 * Linear covariance function.
-* Linear covariance function with automatic relevance detection. 
+* Linear covariance function with automatic relevance detection.
 * Matern covariance function with nu=1.5 and isotropic distance measure.
 * Matern covariance function with nu=2.5 and isotropic distance measure.
 * Independent covariance function (white noise).
 * Radial basis covariance function with compact support.
-* Isotropic rational quadratic covariance function. 
+* Isotropic rational quadratic covariance function.
 * Squared exponential covariance function with automatic relevance detection.
 * Squared exponential covariance function with isotropic distance measure.
 
@@ -71,7 +72,7 @@ Add data to the training set. Input vectors x must be provided as double[] and t
 
     gp.add_pattern(x, y);
 
-Predict value or variance of an input vector x. 
+Predict value or variance of an input vector x.
 
     f = gp.f(x);
     v = gp.var(x);
@@ -120,12 +121,12 @@ on Artificial Neural Networks*, Computational Intelligence and Learning.
 * 2011/09/28 version 0.1.3 \\
   improved organization of training data \\
   improved interfaces
-  
+
 * 2011/06/03 version 0.1.2 \\
   added Matern5 covariance function \\
   added isotropic rational quadratic covariance function \\
-  added function to draw random data according to covariance function 
- 
+  added function to draw random data according to covariance function
+
 * 2011/05/27 version 0.1.1 \\
   google-tests added \\
   added Matern3 covariance function \\
@@ -134,4 +135,4 @@ on Artificial Neural Networks*, Computational Intelligence and Learning.
 * 2011/05/26 version 0.1.0
   basic functionality for standard gp regression \\
   most important covariance functions implemented \\
-  capability to read and write models to disk 
+  capability to read and write models to disk

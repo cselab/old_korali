@@ -8,44 +8,12 @@
 #include <vector>
 #include <cmath>
 
-#include "gp_data.h"
+#include "gp_wrap.h"
 
-using namespace libgp;
+
 using namespace std;
-
-class grid{
-
-  public:
-
-    grid( Vector2d ab, RowVectorXd xo, int N, int ind ){
-
-      int dim = xo.size()+1;
-      df_ind = ind-1;
-
-      assert(df_ind<dim);
-
-      h = ( ab(1)-ab(0) ) / (N-1);
-
-      X.setZero(N,dim);
-      X.leftCols(dim-1) = xo.replicate(N,1);
-      X.col(dim-1) = VectorXd::LinSpaced( N, ab(0), ab(1));
-
-      X.col(dim-1).swap(X.col(df_ind));
-    }
-
-    void display(){
-      cout << "\n\n" << X << "\n\n";
-    }
-
-
-    virtual ~grid(){};
-
-    MatrixXd X;
-    double h ;
-    int df_ind ;
-
-};
-
+using namespace libgp;
+using namespace libgpwrap;
 
 VectorXd test_gp( string datafile, string cov_str, string ident, grid gr, int Ntrain, int Ntest );
 
@@ -59,7 +27,7 @@ int main (int argc, char const *argv[]){
                                       // "CovMatern5iso",
                                       // "CovRQiso",
                                       // "CovSEard",
-                                      // "CovSum ( CovMatern3iso, CovSEiso)",
+                                      "CovSum ( CovMatern3iso, CovSEiso)",
                                       // "CovSum ( CovSEiso, CovLinearard)",
                                       // "CovSum ( CovSEiso, CovLinearone)",
                                       // "CovProd( CovProd( CovLinearone, CovLinearone ), CovLinearone )"
@@ -76,7 +44,7 @@ int main (int argc, char const *argv[]){
 
   // srand48( 123 );
   // test_gp( "data/cos.dat", "CovPeriodic", to_string(0), gr, 20, 100);
-  test_gp( "data/cos.dat", "CovSum ( CovPeriodicMatern3iso, CovSEiso)", to_string(1), gr, 20, 100);
+  // test_gp( "data/cos.dat", "CovSum ( CovPeriodicMatern3iso, CovSEiso)", to_string(1), gr, 20, 100);
 
 
   // Vector2d ab; ab << 0, 5;
@@ -106,7 +74,7 @@ VectorXd test_gp( string datafile, string cov_str, string ident, grid gr, int Nt
 
   gp_data gpd( datafile );
 
-  gpd.split_train_test( Ntrain, Ntest );
+  gpd.split_train_test( Ntrain, Ntest, "random" );
 
   gpd.set_gp( cov_str );
   gpd.train_gp( 1e4, 1e-4, verbose );

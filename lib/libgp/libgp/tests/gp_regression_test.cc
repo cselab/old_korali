@@ -32,6 +32,8 @@ double test_gp_regression(libgp::GaussianProcess * gp)
   return tss/(n*0.2-1);
 }
 
+
+
 void run_regression_test(std::string covf_str)
 {
   double mss = 0.0;
@@ -43,36 +45,44 @@ void run_regression_test(std::string covf_str)
     params.setZero();
     params(gp->covf().get_param_dim()-1) = -2;
     gp->covf().set_loghyper(params);
-    mss += test_gp_regression(gp);    
+    mss += test_gp_regression(gp);
     delete gp;
   }
   ASSERT_TRUE(mss/n < 0.05);
 }
+
+
+
 
 TEST(GPRegressionTest, SEiso) {
   std::string covf_str("CovSum ( CovSEiso, CovNoise)");
   run_regression_test(covf_str);
 }
 
+
 TEST(GPRegressionTest, Matern3iso) {
   std::string covf_str("CovSum ( CovMatern3iso, CovNoise)");
   run_regression_test(covf_str);
 }
+
 
 TEST(GPRegressionTest, Matern5iso) {
   std::string covf_str("CovSum ( CovMatern5iso, CovNoise)");
   run_regression_test(covf_str);
 }
 
+
 TEST(GPRegressionTest, CovSEard) {
   std::string covf_str("CovSum ( CovSEard, CovNoise)");
   run_regression_test(covf_str);
 }
 
+
 TEST(GPRegressionTest, CovRQiso) {
   std::string covf_str("CovSum ( CovRQiso, CovNoise)");
   run_regression_test(covf_str);
 }
+
 
 TEST(GPRegressionTest, UpdateL) {
   int input_dim = 2;

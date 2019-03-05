@@ -3,3 +3,6 @@ build*
 archive
 *.swp
 .DS_Store
+
+
+*.aux

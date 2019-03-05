@@ -19,7 +19,7 @@
 #include "cov_prod.h"
 #include "cov_periodic_matern3_iso.h"
 #include "cov_periodic.h"
-// #include "input_dim_filter.h"
+#include "input_dim_filter.h"
 
 namespace libgp {
 
@@ -34,9 +34,10 @@ namespace libgp {
     registry["CovSEiso"]      = & create_func<CovSEiso>;
     registry["CovSum"]        = & create_func<CovSum>;
     registry["CovProd"]       = & create_func<CovProd>;
+    registry["CovPeriodic"]   = & create_func<CovPeriodic>;
+    registry["InputDimFilter"]= & create_func<InputDimFilter>;
     registry["CovPeriodicMatern3iso"] = & create_func<CovPeriodicMatern3iso>;
-    registry["CovPeriodic"]    = & create_func<CovPeriodic>;
-    // registry["InputDimFilter"] = & create_func<InputDimFilter>;
+
   }
 
   CovFactory::~CovFactory () {};
