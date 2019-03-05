@@ -43,6 +43,7 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
     curres_db.entries = 0;
 
     ifitfun_ptr_->initialize(0, NULL);
+    init();
 }
 
 TmcmcEngine::~TmcmcEngine()
@@ -70,7 +71,6 @@ TmcmcEngine::~TmcmcEngine()
 
 void TmcmcEngine::run()
 {
-    init();
 
     if (data.MaxStages == 1) {
         printf("Maxstages == 1, nothing to do\n");
