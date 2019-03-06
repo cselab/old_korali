@@ -1,7 +1,7 @@
 clear; clc
 
 % d = load('../data/grad1.dat');
-d = load('../../build/examples/data/grad3.dat');
+d = load('../../build/examples/data/grad1.dat');
 
 close all
 

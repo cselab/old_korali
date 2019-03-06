@@ -158,7 +158,9 @@ namespace libgp {
     int n = sampleset->size();
     Eigen::MatrixXd  D = Eigen::MatrixXd::Zero(input_dim,n);
 
-    Eigen::VectorXd g(input_dim);
+
+
+    Eigen::VectorXd g(input_dim); g.setZero();
     for(size_t j = 0; j < n; ++j){
       cf->gradx( x, sampleset->x(j), g );
       D.col(j) = g;
@@ -166,12 +168,7 @@ namespace libgp {
 
     compute();
     update_alpha();
-
     grad = D*alpha;
-
-    // std::cout << D << "\n---\n";
-    // std::cout << alpha << "\n---\n";
-    // std::cout << grad << "\n---\n";
 
     return grad;
   }

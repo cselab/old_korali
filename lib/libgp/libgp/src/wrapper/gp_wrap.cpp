@@ -202,6 +202,7 @@ namespace libgpwrap{
       for(int j=0 ; j<X.cols() ; j++) x[j] = X(i,j);
 
       DF.row(i) = gp->dfdx( x );
+
     }
 
   }

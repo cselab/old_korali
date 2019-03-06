@@ -24,20 +24,31 @@ namespace libgp
     return true;
   }
 
+
+
   double InputDimFilter::get(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2)
   {
     return nested->get(x1.segment(filter, 1), x2.segment(filter, 1));
   }
 
+
+
   void InputDimFilter::grad(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
   {
+
     nested->grad(x1.segment(filter, 1), x2.segment(filter, 1), grad);
   }
 
+
+
   void InputDimFilter::gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
   {
-    nested->gradx( x1.segment(filter, 1), x2.segment(filter, 1), grad);
+    Eigen::VectorXd tmp(1);
+    nested->gradx( x1.segment(filter, 1), x2.segment(filter, 1), tmp);
+    grad(filter) = tmp(0);
   }
+
+
 
   void InputDimFilter::set_loghyper(const Eigen::VectorXd &p)
   {

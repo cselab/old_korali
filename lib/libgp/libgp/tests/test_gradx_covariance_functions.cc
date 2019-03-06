@@ -55,7 +55,7 @@ class Gradient_x_Test : public TestWithParam<std::string> {
 
 TEST_P( Gradient_x_Test, EqualToNumerical ){
 
-  // std::cout <<  << "\n";
+  // std::cout << gradx_error() << "\n";
   // std::cout << "gp parameters = " <<  gpd->get_gp().covf().get_loghyper().array().exp().transpose()  << "\n";
   EXPECT_TRUE( fabs(gradx_error()) < 5e-2 );
 }
@@ -122,7 +122,7 @@ TEST_P( Gradient_x_nd_Test, EqualToNumerical ){
   for(int k=1; k<=3; k++){
     // std::cout << gradx_error(k) << "\n";
     // std::cout << "gp parameters = " <<  gpd->get_gp().covf().get_loghyper().array().exp().transpose()  << "\n";
-    EXPECT_TRUE( fabs(gradx_error(k)) < 1e-4 );
+    EXPECT_TRUE( fabs(gradx_error(k)) < 0.005 );
   }
 }
 
@@ -138,7 +138,7 @@ INSTANTIATE_TEST_SUITE_P( CovarianceFunction, Gradient_x_nd_Test, Values(
           "CovSEard",
           "CovSEiso",
           "CovSum(CovSEiso, CovNoise)",
-          "CovSum(CovLinearard, CovNoise)"
-          // "InputDimFilter(0/CovSEiso)",
-          // "InputDimFilter(0/CovSum(CovSEiso, CovNoise))"
+          "CovSum(CovLinearard, CovNoise)",
+          "InputDimFilter(0/CovSEiso)",
+          "InputDimFilter(0/CovSum(CovSEiso, CovNoise))"
           ));
