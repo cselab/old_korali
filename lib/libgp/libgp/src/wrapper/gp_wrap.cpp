@@ -99,9 +99,13 @@ namespace libgpwrap{
   double gp_data::validate_gp( string filename ){
 
     ofstream fp;
-    fp.open( filename.c_str() );
 
-    fp << "%% X_1 | ... | X_N | prediction | variance | exact " << endl;
+    bool bwrite = false;
+    if( !filename.empty() ){
+      fp.open( filename.c_str() );
+      fp << "%% X_1 | ... | X_N | prediction | variance | exact " << endl;
+      bwrite = true;
+    }
 
     double Ypred, var, tmp;
 
@@ -115,28 +119,33 @@ namespace libgpwrap{
       Ypred = gp->f(Xtest);
       var   = gp->var(Xtest);
 
-      for( int j=0; j<dim; j++) fp << Xtest[j] << "  ";
-      fp << Ypred << "  " << var << "  " << data[ind[Ntrain+i]][dim] << endl;
+      if( bwrite ){
+        for( int j=0; j<dim; j++) fp << Xtest[j] << "  ";
+        fp << Ypred << "  " << var << "  " << data[ind[Ntrain+i]][dim] << endl;
+      }
 
       tmp = Ypred - data[ind[Ntrain+i]][dim];
       test_error += tmp*tmp;
     }
     test_error = test_error/Ntrain;
 
-
     //  write also train set and prediction in "filename"
-    for(int i = 0; i < Ntrain; ++i) {
+    if( bwrite ){
+      for(int i = 0; i < Ntrain; ++i) {
+        double *Xtrain = &data[ind[i]][0];
 
-      double *Xtrain = &data[ind[i]][0];
+        Ypred = gp->f(Xtrain);
+        var   = gp->var(Xtrain);
 
-      Ypred = gp->f(Xtrain);
-      var   = gp->var(Xtrain);
-
-      for( int j=0; j<dim; j++) fp << Xtrain[j] << "  ";
-      fp << Ypred << "  " << var << "  " << data[ind[i]][dim] << endl;
+        for( int j=0; j<dim; j++) fp << Xtrain[j] << "  ";
+        fp << Ypred << "  " << var << "  " << data[ind[i]][dim] << endl;
+      }
     }
 
-    fp.close();
+    if( bwrite )  fp.close();
+
+
+
 
     return test_error;
   }
@@ -211,10 +220,12 @@ namespace libgpwrap{
 
     DFFD = ( F.tail(N-2) - F.head(N-2) )/(2*h);
 
-    FILE *fp = fopen(filename.c_str(),"w");
-    for( int i=1; i<N-1; i++ )
-      fprintf(fp,"%.10le %.10le %.10le \n ",X(i,k),DF(i,k),DFFD(i-1));
-    fclose(fp);
+    if( !filename.empty() ){
+      FILE *fp = fopen(filename.c_str(),"w");
+      for( int i=1; i<N-1; i++ )
+        fprintf(fp,"%.10le %.10le %.10le \n ",X(i,k),DF(i,k),DFFD(i-1));
+      fclose(fp);
+    }
 
     return ( DFFD - DF.col(k).segment(1,N-2) ).norm();
 

@@ -1,7 +1,9 @@
 clc; clear;
 
-gp_file  =  '../data/gp1.dat';
-out_file = '../data/out1.dat';
+% gp_file  = '../data/gp1.dat';
+% out_file = '../data/out1.dat';
+gp_file  = '../../build/examples/data/gp1.dat';
+out_file = '../../build/examples/data/out1.dat';
 
 addpath('./shplot')
 

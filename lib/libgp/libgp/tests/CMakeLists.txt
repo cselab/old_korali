@@ -40,4 +40,6 @@ INCLUDE("Sources.cmake")
 
 ADD_EXECUTABLE( gptest ${LIBGP_TESTS} )
 
-TARGET_LINK_LIBRARIES( gptest gp ${CMAKE_THREAD_LIBS_INIT}  gtest gtest_main)
+TARGET_LINK_LIBRARIES( gptest gp gpwrap ${CMAKE_THREAD_LIBS_INIT}  gtest gtest_main)
+
+file( COPY ${CMAKE_SOURCE_DIR}/examples/data DESTINATION .)

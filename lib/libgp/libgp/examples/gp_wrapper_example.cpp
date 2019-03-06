@@ -22,24 +22,30 @@ VectorXd test_gp( string datafile, string cov_str, string ident, grid gr, int Nt
 int main (int argc, char const *argv[]){
 
   static vector<string> cov_str = {
-                                      // "CovSEiso",
-                                      // "CovMatern3iso",
-                                      // "CovMatern5iso",
+                                      "CovLinearard",
+                                      "CovLinearone",
+                                      "CovMatern3iso",
+                                      "CovMatern5iso",
                                       // "CovRQiso",
                                       // "CovSEard",
-                                      "CovSum ( CovMatern3iso, CovSEiso)",
+                                      // "CovSum ( CovMatern3iso, CovSEiso)",
                                       // "CovSum ( CovSEiso, CovLinearard)",
                                       // "CovSum ( CovSEiso, CovLinearone)",
                                       // "CovProd( CovProd( CovLinearone, CovLinearone ), CovLinearone )"
                                   };
 
-  Vector2d ab; ab << 0, 7;
-  RowVectorXd xo;
-  grid gr(ab,xo,1000,1);
-  for(int i=0; i<cov_str.size(); i++){
-    srand48( 123 );
-    test_gp( "data/sincos.dat", cov_str[i], to_string(i+1), gr, 20, 100);
-  }
+  // XXX InputDimFilter does not work!
+  // static vector<string> cov_str = {
+  //                                 " CovSum(CovSum(InputDimFilter(0/CovSEiso),InputDimFilter(1/CovSEiso)),InputDimFilter(2/CovSEiso))"
+  //                                 };
+
+  // Vector2d ab; ab << 0, 7;
+  // RowVectorXd xo;
+  // grid gr(ab,xo,1000,1);
+  // for(int i=0; i<cov_str.size(); i++){
+  //   srand48( 123 );
+  //   test_gp( "data/sincos.dat", cov_str[i], to_string(i+1), gr, 20, 100);
+  // }
 
 
   // srand48( 123 );
@@ -47,12 +53,13 @@ int main (int argc, char const *argv[]){
   // test_gp( "data/cos.dat", "CovSum ( CovPeriodicMatern3iso, CovSEiso)", to_string(1), gr, 20, 100);
 
 
-  // Vector2d ab; ab << 0, 5;
-  // RowVectorXd xo(2); xo << 2.5, 2.5;
-  // grid gr(ab,xo,100,3);
-  // for(int i=0; i<cov_str.size(); i++){
-  //   test_gp( "data/sincos3d.dat", cov_str[i], to_string(i+1), gr, 500, 100);
-  // }
+  Vector2d ab; ab << 0, 5;
+  RowVectorXd xo(2); xo << 1.5, 1.5;
+  grid gr(ab,xo,100,1);
+  for(int i=0; i<cov_str.size(); i++){
+    srand48( 123 );
+    test_gp( "data/sincos3d.dat", cov_str[i], to_string(i+1), gr, 10, 10);
+  }
 
 
 
@@ -76,7 +83,7 @@ VectorXd test_gp( string datafile, string cov_str, string ident, grid gr, int Nt
 
   gpd.split_train_test( Ntrain, Ntest, "random" );
 
-  gpd.set_gp( cov_str );
+  gpd.set_gp( cov_str, 0.5 );
   gpd.train_gp( 1e4, 1e-4, verbose );
 
   str = filenames[0] + ident + ".dat";
