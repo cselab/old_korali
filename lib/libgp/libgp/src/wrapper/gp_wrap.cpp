@@ -6,6 +6,9 @@
 
 namespace libgpwrap{
 
+  using namespace std;
+  using namespace Eigen;
+  using namespace libgp;
 
   gp_data::gp_data( string filename ){
 
@@ -302,6 +305,4 @@ namespace libgpwrap{
 
 
 
-
-
-}// end of namespace libgpwrap
+}/* libgpwrap */

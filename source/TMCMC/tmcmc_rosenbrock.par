@@ -8,7 +8,7 @@ TolCOV	        1
 MinStep         1e-3
 Bound           -3 3
 Bound           -3 3
-#Bound           -3 3
+
 #------------------------------ MCMC OPTIONS -----------------------------------
 use_local_cov   0
 bbeta		    0.2
@@ -17,7 +17,7 @@ burn_in         0
 #--------------------------- MANIFOLD OPTIONS ----------------------------------
 
 moptions.eps        0.1
-moptions.use_ebds   1
+moptions.use_ebds   0
 moptions.conf       0.68
 moptions.pct_eub    0.2
 moptions.pct_elb    0.2

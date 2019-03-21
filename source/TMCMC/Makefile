@@ -101,4 +101,6 @@ clean:; rm -rf  $(TARGET) main_autodiff_example main_rosenbrock_example  main_gp
 	(cd $(DIR_FITFUNXX); make clean)
 	(cd $(DIR_TMCMCXX); make clean)
 
-.PHONY: clean all
+clean_run:; rm *.txt
+
+.PHONY: clean all clean_run

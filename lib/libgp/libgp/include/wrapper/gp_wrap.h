@@ -12,70 +12,61 @@
 
 namespace libgpwrap{
 
-  using namespace libgp;
-  using namespace std;
-  using namespace Eigen;
-
-
   typedef std::vector< std::vector<double> > dmatrix;
   typedef std::vector<double> dvector;
-
 
   class grid{
 
     public:
 
-      grid( Vector2d ab, RowVectorXd xo, int N, int ind );
+      grid( Eigen::Vector2d ab, Eigen::RowVectorXd xo, int N, int ind );
 
       virtual ~grid(){};
 
       void display( );
 
-      MatrixXd X;
+      Eigen::MatrixXd X;
       double h ;
       int df_ind ;
   };
-
-
-
 
 
   class gp_data {
 
     public:
 
-      gp_data( string filename );
+      gp_data( std::string filename );
 
       virtual ~gp_data();
 
-      void split_train_test( int Ntr, int Ntst, string tp="random");
+      void split_train_test( int Ntr, int Ntst, std::string tp="random");
 
-      void set_gp( string covstr, double d=0 );
+      void set_gp( std::string covstr, double d=0 );
 
       void train_gp( size_t Nmax, double tol, int verbose=1);
 
-      GaussianProcess & get_gp();
+      libgp::GaussianProcess & get_gp();
 
-      double validate_gp( string filename );
+      double validate_gp( std::string filename );
 
       double get_error();
 
-      void add_x( MatrixXd input );
+      void add_x( Eigen::MatrixXd input );
 
       void eval_f( );
 
       void eval_df( );
 
-      double validate_df( int k, double h, string filename );
+      double validate_df( int k, double h, std::string filename );
 
     protected:
 
-      ifstream file;
+      std::ifstream file;
 
       dmatrix data;
 
-      MatrixXd X, DF;
-      VectorXd F, DFFD;
+      Eigen::MatrixXd X, DF;
+      Eigen::VectorXd F, DFFD;
 
       int Ns, dim;
 
@@ -83,13 +74,13 @@ namespace libgpwrap{
 
       int *ind = NULL;
 
-      string cov_str;
+      std::string cov_str;
 
-      GaussianProcess *gp = nullptr;
+      libgp::GaussianProcess *gp = nullptr;
 
       double test_error = NAN;
 
-      void load_matrix( istream* is, dmatrix & matrix );
+      void load_matrix( std::istream* is, dmatrix & matrix );
   };
 
 

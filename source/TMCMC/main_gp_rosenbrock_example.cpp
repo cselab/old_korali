@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#include <libgp/libgp/include/gp.h>
-#include <libgp/libgp/include/gp_utils.h>
-#include <libgp/libgp/include/rprop.h>
+#include <libgp/libgp/include/core/gp.h>
+#include <libgp/libgp/include/core/gp_utils.h>
+#include <libgp/libgp/include/core/rprop.h>
 
 #include "fitfun.hpp"
 #include "rosenbrock.hpp"
@@ -16,13 +16,14 @@ void testGp(GaussianProcess& gp, double low, double up, size_t N);
 
 int main(int argc, char *argv[])
 {    
-    int n      = 250;
     double low = -3;
     double up  = 3;
 
-    int nit = 4000;
+    int nTraining = 100;
+    int nTest     = 100;
+    int nOptSteps = 5000;
     
-    // initialize Gaussian process for 1-D input using the squared exponential 
+    // initialize Gaussian process for 2-D input using the squared exponential 
     printf("initializing Gaussian process .. \n");
     GaussianProcess gp(2, "CovSum ( CovSEiso, CovNoise)");
     // initialize hyper parameter vector
@@ -32,38 +33,34 @@ int main(int argc, char *argv[])
     gp.covf().set_loghyper(params);
 
     // add training patterns
-    printf("add training data to Gp ..  \n");
+    printf("add training data to Gp ( N = %d )..  \n", nTraining);
     double y;
     double x[2];
-    for(int i = 0; i < n; ++i) {
-      x[0] = drand48()*(up-low)-low;
-      x[1] = drand48()*(up-low)-low;
+    for(int i = 0; i < nTraining; ++i) {
+      x[0] = drand48()*(up-low)+low;
+      x[1] = drand48()*(up-low)+low;
       y = f_minusRosenbrock(x, 2);
       gp.add_pattern(x, y);
     }
-    printf("loglike before maximization %f .. \n", gp.log_likelihood());
-    testGp(gp, low, up, 1000);
+    printf("loglike before maximization %f \n", gp.log_likelihood());
+    testGp(gp, low, up, nTest);
 
     // maximize with RProp
     RProp rprop;
     rprop.init(1e-4);
-    bool verbose = true;
-    printf("maximize hyper params of Gp (verbose: %d, iterations: %d) .. \n", verbose, nit);
-    rprop.maximize(&gp, nit, verbose);
-    printf("loglike after maximization %f .. \n", gp.log_likelihood());
-    testGp(gp, low, up, 1000);
-    
-    gp.write("gp_rosenbrock.par");
+    printf("maximize hyper params of Gp ( max iterations: %d) .. \n", nOptSteps);
+    rprop.maximize(&gp, nOptSteps, false);
+    printf("loglike after maximization %f \n", gp.log_likelihood());
+    testGp(gp, low, up, nTest);
 
     // init fitfun
-    auto gplambda = [&gp] (const double *theta, int N) { return -gp.f(theta); };
+    auto gplambda = [&gp] (const double *theta, int N) { return gp.f(theta); };
     Fitfun rosenbrock = Fitfun(gplambda);
-    //Fitfun rosenbrock = Fitfun(f_minusRosenbrock);
 
     //tmcmcm
     printf("run Tmcmcmc.. \n");
     TmcmcEngine engine(&rosenbrock, Standard, "tmcmc_rosenbrock.par", "priors_rosenbrock.par");
-    //engine.run();
+    engine.run();
     
     //exit
     printf("exit succefull \n");
@@ -71,12 +68,18 @@ int main(int argc, char *argv[])
 }
 
 void testGp(GaussianProcess& gp, double low, double up, size_t N){
-    double se = 0;
-    double x[2];
+    printf("calculating MSE ( N = %zu ) .. \n", N);
+    double max = -std::numeric_limits<double>::max();
+    double e, se = 0;
+    double x[2] , xmax[2];
     for(int i = 0; i < N; ++i) {
-        x[0] = drand48()*(up-low)-low;
-        x[1] = drand48()*(up-low)-low;
+        x[0] = drand48()*(up-low)+low;
+        x[1] = drand48()*(up-low)+low;
+        
+        e = pow(f_minusRosenbrock(x,2) - gp.f(x), 2);
+        if(e > max) { max = e; xmax[0] = x[0]; xmax[1] = x[1]; }
+        
         se += pow(f_minusRosenbrock(x, 2)-gp.f(x),2);
     }
-    printf("mse: %f\n", se/N);
+    printf("mse: %f (max squared error %f at (%f, %f) ) \n", se/N, max, xmax[0], xmax[1] );
 }
