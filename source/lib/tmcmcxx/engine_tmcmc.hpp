@@ -93,7 +93,7 @@ private:
                               unsigned int sel[]);
 
 
-    void evaluate_F(double point[], double *Fval, int worker_id, int gen_id,
+    void evaluate_candidate(double point[], double *Fval, int worker_id, int gen_id,
                     int chain_id, int step_id, int ntasks);
     
     void manifold_evaluate_candidate(double point[], double *Fval, int *perr, 
@@ -101,7 +101,7 @@ private:
                              double evec[], double eval[], int worker_id, 
                              int gen_id, int chain_id, int step_id, int ntasks);
     
-    void initchaintask(double in_tparam[], double *out_tparam, int winfo[4]);
+    void initchaintask(double in_tparam[], int winfo[4]);
     void check_for_exit();
 
     void precompute_chain_covariances(const cgdbp_t* leader,double** init_mean,
@@ -116,10 +116,10 @@ private:
     bool compute_candidate(double candidate[], double chain_mean[]);
     bool compute_candidate_cov(double candidate[], double chain_mean[], double chain_cov[]);
     bool compute_manifold_candidate(double candidate[], double leader[], double eps, double *SIG, double *grad, int posdef);
-    void chaintask(double in_tparam[], int *pnsteps, double *out_tparam, int winfo[4],
+    void chaintask(double in_tparam[], int pnsteps, double out_tparam, int winfo[4],
                    double *init_mean, double *chain_cov);
-    void manifold_chaintask(double in_tparam[], int *pnsteps, double *out_tparam, 
-                            int *t_err, int *t_posdef, double *t_grad, 
+    void manifold_chaintask(double in_tparam[], int pnsteps, double out_tparam, 
+                            int t_err, int t_posdef, double *t_grad, 
                             double *t_cov, double *t_evec, double *t_eval, int winfo[4]);
 
 

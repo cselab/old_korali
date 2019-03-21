@@ -23,7 +23,6 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
     _method(method),
     data(data_t(ftmcmcpar)),
     nchains(data.Num[0]),
-    out_tparam(new double[data.PopSize]),
     leaders(new cgdbp_t[data.PopSize]),
     prior(fpriorpar),
     ifitfun_ptr_(ifitfun_ptr)
@@ -48,8 +47,6 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
 
 TmcmcEngine::~TmcmcEngine()
 {
-    delete [] out_tparam;
-
     for (int i = 0; i< data.PopSize; ++i) delete[] leaders[i].point;
 
     if (_method == Manifold) {
@@ -203,25 +200,33 @@ void TmcmcEngine::evalGen()
                         init_mean[d] = in_tparam[d];
                 }
 
-                out_tparam[i] = leaders[i].F;    /* loglik_leader...*/
-
-
 #ifdef _USE_TORC_
-                torc_create(leaders[i].queue, (void (*)())chaintask, 7,
-                            data.Nth, MPI_DOUBLE, CALL_BY_COP,
-                            1, MPI_INT, CALL_BY_COP,
-                            1, MPI_INT, CALL_BY_COP,
-                            1, MPI_DOUBLE, CALL_BY_REF,
-                            4, MPI_INT, CALL_BY_COP,
-                            data.Nth, MPI_DOUBLE, CALL_BY_COP,
-                            data.Nth*data.Nth, MPI_DOUBLE, CALL_BY_COP,
-                            in_tparam, &data.Nth, &nsteps, &out_tparam[i], winfo,
-                            init_mean, chain_cov);
+                if (_method == Standard )
+                    torc_create(leaders[i].queue, (void (*)())chaintask, 7,
+                                data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                1, MPI_INT, CALL_BY_COP,
+                                1, MPI_INT, CALL_BY_COP,
+                                1, MPI_DOUBLE, CALL_BY_REF,
+                                4, MPI_INT, CALL_BY_COP,
+                                data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                data.Nth*data.Nth, MPI_DOUBLE, CALL_BY_COP,
+                                in_tparam, &data.Nth, &nsteps, leaders[i].F, winfo,
+                                init_mean, chain_cov);
+                else /* Manifold */ {
+                    printf("Manifold method not yet implemented for TORC!!! aborting.. \n");
+                    abort();
+                }
 #else
 #ifdef _USE_OPENMP_
-                #pragma omp task shared(data, out_tparam) firstprivate(i, nsteps, in_tparam, winfo, init_mean, chain_cov)
+                #pragma omp task shared(data, leaders) firstprivate(i, nsteps, in_tparam, winfo, init_mean, chain_cov)
 #endif
-                chaintask( in_tparam, &nsteps, &out_tparam[i], winfo, init_mean, chain_cov );
+                if (_method == Standard ) 
+                    chaintask( in_tparam, nsteps, leaders[i].F , winfo, init_mean, chain_cov );
+                else /* Manifold */ 
+                    manifold_chaintask(in_tparam, nsteps, leaders[i].F , 
+                            leaders[i].error_flg, leaders[i].posdef, 
+                            leaders[i].gradient, leaders[i].cov, 
+                            leaders[i].evec, leaders[i].eval, winfo ); 
 #endif
             }
 
@@ -302,16 +307,15 @@ void TmcmcEngine::sample_from_prior()
             torc_create(-1, (void (*)())initchaintask, 4,
                         data.Nth, MPI_DOUBLE, CALL_BY_COP,
                         1, MPI_INT, CALL_BY_COP,
-                        1, MPI_DOUBLE, CALL_BY_RES,
                         4, MPI_INT, CALL_BY_COP,
-                        in_tparam, &data.Nth, &out_tparam[i], winfo);
+                        in_tparam, &data.Nth, winfo);
 #else
 #ifdef _USE_OPENMP_
-            //#pragma omp task shared(data, out_tparam) firstprivate(i, in_tparam, winfo)
-            #pragma omp task firstprivate(i, winfo, in_tparam) shared(data, out_tparam)
+            //#pragma omp task shared(data, leaders) firstprivate(i, in_tparam, winfo)
+            #pragma omp task firstprivate(i, winfo, in_tparam) shared(data, leaders)
 #endif
             {
-                initchaintask(in_tparam, &out_tparam[i], winfo);
+                initchaintask(in_tparam, winfo);
             }
 #endif
         }
@@ -613,7 +617,7 @@ void TmcmcEngine::init_curres_db()
     curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize];
 }
 
-void TmcmcEngine::evaluate_F(double point[], double *Fval, int worker_id,
+void TmcmcEngine::evaluate_candidate(double point[], double *Fval, int worker_id,
                              int gen_id, int chain_id, int step_id, int ntasks)
 {
     int winfo[4] = { gen_id, chain_id, step_id, 0 };
@@ -685,7 +689,7 @@ void TmcmcEngine::manifold_evaluate_candidate(double point[], double *Fval, int 
 }
 
 
-void TmcmcEngine::initchaintask(double in_tparam[], double *out_tparam, int winfo[4])
+void TmcmcEngine::initchaintask(double in_tparam[],  int winfo[4])
 {
     int gen_id   = winfo[0];
     int chain_id = winfo[1];
@@ -696,14 +700,13 @@ void TmcmcEngine::initchaintask(double in_tparam[], double *out_tparam, int winf
     for (int i = 0; i < data.Nth; ++i)
         point[i] = in_tparam[i];
 
-    evaluate_F(point, &fpoint, me, gen_id, chain_id, 0, 1);
+    evaluate_candidate(point, &fpoint, me, gen_id, chain_id, 0, 1);
 
     double logprior = prior.eval_logpdf(point);
 
     /* update current db entry */
     torc_update_curgen_db( point, fpoint, logprior );
     if (data.ifdump) torc_update_full_db(point, fpoint, NULL, 0, 0);
-    *out_tparam = fpoint;    /* currently not required, the result is already in the db*/
 
     return;
 }
@@ -1227,11 +1230,11 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, int posdef, double eval[
 
 
 
-void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam, 
+void TmcmcEngine::chaintask(double in_tparam[], int pnsteps, double out_tparam, 
                             int winfo[4], double *init_mean, double *chain_cov)
 {
 
-    int nsteps   = *pnsteps;
+    int nsteps   = pnsteps;
     int gen_id   = winfo[0];
     int chain_id = winfo[1];
 
@@ -1242,7 +1245,7 @@ void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam
 
     // get initial leader and its value
     for (int i = 0; i < data.Nth; ++i) leader[i] = in_tparam[i];
-    loglik_leader   = *out_tparam;
+    loglik_leader   = out_tparam;
     logprior_leader = prior.eval_logpdf(leader);
 
     double pj = runinfo.p[runinfo.Gen];
@@ -1264,7 +1267,7 @@ void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam
 
         if (candidate_inbds) {
 
-            evaluate_F(candidate, &loglik_candidate, me, gen_id, chain_id, step, 1);    // this can spawn many tasks
+            evaluate_candidate(candidate, &loglik_candidate, me, gen_id, chain_id, step, 1);    // this can spawn many tasks
 
             if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglik_candidate, NULL, 0, 0);
             // last argument should be 1 if it is a surrogate
@@ -1295,11 +1298,11 @@ void TmcmcEngine::chaintask(double in_tparam[], int *pnsteps, double *out_tparam
 
 
 //TODO: remove pointers where not needed
-void TmcmcEngine::manifold_chaintask(double in_tparam[], int *pnsteps, double *out_tparam, 
-                                    int *t_err, int *t_posdef, double *t_grad, 
+void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out_tparam, 
+                                    int t_err, int t_posdef, double *t_grad, 
                                     double *t_cov, double *t_evec, double *t_eval, int winfo[4]) 
 {
-    int nsteps   = *pnsteps;
+    int nsteps   = pnsteps;
     int gen_id   = winfo[0];
     int chain_id = winfo[1];
 
@@ -1325,10 +1328,10 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int *pnsteps, double *o
     /* get initial leader and its values */
     int i, step;
 	for (i = 0; i < data.Nth; i++) leader[i] = in_tparam[i];
-	loglik_leader = *out_tparam;
+	loglik_leader = out_tparam;
 
-	l_err    = *t_err;
-	l_posdef = *t_posdef;
+	l_err    = t_err;
+	l_posdef = t_posdef;
 	for ( i=0; i < data.Nth; i++)			l_grad[i] = t_grad[i];
 	for ( i=0; i < data.Nth*data.Nth; i++)	l_cov[i]  = t_cov[i];
 	for ( i=0; i < data.Nth*data.Nth; i++)	l_evec[i] = t_evec[i];
