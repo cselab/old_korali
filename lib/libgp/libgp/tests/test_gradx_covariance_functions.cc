@@ -13,6 +13,7 @@ using ::testing::TestWithParam;
 using ::testing::Values;
 
 using namespace libgpwrap;
+using namespace Eigen;
 
 class Gradient_x_Test : public TestWithParam<std::string> {
 
