@@ -17,7 +17,10 @@ DIR_LIBGP    ?= ../../lib/libgp/libgp/
 LIB_LIBGP    ?= gp
 DIR_LIBGPLIB ?= $(DIR_LIBGP)lib
 
-all: main_autodiff_example main_rosenbrock_example main_gp_rosenbrock_example $(TARGET)
+all: main_autodiff_example \
+	 main_rosenbrock_example \
+     main_manifold_rosenbrock_example \
+	 main_gp_rosenbrock_example 
 
 L=../lib
 DIR_PRIORS   = $L/priors
@@ -67,6 +70,12 @@ main_rosenbrock_example:
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
+main_manifold_rosenbrock_example:
+	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
+	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
+	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
+	$(LINK.o.xx) $^ $(LDXLIBS)
+
 main_gp_rosenbrock_example:
 	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
 	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
@@ -76,26 +85,17 @@ main_gp_rosenbrock_example:
 
 # dependencies
 
-$(TARGET): tmcmc_run.o \
-	tmcmc_stats.o \
-	tmcmc_db.o \
-	tmcmc_aux.o \
-	tmcmc_engine.o \
-
 main_autodiff_example: main_autodiff_example.o
 main_rosenbrock_example: main_rosenbrock_example.o
+main_manifold_rosenbrock_example: main_manifold_rosenbrock_example.o
 main_gp_rosenbrock_example: main_gp_rosenbrock_example.o
 
-tmcmc_run.o: tmcmc_run.c
-tmcmc_stats.o: tmcmc_stats.c
-tmcmc_db.o: tmcmc_db.c 
-tmcmc_aux.o: tmcmc_aux.c
-tmcmc_engine.o: tmcmc_engine.c
 main_autodiff_example.o: main_autodiff_example.cpp
 main_rosenbrock_example.o: main_rosenbrock_example.cpp
+main_manifold_rosenbrock_example.o: main_manifold_rosenbrock_example.cpp
 main_gp_rosenbrock_example.o: main_gp_rosenbrock_example.cpp
 
-clean:; rm -rf  $(TARGET) main_autodiff_example main_rosenbrock_example  main_gp_rosenbrock_example *.o
+clean:; rm -rf  $(TARGET) main_autodiff_example main_rosenbrock_example main_manifold_rosenbrock_example main_gp_rosenbrock_example *.o
 	(cd $(DIR_PRIORS); make clean)
 	(cd $(DIR_PRIORSXX); make clean)
 	(cd $(DIR_FITFUNXX); make clean)
