@@ -8,6 +8,7 @@
 #include <Eigen/Dense>
 #include <string>
 #include <vector>
+#include <fstream>
 
 
 namespace libgpwrap{

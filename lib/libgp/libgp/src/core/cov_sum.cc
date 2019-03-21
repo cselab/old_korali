@@ -49,8 +49,8 @@ namespace libgp
 
   void CovSum::gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad){
 
-    Eigen::VectorXd grad_first  = Eigen::VectorXd::Constant(input_dim,NAN);
-    Eigen::VectorXd grad_second = Eigen::VectorXd::Constant(input_dim,NAN);
+    Eigen::VectorXd grad_first  = Eigen::VectorXd::Constant(input_dim,0);
+    Eigen::VectorXd grad_second = Eigen::VectorXd::Constant(input_dim,0);
 
     first->gradx(x1, x2, grad_first);
     second->gradx(x1, x2, grad_second);

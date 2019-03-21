@@ -28,6 +28,14 @@ int main (int argc, char const *argv[]){
                                        "CovProd( CovProd( CovLinearone, CovLinearone ), CovLinearone )"
                                   };
 
+  // XXX InputDimFilter does not work!
+  /*
+  static vector<string> cov_str = {
+                                  "CovSum( InputDimFilter(0/CovSEiso), InputDimFilter(1/CovSEiso) )"
+                                  // " CovSum(CovSum(InputDimFilter(0/CovSEiso),InputDimFilter(1/CovSEiso)),InputDimFilter(2/CovSEiso))"
+                                  };
+  */
+
   srand48( 123 );
   
   Vector2d ab; ab << 0, 7;
@@ -48,7 +56,6 @@ int main (int argc, char const *argv[]){
   }
   */
 
-
   return EXIT_SUCCESS;
 
 }
@@ -68,7 +75,7 @@ VectorXd test_gp( string datafile, string cov_str, string ident, grid gr, int Nt
 
   gpd.set_gp( cov_str, 0.5 );
   gpd.train_gp( 1e4, 1e-4, verbose );
-
+  
   str = filenames[0] + ident + ".dat";
   gpd.get_gp().write( str.c_str() );
 

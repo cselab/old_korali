@@ -1,6 +1,7 @@
 clear; clc
 
-d = load('../data/grad1.dat');
+% d = load('../data/grad1.dat');
+d = load('../../build/examples/data/grad1.dat');
 
 close all
 

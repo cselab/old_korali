@@ -34,7 +34,8 @@ namespace libgp
 
   void CovLinearard::gradx(const Eigen::VectorXd &x1, const Eigen::VectorXd &x2, Eigen::VectorXd &grad)
   {
-    grad = x2.cwiseQuotient(ell);
+    Eigen::VectorXd t = ell.array().square();
+    grad = x2.cwiseQuotient(t);
   }
 
 
