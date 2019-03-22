@@ -9,7 +9,7 @@ using namespace fitfun;
 
 int main(int argc, char *argv[])
 {
-    Fitfun rosenbrock = Fitfun(*f_minusRosenbrock);
+    Fitfun rosenbrock = Fitfun(*f_minusRosenbrock, *gradX_minusRosenbrock, *hessX_minusRosenbrock);
 
     TmcmcEngine engine(&rosenbrock, Manifold);
     engine.run();

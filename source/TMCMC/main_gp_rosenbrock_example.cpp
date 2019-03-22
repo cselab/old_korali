@@ -19,9 +19,9 @@ int main(int argc, char *argv[])
     double low = -3;
     double up  = 3;
 
-    int nTraining = 100;
-    int nTest     = 100;
-    int nOptSteps = 5000;
+    size_t nTraining = 100;
+    size_t nTest     = 100;
+    size_t nOptSteps = 5000;
     
     // initialize Gaussian process for 2-D input using the squared exponential 
     printf("initializing Gaussian process .. \n");
@@ -33,10 +33,10 @@ int main(int argc, char *argv[])
     gp.covf().set_loghyper(params);
 
     // add training patterns
-    printf("add training data to Gp ( N = %d )..  \n", nTraining);
+    printf("add training data to Gp ( N = %zu )..  \n", nTraining);
     double y;
     double x[2];
-    for(int i = 0; i < nTraining; ++i) {
+    for(size_t i = 0; i < nTraining; ++i) {
       x[0] = drand48()*(up-low)+low;
       x[1] = drand48()*(up-low)+low;
       y = f_minusRosenbrock(x, 2);
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     // maximize with RProp
     RProp rprop;
     rprop.init(1e-4);
-    printf("maximize hyper params of Gp ( max iterations: %d) .. \n", nOptSteps);
+    printf("maximize hyper params of Gp ( max iterations: %zu) .. \n", nOptSteps);
     rprop.maximize(&gp, nOptSteps, false);
     printf("loglike after maximization %f \n", gp.log_likelihood());
     testGp(gp, low, up, nTest);
@@ -72,7 +72,7 @@ void testGp(GaussianProcess& gp, double low, double up, size_t N){
     double max = -std::numeric_limits<double>::max();
     double e, se = 0;
     double x[2] , xmax[2];
-    for(int i = 0; i < N; ++i) {
+    for(size_t i = 0; i < N; ++i) {
         x[0] = drand48()*(up-low)+low;
         x[1] = drand48()*(up-low)+low;
         

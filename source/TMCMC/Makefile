@@ -15,7 +15,7 @@ DIR_SUNDIALS ?= ../../lib/stan/lib/sundials_3.1.0/include
 
 DIR_LIBGP    ?= ../../lib/libgp/libgp/
 LIB_LIBGP    ?= gp
-DIR_LIBGPLIB ?= $(DIR_LIBGP)lib
+DIR_LIBGPLIB ?= $(DIR_LIBGP)build
 
 all: main_autodiff_example \
 	 main_rosenbrock_example \
@@ -48,7 +48,8 @@ STANINCLUDES += -I$(DIR_BOOST)
 STANINCLUDES += -I$(DIR_SUNDIALS)
 
 CXXFLAGS += $(STANINCLUDES)
-CXXFLAGS += -I$(DIR_LIBGP)
+
+#CXXFLAGS += -I$(DIR_LIBGP)
 LDXLIBS  += -L$(DIR_LIBGPLIB) -l$(LIB_LIBGP)
 
 $(TARGET):
@@ -80,6 +81,7 @@ main_gp_rosenbrock_example:
 	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
 	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
+	(cd $(DIR_LIBGPLIB); make)
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
 

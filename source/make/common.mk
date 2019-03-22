@@ -5,10 +5,10 @@
 use_torc?=0
 use_omp?=0
 
-CC  := gcc #mpicc
-LD  := gcc #mpicc
-CXX := g++ #mpic++
-LDX := g++ #mpic++
+CC  := gcc-8 #mpicc
+LD  := gcc-8 #mpicc
+CXX := g++-8 #mpic++
+LDX := g++-8 #mpic++
 
 ifeq ($(use_torc),1)
 	CFLAGS   += -D_USE_TORC_=1 `torc_cflags` 
@@ -20,7 +20,7 @@ endif
 ifeq ($(use_omp),1)
     CFLAGS += -D_USE_OPENMP_=1 -fopenmp
     LDLIBS += -fopenmp
-	// (TODO: what about c++?)
+	# (TODO: what about c++?)
 endif
 
 
@@ -35,6 +35,8 @@ CXXFLAGS += `gsl-config --cflags`
 
 LDLIBS  += `gsl-config --libs` -lm -lpthread
 LDXLIBS += `gsl-config --libs` -lm -lpthread
+
+LDFLAGS = -g
 
 COMPILE.c   = $(CC)  $(CFLAGS)   -c -o $@
 COMPILE.cxx = $(CXX) $(CXXFLAGS) -c -o $@

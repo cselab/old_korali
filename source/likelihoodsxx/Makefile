@@ -21,9 +21,10 @@ CXXFLAGS += $(STANINCLUDES) -Wfatal-errors
 libfitfunxx.a: system_utils.o coupled_ode_system.o auto_diff_fitfun.o
 
 # deps
+
 system_utils.o: system_utils.cpp
 
-coupled_ode_system.o: coupled_ode_system.cpp
+coupled_ode_system.o: coupled_ode_system.cpp fitfun.hpp
 
 auto_diff_fitfun.o: auto_diff_fitfun.cpp
 

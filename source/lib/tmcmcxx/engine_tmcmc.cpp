@@ -695,18 +695,35 @@ void TmcmcEngine::initchaintask(double in_tparam[],  int winfo[4])
     int chain_id = winfo[1];
 
     long   me = torc_worker_id();
-    double point[data.Nth], fpoint;
+    double leader[data.Nth], loglik_leader;
 
     for (int i = 0; i < data.Nth; ++i)
-        point[i] = in_tparam[i];
+        leader[i] = in_tparam[i];
 
-    evaluate_candidate(point, &fpoint, me, gen_id, chain_id, 0, 1);
+    double logprior = prior.eval_logpdf(leader);
+   
+    if( _method == Standard)
+    {
+        evaluate_candidate( leader, &loglik_leader, me, gen_id, chain_id, 0, 1);
+        torc_update_curgen_db( leader, loglik_leader, logprior );
 
-    double logprior = prior.eval_logpdf(point);
+    } else /* Manifold */ {
 
-    /* update current db entry */
-    torc_update_curgen_db( point, fpoint, logprior );
-    if (data.ifdump) torc_update_full_db(point, fpoint, NULL, 0, 0);
+        int c_err, c_posdef;
+        double c_grad[data.Nth];
+        double c_cov[data.Nth*data.Nth];
+        double c_evec[data.Nth*data.Nth];
+        double c_eval[data.Nth];
+
+        manifold_evaluate_candidate(leader, &loglik_leader, &c_err, &c_posdef, 
+                                    c_grad, c_cov, c_evec, c_eval, 
+                                    me, gen_id, chain_id, 0, 1);
+        torc_update_manifold_curgen_db(leader, loglik_leader, logprior, c_err, 
+                                       c_posdef, c_grad, c_cov, c_evec, c_eval);
+
+    }
+    
+    if (data.ifdump) torc_update_full_db(leader, loglik_leader, NULL, 0, 0);
 
     return;
 }
