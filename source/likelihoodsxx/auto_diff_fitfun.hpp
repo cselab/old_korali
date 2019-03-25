@@ -1,5 +1,5 @@
-#ifndef _AUTO_DIFF_FITFUN_HPP_
-#define _AUTO_DIFF_FITFUN_HPP_
+#ifndef AUTO_DIFF_FITFUN_HPP
+#define AUTO_DIFF_FITFUN_HPP
 
 #include "coupled_ode_system.hpp"
 
@@ -22,4 +22,4 @@ private:
 
 }//namespace fitfun
 
-#endif// _AutoDiffFitFun_HPP_
+#endif// AUTO_DIFF_FITFUN_HPP

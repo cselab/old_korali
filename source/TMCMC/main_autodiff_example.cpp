@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     AutoFitfun af(0.0, 2, 2, true); //false := no MALA
     af.setObservations(t,obs);
 
-    TmcmcEngine engine(&af, Manifold);
+    TmcmcEngine engine(&af, Manifold, "autodif_tmcmc.par", "autodif_priors.par");
     engine.run();
     return 0;
 }

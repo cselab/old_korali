@@ -46,24 +46,23 @@ gsl_matrix* hessX_minusRosenbrock(const double *x, int N)
     gsl_matrix* hess = gsl_matrix_calloc(N, N);
     gsl_matrix_set(hess, 0, 0, 400*x[1]-1200*x[0]*x[0]-2);
 
-    double d2dxidxh, d2dxi2, d2dxidxj;
-    for(int i = 1; i < N-1; ++i) {
-        int h = i - 1;
-        int j = i + 1;
-        d2dxidxh = -400*x[h];
-        gsl_matrix_set(hess, i, h, d2dxidxh);
-        gsl_matrix_set(hess, h, i, d2dxidxh);
-        
-        d2dxi2 = -202+400*x[j]-1200*x[i]*x[i];
-        gsl_matrix_set(hess, i, j, d2dxi2);
-        gsl_matrix_set(hess, j, i, d2dxi2);
+    gsl_matrix_set(hess, 0, 1, 400*x[0]);
+    gsl_matrix_set(hess, 1, 0, 400*x[0]);
 
-        d2dxidxj = -400*x[j];
+    double d2dxi2, d2dxidxj;
+    for(int i = 1; i < N-1; ++i) {
+        int j = i + 1;
+        
+        d2dxi2 = 400*x[j]-1200*x[i]*x[i]-202;
+        gsl_matrix_set(hess, i, i, d2dxi2);
+
+        d2dxidxj = 400*x[j];
         gsl_matrix_set(hess, i, j, d2dxidxj);
         gsl_matrix_set(hess, j, i, d2dxidxj);
     }
 
     gsl_matrix_set(hess, N-1, N-1, 400*x[N-2]);
+    return hess;
 }
 
     

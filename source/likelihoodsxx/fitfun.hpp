@@ -32,7 +32,9 @@ class Fitfun : public IFitfun
 public:
 	Fitfun(fmodel_ptr model, grad_model_ptr grad = nullptr, hess_model_ptr hess = nullptr) : _model(model), _grad(grad), _hess(hess) {};
 
-    double evaluate (const double* x, int n, void* output, int* info);
+    double evaluate (const double* x, size_t n, void* output, int* info);
+    
+    double evaluateM (const double* x, size_t n, void* output, int* info);
     
     void initialize(int argc, const  char **argv) {};
 
@@ -47,15 +49,42 @@ private:
 
 };
 
-inline double Fitfun::evaluate (const double* x, int n, void* output, int* info) { 
-    if (_grad == nullptr || _hess == nullptr) return _model(x, n); // TODO: (DW) find a way if only one of it is availale
+inline double Fitfun::evaluate (const double* x, size_t n, void* output, int* info) { return _model(x,n); };
+
+inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* info) { 
+    
     double llk = _model(x,n);
+
+    if (_grad == nullptr || _hess == nullptr) {
+        printf("WARNING: Fitfun::evaluateM() _grad and or _hess not defined!! returning llk..\n");
+        return llk;
+    }
     
     return_type* result = static_cast<return_type*>(output);
     result->loglike   = llk;
-    result->grad      = _grad(x,n);
-   
+
+    gsl_vector* grad = _grad(x,n);
+    gsl_vector_scale(grad, 1.0/llk);
+    result->grad      = grad;
+
+    gsl_vector* invgrad = gsl_vector_calloc(n);
+    gsl_vector_memcpy(invgrad, grad);
+
+    gsl_matrix* igrad2 = gsl_matrix_calloc(n,n);
+    for(size_t i = 0; i<n; ++i)
+        for(size_t j = 0; j<=i; ++j) {
+            double c = -gsl_vector_get(invgrad,i)*gsl_vector_get(grad,j);
+            gsl_matrix_set(igrad2,i,j,c);
+            gsl_matrix_set(igrad2,j,i,c);
+        }
+
+    gsl_vector_free(invgrad);
+
     gsl_matrix* hess  = _hess(x,n);
+    gsl_matrix_scale(hess, 1.0/llk);
+
+    gsl_matrix_add(hess, igrad2);
+    gsl_matrix_free(igrad2);
 
     gsl_permutation * permutation = gsl_permutation_alloc(n);
     gsl_matrix * inv_hess = gsl_matrix_alloc(n,n);
@@ -67,17 +96,19 @@ inline double Fitfun::evaluate (const double* x, int n, void* output, int* info)
     if(LU_dec_err == 0)
     	LU_inv_err = gsl_linalg_LU_invert(hess, permutation, inv_hess);
    
+    gsl_permutation_free(permutation);
+    
     if (LU_dec_err != 0 || LU_inv_err != 0) {
         if(LU_dec_err != 0) printf("Fitfun::evaluate : Error in LU decomp. \n");
 	    else printf("Fitfun::evaluate : Error in LU invert. \n");
-        
         result->error_flg = 2;
         result->posdef    = 0;
         gsl_matrix_free(hess);
         gsl_matrix_free(inv_hess);
-        gsl_permutation_free(permutation);
         return llk;
     }
+
+    gsl_matrix_scale(inv_hess, -1.0);
 
     gsl_matrix * inv_hess_work = gsl_matrix_alloc(n,n);
     gsl_matrix_memcpy (inv_hess_work, inv_hess);
@@ -91,11 +122,10 @@ inline double Fitfun::evaluate (const double* x, int n, void* output, int* info)
     gsl_eigen_symmv_free (w);
     gsl_matrix_free(inv_hess_work);
     gsl_matrix_free(hess);
-    gsl_permutation_free(permutation);
 
     bool posdef = (gsl_vector_min(eval) > 0.0);
     int sigma_err = 0;
-    for(int i = 0; i<n; ++i) {
+    for(size_t i = 0; i<n; ++i) {
         if (!isfinite(gsl_vector_get(eval,i))) {
             sigma_err = 1;
             printf("Fitfun::evaluate : Error in inv_hess (not posdef). \n");
@@ -103,8 +133,8 @@ inline double Fitfun::evaluate (const double* x, int n, void* output, int* info)
         }
     }
 
-    for(int i = 0; i<n; ++i)
-        for(int j = 0; j<n; ++j) {
+    for(size_t i = 0; i<n; ++i)
+        for(size_t j = 0; j<n; ++j) {
             if (!isfinite(gsl_matrix_get(evec,i,j))) {
                 printf("Fitfun::evaluate : Error in inv_hess (evec not finite).\n"); 
             	sigma_err = 1;
@@ -121,17 +151,16 @@ inline double Fitfun::evaluate (const double* x, int n, void* output, int* info)
         result->error_flg = 2;
         result->posdef    = 0;
         gsl_matrix_free(inv_hess);
-        gsl_permutation_free(permutation);
         gsl_vector_free(eval);
         gsl_matrix_free(evec);
         return llk;
     }
    
     result->error_flg = false;
-    result->eval      = eval;
-    result->cov       = inv_hess;
-    result->evec      = evec;
     result->posdef    = posdef;
+    result->cov       = inv_hess;
+    result->eval      = eval;
+    result->evec      = evec;
     
     return llk;
 

@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 {
     Fitfun rosenbrock = Fitfun(*f_minusRosenbrock);
 
-    TmcmcEngine engine(&rosenbrock);
+    TmcmcEngine engine(&rosenbrock, Standard, "tmcmc_rosenbrock.par", "priors_rosenbrock.par");
     engine.run();
     return 0;
 }

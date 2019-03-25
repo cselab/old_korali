@@ -177,8 +177,7 @@ std::pair<std::vector<vec_d >, bool> CoupledOdeSystem::integrate_boost(
     return std::make_pair(sol,true);
 }
 
-
-double CoupledOdeSystem::evaluate(const double *x, int n, void* output, int *info)
+inline double CoupledOdeSystem::evaluate(const double *x, size_t n, void* output, int *info)
 {
     const int indexSigma = n-1;
 

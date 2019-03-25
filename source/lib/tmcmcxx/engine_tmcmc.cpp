@@ -657,9 +657,8 @@ void TmcmcEngine::manifold_evaluate_candidate(double point[], double *Fval, int 
     // TODO: this belongs somewher else for mTMCMC (DW)
     fitfun::return_type *result = new fitfun::return_type;
     
-    ifitfun_ptr_->evaluate(point, Nth, result, winfo);
+    *Fval = ifitfun_ptr_->evaluateM(point, Nth, result, winfo);
     
-    *Fval    = result->loglike;
     *perr    = result->error_flg;
     *pposdef = result->posdef;
 

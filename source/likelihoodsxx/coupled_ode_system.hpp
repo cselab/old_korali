@@ -21,7 +21,8 @@ public:
         _B_temp_trans = Eigen::MatrixXd::Zero(_numparam, _dim);
     }
 
-    double evaluate(const double *x, int n, void* output, int *info);
+    double evaluate(const double *x, size_t n, void* output, int *info);
+    double evaluateM(const double *x, size_t n, void* output, int *info) { return evaluate(x,n,output,info); }
     void initialize(int argc, const  char **argv) {};
     void finalize() {};
 
