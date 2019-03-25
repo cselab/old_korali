@@ -404,7 +404,7 @@ void TmcmcEngine::torc_update_full_db(double point[], double F, double *G, int n
 }
 
 
-void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double prior, int error_flg, int posdef, double gradient[], double cov[], double evec[], double eval[])
+void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double prior, int error_flg, bool posdef, double gradient[], double cov[], double evec[], double eval[])
 {
 	int i, pos;
 
@@ -438,9 +438,10 @@ void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double pri
 }
 
 
-void TmcmcEngine::torc_update_manifold_curgen_db(double point[], double F, double prior, int error_flg, int posdef, double gradient[], double cov[], double evec[], double eval[])
+void TmcmcEngine::torc_update_manifold_curgen_db(double point[], double F, double prior, int error_flg, bool posdef, double gradient[], double cov[], double evec[], double eval[])
 {
 	if (torc_node_id() == 0) {
+        for(int i = 0; i < data.Nth; ++i) if (eval[i] == 0) printf("WTF\n");
 		update_manifold_curgen_db(point, F, prior, error_flg, posdef, gradient, cov, evec, eval);
 		return;
 	}
@@ -641,7 +642,7 @@ void TmcmcEngine::evaluate_candidate(double point[], double *Fval, int worker_id
 
 
 void TmcmcEngine::manifold_evaluate_candidate(double point[], double *Fval, int *perr, 
-                                      int *pposdef, double grad[], double cov[], 
+                                      bool *pposdef, double grad[], double cov[], 
                                       double evec[], double eval[], int worker_id, 
                                       int gen_id, int chain_id, int step_id, int ntasks)
 {
@@ -662,25 +663,18 @@ void TmcmcEngine::manifold_evaluate_candidate(double point[], double *Fval, int 
     *perr    = result->error_flg;
     *pposdef = result->posdef;
 
-    if (result->grad != nullptr) 
-        std::copy(result->grad->data, result->grad->data+Nth, grad);
-    else 
-        std::memset(grad, 0, Nth*sizeof(double));
+    if (result->grad != nullptr) std::copy(result->grad->data, result->grad->data+Nth, grad);
+    else std::memset(grad, 0, Nth*sizeof(double));
 
-	if (result->eval != nullptr) 
-		std::copy(result->eval->data, result->eval->data+Nth, eval);
-	else
-		std::memset(eval, 0, Nth*sizeof(double));
+	if (result->eval != nullptr) std::copy(result->eval->data, result->eval->data+Nth, eval);
+    else std::memset(eval, 0, Nth*sizeof(double));
 
-	if (result->evec != nullptr)
-		std::copy(result->evec->data, result->evec->data+Nth*Nth, evec);
-	else 
-		std::memset(evec, 0, Nth*Nth*sizeof(double));
+
+	if (result->evec != nullptr) std::copy(result->evec->data, result->evec->data+Nth*Nth, evec);
+	else std::memset(evec, 0, Nth*Nth*sizeof(double));
 	
-    if (result->cov != nullptr)
-        std::copy(result->cov->data, result->cov->data+Nth*Nth, cov);
-	else
-		std::memset(cov, 0, Nth*Nth*sizeof(double));
+    if (result->cov != nullptr) std::copy(result->cov->data, result->cov->data+Nth*Nth, cov);
+	else std::memset(cov, 0, Nth*Nth*sizeof(double));
 
     delete result;
 
@@ -708,7 +702,8 @@ void TmcmcEngine::initchaintask(double in_tparam[],  int winfo[4])
 
     } else /* Manifold */ {
 
-        int c_err, c_posdef;
+        int c_err;
+        bool c_posdef;
         double c_grad[data.Nth];
         double c_cov[data.Nth*data.Nth];
         double c_evec[data.Nth*data.Nth];
@@ -1053,7 +1048,7 @@ bool TmcmcEngine::compute_candidate_cov(double candidate[], double chain_mean[],
 }
 
 
-bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[], double eps, double *SIG, double *grad, int posdef)
+bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[], double eps, double *SIG, double *grad, bool posdef)
 {
 	int i;
 	double epsSIG[data.Nth*data.Nth];
@@ -1138,7 +1133,7 @@ void TmcmcEngine::manifold_calculate_grad(const double* grad, double* gradOut)
 }
 
 
-int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, int posdef, double eval[], double evec[], const double* pos)
+int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval[], double evec[], const double* pos)
 {
     int i, j, l;
 	int Nth = data.Nth;
@@ -1315,7 +1310,7 @@ void TmcmcEngine::chaintask(double in_tparam[], int pnsteps, double out_tparam,
 
 //TODO: remove pointers where not needed
 void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out_tparam, 
-                                    int t_err, int t_posdef, double *t_grad, 
+                                    int t_err, bool t_posdef, double *t_grad, 
                                     double *t_cov, double *t_evec, double *t_eval, int winfo[4]) 
 {
     int nsteps   = pnsteps;
@@ -1327,13 +1322,15 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out
     double leader[data.Nth], loglik_leader;             /* old */
     double candidate[data.Nth], loglike_candidate;      /* new */
 
-    int l_err, l_posdef;
+    int l_err;
+    bool l_posdef;
     double l_grad[data.Nth], l_grad_scaled[data.Nth];
 	double l_cov[data.Nth*data.Nth];
 	double l_evec[data.Nth*data.Nth];
 	double l_eval[data.Nth];
     
-    int c_err, c_posdef;
+    int c_err;
+    bool c_posdef;
     double c_grad[data.Nth], c_grad_scaled[data.Nth];
     double c_cov[data.Nth*data.Nth];
     double c_evec[data.Nth*data.Nth];
@@ -1608,13 +1605,33 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 #endif
     }
 
+    /* TODO: do we need to copy this? (DW) esp. prior?
+    double prior;
+    int counter;    
+    int nsel;       
+    int queue;          
+    int surrogate;      
+    double error;       
+    */
+
+
     int ldi = 0;                    /* leader index */
     for (i = 0; i < n; ++i) {       /* newleader */
         if (list[i].nsel != 0) {
             int idx = list[i].idx;
-            for (p = 0; p < data.Nth ; p++) {
-                leaders[ldi].point[p] = curgen_db.entry[idx].point[p];
+            for (p = 0; p < data.Nth ; p++) leaders[ldi].point[p] = curgen_db.entry[idx].point[p];
+    
+            if( _method == Manifold ) {
+                leaders[ldi].error_flg = curgen_db.entry[idx].error_flg;
+                leaders[ldi].posdef = curgen_db.entry[idx].posdef;
+                for (p = 0; p < data.Nth ; p++) leaders[ldi].gradient[p] = curgen_db.entry[idx].gradient[p];
+                for (p = 0; p < data.Nth ; p++) leaders[ldi].eval[p] = curgen_db.entry[idx].eval[p];                
+                for (p = 0; p < data.Nth*data.Nth ; p++) 
+                    leaders[ldi].cov[p] = curgen_db.entry[idx].cov[p];
+                for (p = 0; p < data.Nth*data.Nth ; p++) 
+                    leaders[ldi].evec[p] = curgen_db.entry[idx].evec[p];
             }
+        
             leaders[ldi].F = curgen_db.entry[idx].F;
             leaders[ldi].nsel = list[i].nsel;
             ldi++;

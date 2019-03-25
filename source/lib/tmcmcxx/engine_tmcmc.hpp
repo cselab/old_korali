@@ -79,11 +79,11 @@ private:
 
     void update_manifold_curgen_db(
             double point[], double F, double prior, 
-            int error_flg, int posdef, double gradient[], double cov[], 
+            int error_flg, bool posdef, double gradient[], double cov[], 
             double evec[], double eval[]);
     void torc_update_manifold_curgen_db(
             double point[], double F, double prior, 
-            int error_flg, int posdef, double gradient[], double cov[], 
+            int error_flg, bool posdef, double gradient[], double cov[], 
             double evec[], double eval[]);
     
     void init_curres_db();
@@ -97,7 +97,7 @@ private:
                     int chain_id, int step_id, int ntasks);
     
     void manifold_evaluate_candidate(double point[], double *Fval, int *perr, 
-                             int *pposdef, double grad[], double cov[], 
+                             bool *pposdef, double grad[], double cov[], 
                              double evec[], double eval[], int worker_id, 
                              int gen_id, int chain_id, int step_id, int ntasks);
     
@@ -111,15 +111,15 @@ private:
     double manifold_accept_ratio( double lnfo_lik, double lnfo_pri, double lnfc_lik, double lnfc_pri, double eps, double* thetao, double* thetac, double* gradiento, double* gradientc, double* SIGo);
    
     void manifold_calculate_grad(const double* grad, double* gradOut);
-    int manifold_calculate_Sig(double *pSIGMA, int posdef, double eval[], double evec[], const double* pos);
+    int manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval[], double evec[], const double* pos);
     
     bool compute_candidate(double candidate[], double chain_mean[]);
     bool compute_candidate_cov(double candidate[], double chain_mean[], double chain_cov[]);
-    bool compute_manifold_candidate(double candidate[], double leader[], double eps, double *SIG, double *grad, int posdef);
+    bool compute_manifold_candidate(double candidate[], double leader[], double eps, double *SIG, double *grad, bool posdef);
     void chaintask(double in_tparam[], int pnsteps, double out_tparam, int winfo[4],
                    double *init_mean, double *chain_cov);
     void manifold_chaintask(double in_tparam[], int pnsteps, double out_tparam, 
-                            int t_err, int t_posdef, double *t_grad, 
+                            int t_err, bool t_posdef, double *t_grad, 
                             double *t_cov, double *t_evec, double *t_eval, int winfo[4]);
 
 

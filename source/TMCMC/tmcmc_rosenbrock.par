@@ -5,9 +5,9 @@ Nth		        2
 MaxStages	    100
 PopSize		    10000
 TolCOV	        1
-MinStep         1e-3
-Bound           -3 3
-Bound           -3 3
+MinStep         1e-4
+Bound           -5 5
+Bound           -5 5
 
 #------------------------------ MCMC OPTIONS -----------------------------------
 use_local_cov   0

@@ -3,11 +3,12 @@
 #------------------------ GENERAL PARAMETERS ----------------------------------
 Nth		        2
 MaxStages	    100
-PopSize		    10000
+PopSize		    16000
 TolCOV	        1
-MinStep         1e-3
+MinStep         1e-4
 Bound           -5 5
 Bound           -5 5
+
 
 #------------------------------ MCMC OPTIONS -----------------------------------
 use_local_cov   0
@@ -16,14 +17,14 @@ burn_in         0
 
 #--------------------------- MANIFOLD OPTIONS ----------------------------------
 
-moptions.eps        0.1
+moptions.eps        1.0
 moptions.use_ebds   1
 moptions.conf       0.68
 moptions.pct_eub    0.2
 moptions.pct_elb    0.2
 
 #---------------------------- OTHER OPTIONS ------------------------------------
-seed		    982323
+seed		    982324
 
 #---------------------------- Internal options ---------------------------------
 opt.MaxIter	    1000

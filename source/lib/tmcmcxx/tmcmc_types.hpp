@@ -126,8 +126,8 @@ typedef struct cgdbp_s {
     int error_flg; 
     int posdef;         //TODO: can we combine this with error_flg? (DW)
     double *gradient;   /*[PROBDIM]*/
-    double *cov;        /*[PROBDIM]*/
-    double *evec;       /*[PROBDIM][PROBDIM]*/
+    double *cov;        /*[PROBDIM*PROBDIM]*/
+    double *evec;       /*[PROBDIM*PROBDIM]*/
     double *eval;       /*[PROBDIM]*/
 } cgdbp_t;
 

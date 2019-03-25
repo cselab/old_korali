@@ -15,7 +15,7 @@ namespace fitfun{
 typedef struct {
     double loglike;
     int error_flg; //0: all good, 1: only llk, 2: llk & grad ok
-    int posdef;
+    bool posdef;
     gsl_vector* grad;
     gsl_matrix* cov;
     gsl_matrix* evec;
@@ -63,10 +63,9 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
     return_type* result = static_cast<return_type*>(output);
     result->loglike   = llk;
 
-    gsl_vector* grad = _grad(x,n);
-    gsl_vector_scale(grad, 1.0/llk);
-    result->grad      = grad;
+    result->grad      = _grad(x,n);
 
+    /*
     gsl_vector* invgrad = gsl_vector_calloc(n);
     gsl_vector_memcpy(invgrad, grad);
 
@@ -85,16 +84,20 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
 
     gsl_matrix_add(hess, igrad2);
     gsl_matrix_free(igrad2);
+    */
+
 
     gsl_permutation * permutation = gsl_permutation_alloc(n);
-    gsl_matrix * inv_hess = gsl_matrix_alloc(n,n);
-   
+    gsl_matrix * inv_neg_hess = gsl_matrix_alloc(n,n);
+
+    gsl_matrix* hess  = _hess(x,n);
+
     int LU_dec_err = 0, signum;
     LU_dec_err = gsl_linalg_LU_decomp(hess, permutation, &signum);
     
     int LU_inv_err = 0;
     if(LU_dec_err == 0)
-    	LU_inv_err = gsl_linalg_LU_invert(hess, permutation, inv_hess);
+    	LU_inv_err = gsl_linalg_LU_invert(hess, permutation, inv_neg_hess);
    
     gsl_permutation_free(permutation);
     
@@ -102,16 +105,16 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
         if(LU_dec_err != 0) printf("Fitfun::evaluate : Error in LU decomp. \n");
 	    else printf("Fitfun::evaluate : Error in LU invert. \n");
         result->error_flg = 2;
-        result->posdef    = 0;
+        result->posdef    = false;
         gsl_matrix_free(hess);
-        gsl_matrix_free(inv_hess);
+        gsl_matrix_free(inv_neg_hess);
         return llk;
     }
 
-    gsl_matrix_scale(inv_hess, -1.0);
+    gsl_matrix_scale(inv_neg_hess, -1.0);
 
     gsl_matrix * inv_hess_work = gsl_matrix_alloc(n,n);
-    gsl_matrix_memcpy (inv_hess_work, inv_hess);
+    gsl_matrix_memcpy (inv_hess_work, inv_neg_hess);
 
     gsl_vector *eval = gsl_vector_alloc (n);
     gsl_matrix *evec = gsl_matrix_alloc (n, n);
@@ -128,7 +131,7 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
     for(size_t i = 0; i<n; ++i) {
         if (!isfinite(gsl_vector_get(eval,i))) {
             sigma_err = 1;
-            printf("Fitfun::evaluate : Error in inv_hess (not posdef). \n");
+            printf("Fitfun::evaluate : Error in inv_neg_hess (not posdef). \n");
 	        break;
         }
     }
@@ -136,12 +139,12 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
     for(size_t i = 0; i<n; ++i)
         for(size_t j = 0; j<n; ++j) {
             if (!isfinite(gsl_matrix_get(evec,i,j))) {
-                printf("Fitfun::evaluate : Error in inv_hess (evec not finite).\n"); 
+                printf("Fitfun::evaluate : Error in evec (evec not finite).\n"); 
             	sigma_err = 1;
 		        break;
             }
-            if (!isfinite(gsl_matrix_get(inv_hess,i,j))) {
-                printf("Fitfun::evaluate : Error in inv_hess (inv_hess not finite).\n"); 
+            if (!isfinite(gsl_matrix_get(inv_neg_hess,i,j))) {
+                printf("Fitfun::evaluate : Error in inv_neg_hess (inv_hess not finite).\n"); 
                 sigma_err = 1;
 	    	    break;
 	        }
@@ -149,8 +152,8 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
 
     if (sigma_err != 0) {
         result->error_flg = 2;
-        result->posdef    = 0;
-        gsl_matrix_free(inv_hess);
+        result->posdef    = false;
+        gsl_matrix_free(inv_neg_hess);
         gsl_vector_free(eval);
         gsl_matrix_free(evec);
         return llk;
@@ -158,7 +161,7 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
    
     result->error_flg = false;
     result->posdef    = posdef;
-    result->cov       = inv_hess;
+    result->cov       = inv_neg_hess;
     result->eval      = eval;
     result->evec      = evec;
     
