@@ -1,0 +1,5 @@
+*.dSYM/
+main_gaus_example
+main_gp_rosenbrock_example
+main_manifold_rosenbrock_example
+plotmatrix_hist.py
