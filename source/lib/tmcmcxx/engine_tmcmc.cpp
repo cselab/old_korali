@@ -1137,6 +1137,7 @@ void TmcmcEngine::manifold_calculate_grad(const double* grad, double* gradOut)
 
 int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval[], double evec[], const double* pos)
 {
+    printf("manifold calculate sig:\n");
     int i, j, l;
 	int Nth = data.Nth;
     double p = runinfo.p[runinfo.Gen];
@@ -1199,23 +1200,25 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 	for (l=0; l<Nth; ++l)
 	{
 		double sc = sqrt(gsl_vector_get(gsl_eval,l)*data.moptions.chi2);
+        printf("sc before: %f\n", sc);
 		// correct eigenvectors to extended bounds
 		gsl_matrix_get_col (eigv, out_lik_evec, l);
 		sc = scale_to_box(pos,  sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
 		sc = scale_to_box(pos, -sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
+        printf("sc after: %f\n", sc);
 		gsl_vector_set(gsl_eval, l, sc*sc/data.moptions.chi2);
 	}
 	gsl_vector_free(eigv);
 
-	gsl_matrix *tmp_mat = gsl_matrix_alloc(Nth, Nth);
+	gsl_matrix *EVD_mat = gsl_matrix_alloc(Nth, Nth);
 	for (i = 0; i < Nth; ++i)
     		for (j = 0; j < Nth; ++j)
-      			gsl_matrix_set(tmp_mat, i, j, gsl_matrix_get(out_lik_evec,i,j)*gsl_vector_get(gsl_eval, j));
+      			gsl_matrix_set(EVD_mat, i, j, gsl_matrix_get(out_lik_evec,i,j)*gsl_vector_get(gsl_eval, j));
 
 
 	gsl_matrix *SIGMA = gsl_matrix_alloc(Nth, Nth);
 	gsl_matrix_set_zero(SIGMA);
-	int c = gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, tmp_mat, out_lik_evec, 1.0, SIGMA);
+	int c = gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, EVD_mat, out_lik_evec, 1.0, SIGMA);
 	(void)c;
 
     // TEST AFTER ADAPTION
@@ -1232,7 +1235,7 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 	}
 
 	// clean memory
-	gsl_matrix_free(tmp_mat);
+	gsl_matrix_free(EVD_mat);
 	gsl_matrix_free(cSIGMA);
 	gsl_matrix_free(SIGMA);
 	gsl_matrix_free(out_lik_evec);

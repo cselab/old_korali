@@ -17,7 +17,7 @@ burn_in         0
 
 #--------------------------- MANIFOLD OPTIONS ----------------------------------
 
-moptions.eps        0.1
+moptions.eps        1.0
 moptions.use_ebds   1
 moptions.conf       0.68
 moptions.pct_eub    0.2
