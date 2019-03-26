@@ -1053,17 +1053,19 @@ bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[]
 	int i;
 	double epsSIG[data.Nth*data.Nth];
 
-	for (i = 0; i < data.Nth*data.Nth; ++i)
-		epsSIG[i]= eps*SIG[i];
+	for (i = 0; i < data.Nth*data.Nth; ++i) epsSIG[i]= eps*SIG[i];
 
 	double tmp[data.Nth];
 	double theta[data.Nth];
 
+    print_matrix("leader",leader,data.Nth);
+    print_matrix("mgrad",grad,data.Nth);
 	compute_mat_product_vect( SIG, grad, tmp, 0.5*eps, data.Nth);
 
-	for(i = 0; i<data.Nth; ++i)
-		theta[i] = leader[i] + tmp[i];
+	for(i = 0; i<data.Nth; ++i) theta[i] = leader[i] + tmp[i];
 
+    print_matrix("SIG",SIG,data.Nth,data.Nth);
+    print_matrix("mSIG",epsSIG,data.Nth,data.Nth);
 	// propose with multivariate Normal distribution
 	mvnrnd( theta, epsSIG, candidate, data.Nth);
 

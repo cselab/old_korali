@@ -98,6 +98,8 @@ int make_posdef(double *mat, int dim, int method);
 
 void print_matrix(const char *name, double *x, int n);
 
+void print_matrix(const char *name, double *x, int n1, int n2);
+
 void print_matrix_i(char *name, int *x, int n);
 
 void print_matrix_2d(const char *name, double **x, int n1, int n2);

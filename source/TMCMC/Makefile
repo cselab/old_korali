@@ -13,15 +13,14 @@ DIR_EIGEN    ?= ../../lib/stan/lib/eigen_3.3.3
 DIR_BOOST    ?= ../../lib/stan/lib/boost_1.66.0
 DIR_SUNDIALS ?= ../../lib/stan/lib/sundials_3.1.0/include
 
-DIR_LIBGP    ?= ../../lib/libgp/libgp/
-LIB_LIBGP    ?= gp
-DIR_LIBGPLIB ?= $(DIR_LIBGP)build
+#DIR_LIBGP    ?= ../../lib/libgp/libgp/
+#LIB_LIBGP    ?= gp
+#DIR_LIBGPLIB ?= $(DIR_LIBGP)build
 
 all: main_autodiff_example \
 	 main_gaus_example \
 	 main_rosenbrock_example \
      main_manifold_rosenbrock_example \
-	 main_gp_rosenbrock_example 
 
 L=../lib
 DIR_PRIORS   = $L/priors
@@ -51,7 +50,7 @@ STANINCLUDES += -I$(DIR_SUNDIALS)
 CXXFLAGS += $(STANINCLUDES)
 
 #CXXFLAGS += -I$(DIR_LIBGP)
-LDXLIBS  += -L$(DIR_LIBGPLIB) -l$(LIB_LIBGP)
+#LDXLIBS  += -L$(DIR_LIBGPLIB) -l$(LIB_LIBGP)
 
 $(TARGET):
 	(cd $(DIR_PRIORS); make libpriors.a)

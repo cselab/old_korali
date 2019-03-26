@@ -554,6 +554,17 @@ void print_matrix(const char *name, double *x, int n)
     printf("\n");
 }
 
+void print_matrix(const char *name, double *x, int n1, int n2)
+{
+    printf("\n%s =\n\n", name);
+    for (int i = 0; i < n1; ++i) {
+        for(int j = 0; j < n2; ++j) printf("   %20.15lf", x[i*n1+j]);
+        printf("\n");
+    }
+    printf("\n");
+}
+
+
 void print_matrix_i(char *title, int *v, int n)
 {
     printf("\n%s =\n\n", title);

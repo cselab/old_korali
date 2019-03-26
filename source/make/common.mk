@@ -5,10 +5,10 @@
 use_torc?=0
 use_omp?=0
 
-CC  := gcc-8 #mpicc
-LD  := gcc-8 #mpicc
-CXX := g++-8 #mpic++
-LDX := g++-8 #mpic++
+CC  := gcc #mpicc
+LD  := gcc #mpicc
+CXX := g++ #mpic++
+LDX := g++ #mpic++
 
 ifeq ($(use_torc),1)
 	CFLAGS   += -D_USE_TORC_=1 `torc_cflags` 
