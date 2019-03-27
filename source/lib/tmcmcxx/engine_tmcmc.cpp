@@ -78,11 +78,14 @@ void TmcmcEngine::run()
         return;
     }
 
-    nchains = prepare_newgen(nchains, leaders);
+    prepare_newgen(nchains, leaders);
     spmd_update_runinfo();
     if (data.options.Display > 0) print_runinfo();
 
-    while(runinfo.p[runinfo.Gen] < 1.0 && ++runinfo.Gen < data.MaxStages) evalGen();
+    while(runinfo.p[runinfo.Gen] < 1.0 && ++runinfo.Gen < data.MaxStages) {
+        evalGen();
+        if(data.options.Display > 0) print_runinfo();
+    }
 
     print_matrix((char *)"runinfo.p", runinfo.p, runinfo.Gen+1);
     print_matrix((char *)"runinfo.CoefVar", runinfo.CoefVar, runinfo.Gen+1);
@@ -197,8 +200,7 @@ void TmcmcEngine::evalGen()
                             chain_cov[d*data.Nth+e]=
                                 data.bbeta*runinfo.SS[d][e];
 
-                    for (int d = 0; d < data.Nth; ++d)
-                        init_mean[d] = in_tparam[d];
+                    for (int d = 0; d < data.Nth; ++d) init_mean[d] = in_tparam[d];
                 }
 
 #ifdef _USE_TORC_
@@ -260,10 +262,8 @@ void TmcmcEngine::evalGen()
     if (data.restart) check_for_exit();
 
     curres_db.entries = 0;
-    nchains = prepare_newgen(nchains, leaders);
+    prepare_newgen(nchains, leaders);
     spmd_update_runinfo();
-
-    if(data.options.Display > 0) print_runinfo();
 
     return;
 }
@@ -776,9 +776,8 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
     /* Compute weights and normalize*/
     unsigned int i;
 
-    double *flcp  = new double[curgen_db.entries];
-    for (i = 0; i < curgen_db.entries; ++i)
-        flcp[i] = flc[i]*(p[gen+1]-p[gen]);
+    double *flcp = new double[curgen_db.entries];
+    for (i = 0; i < curgen_db.entries; ++i) flcp[i] = flc[i]*(p[gen+1]-p[gen]);
 
 
     const double fjmax = gsl_stats_max(flcp, 1, curgen_db.entries);
@@ -792,12 +791,13 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
     //TODO: logselections[gen+1] or ..[gen]? (DW)
     //logselection is log(Sj), what is logselections[0] if we switch to former?
     double sum_weight = std::accumulate(weight, weight+curgen_db.entries, 0.0);
-    logselections[gen]  = log(sum_weight) + fjmax - log(curgen_db.entries);
+    if (display) printf("sum_weight %f\n", sum_weight);
+    
+    logselections[gen] = log(sum_weight) + fjmax - log(curgen_db.entries);
     if (display) print_matrix("logselections", logselections, gen);
 
     double *q = new double[curgen_db.entries];
-    for (i = 0; i < curgen_db.entries; ++i)
-        q[i] = weight[i]/sum_weight;
+    for (i = 0; i < curgen_db.entries; ++i) q[i] = weight[i]/sum_weight;
     if (display>2) print_matrix("runinfo_q", q, curgen_db.entries);
 
     delete [] weight;
@@ -991,7 +991,6 @@ bool TmcmcEngine::compute_candidate(double candidate[], double chain_mean[])
     for (int i = 0; i < data.Nth; ++i)
         for (int j = 0; j < data.Nth; ++j)
             bSS[i*data.Nth+j]= data.bbeta*runinfo.SS[i][j];
-
 
     mvnrnd(chain_mean, (double *)bSS, candidate, data.Nth);
 
@@ -1431,7 +1430,7 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out
 }
 
 
-int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
+void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 {
     /* process curgen_db -> calculate statitics */
     /* compute probs based on F values */
@@ -1673,7 +1672,7 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             stdx[p]  = gsl_stats_sd_m(x[p], 1, newchains, meanx[p]);
         }
 
-        printf("prepare_newgen: CURGEN DB (LEADER) %d: [nlead=%d]\n", runinfo.Gen, newchains);
+        printf("prepare_newgen: CURGEN DB (LEADER) (Gen: %d): [nlead=%d]\n", runinfo.Gen, newchains);
         if(data.options.Display > 0) {
             print_matrix("means", meanx, data.Nth);
             print_matrix("std", stdx, data.Nth);
@@ -1691,7 +1690,8 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     delete[] g_x;
     delete[] sel;
 
-    return newchains;
+    this->nchains = newchains;
+    return;
 }
 
 void TmcmcEngine::print_runinfo()

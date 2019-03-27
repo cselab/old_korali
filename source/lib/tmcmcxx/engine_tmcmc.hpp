@@ -126,7 +126,7 @@ private:
                             double *t_cov, double *t_evec, double *t_eval, int winfo[4]);
 
 
-    int prepare_newgen(int nchains, cgdbp_t *leaders);
+    void prepare_newgen(int nchains, cgdbp_t *leaders);
 
 
     void print_runinfo();
