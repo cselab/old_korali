@@ -547,6 +547,14 @@ int make_posdef(double *mat, int dim, int method)
 
 }
 
+void print_matrixi(const char *name, int *x, int n)
+{
+    printf("\n%s =\n\n", name);
+    for (int i = 0; i < n; ++i) printf("   %20.15d\n", x[i]);
+    printf("\n");
+}
+
+
 void print_matrix(const char *name, double *x, int n)
 {
     printf("\n%s =\n\n", name);

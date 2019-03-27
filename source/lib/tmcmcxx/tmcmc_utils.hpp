@@ -96,6 +96,8 @@ int in_rect(double *v1, double *v2, double *diam, double sc, int D);
 
 int make_posdef(double *mat, int dim, int method);
 
+void print_matrixi(const char *name, int *x, int n);
+
 void print_matrix(const char *name, double *x, int n);
 
 void print_matrix(const char *name, double *x, int n1, int n2);

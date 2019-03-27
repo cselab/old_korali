@@ -22,7 +22,7 @@ data_t::data_t(const char * fname)
     MinStep = 1e-6;
     bbeta   = -1;
     seed    = 280675;
-    burn_in = -1;
+    burn_in = 0;
     
     use_local_cov = false;
 
@@ -33,7 +33,6 @@ data_t::data_t(const char * fname)
     options.LowerBound = 0.0;
     options.UpperBound = 1.0;
     options.Zdump      = 0;
-
 
     moptions.use_ebds = true;
     moptions.conf     = 0.68;
@@ -183,8 +182,8 @@ data_t::data_t(const char * fname)
         moptions.eubds[i] = upperbound[i];
         if (moptions.use_ebds) {
             double width = upperbound[i] - lowerbound[i];
-            moptions.elbds[i] -= width;
-            moptions.eubds[i] += width;
+            moptions.elbds[i] -= moptions.pct_elb*width;
+            moptions.eubds[i] += moptions.pct_eub*width;
         }
     }
 
@@ -223,6 +222,16 @@ void runinfo_t::init(runinfo_t& runinfo, int nth, int maxstages)
     runinfo.meantheta = new double*[maxstages+1];
     for(int i = 0; i < maxstages+1; ++i) {
         runinfo.meantheta[i] = new double[nth];
+    }
+
+    runinfo.outside           = new int[maxstages];
+    runinfo.corrections       = new int[maxstages];
+    runinfo.failedcorrections = new int[maxstages];
+    for(int i = 0; i<maxstages; ++i) {
+        // is this required? (DW) or missing above?
+        runinfo.outside[i]           = 0;
+        runinfo.corrections[i]       = 0;
+        runinfo.failedcorrections[i] = 0;
     }
 }
 

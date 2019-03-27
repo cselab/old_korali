@@ -109,6 +109,11 @@ typedef struct runinfo_t {
     double *acceptance;     /*[MAXGENS];*/
     double **SS;            /*[PROBDIM][PROBDIM];*/
     double **meantheta;     /*[MAXGENS][PROBDIM]*/
+
+    int *outside;           /*[MAXGENS]*/
+    int *corrections;       /*[MAXGENS]*/
+    int *failedcorrections; /*[MAXGENS]*/
+
 } runinfo_t;
 
 

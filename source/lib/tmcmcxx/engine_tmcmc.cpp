@@ -63,16 +63,17 @@ TmcmcEngine::~TmcmcEngine()
     for(int i = 0; i< data.MaxStages; ++i) delete [] runinfo.meantheta[i];
 
     ifitfun_ptr_->finalize();
-    //TODO: what else needs to be deleted?? (DW)
+
+    //TODO: what else needs to be freed/deleted?? (DW)
+    
+    return;
+    
 }
 
 void TmcmcEngine::run()
 {
 
-    if (data.MaxStages == 1) {
-        printf("Maxstages == 1, nothing to do\n");
-        return;
-    } else if (runinfo.p[runinfo.Gen] == 1.0) {
+    if (runinfo.p[runinfo.Gen] == 1.0) {
         printf("p == 1 from previous run, nothing more to do\n");
         return;
     }
@@ -81,10 +82,7 @@ void TmcmcEngine::run()
     spmd_update_runinfo();
     if (data.options.Display) print_runinfo();
 
-
-    while(runinfo.p[runinfo.Gen] < 1.0 && ++runinfo.Gen < data.MaxStages) {
-        evalGen();
-    }
+    while(runinfo.p[runinfo.Gen] < 1.0 && ++runinfo.Gen < data.MaxStages) evalGen();
 
     print_matrix((char *)"runinfo.p", runinfo.p, runinfo.Gen+1);
     print_matrix((char *)"runinfo.CoefVar", runinfo.CoefVar, runinfo.Gen+1);
@@ -92,15 +90,16 @@ void TmcmcEngine::run()
     print_matrix((char *)"runinfo.acceptance", runinfo.acceptance, runinfo.Gen+1);
     print_matrix((char *)"runinfo.logselection", runinfo.logselections, runinfo.Gen);
 
+    print_runinfo();
+    runinfo_t::save(runinfo, data.Nth, data.MaxStages);
+
     double logEvidence = compute_sum(runinfo.logselections, runinfo.Gen+1);
-    printf("logEvidence = %f", logEvidence);
+    printf("logEvidence = %f\n", logEvidence);
 
     FILE *fp;
     fp = fopen("log_evidence.txt", "w");
     fprintf(fp, "%lf\n", logEvidence);
     fclose(fp);
-
-    runinfo_t::save(runinfo, data.Nth, data.MaxStages);
 
     if (data.icdump) {
         printf("lastgen = %d\n", runinfo.Gen);
@@ -110,9 +109,11 @@ void TmcmcEngine::run()
     }
 
     printf("total function calls = %d\n", get_tfc());
+
 #if defined(_USE_TORC_)
     torc_finalize();
 #endif
+
     return;
 }
 
@@ -264,10 +265,6 @@ void TmcmcEngine::evalGen()
 
     if(data.options.Display) print_runinfo();
 
-    printf("Acceptance rate         :  %lf \n", runinfo.acceptance[runinfo.Gen]) ;
-    printf("Annealing exponent      :  %lf \n", runinfo.p[runinfo.Gen]) ;
-    printf("Coeficient of Variation :  %lf \n", runinfo.CoefVar[runinfo.Gen]) ;
-    printf("----------------------------------------------------------------\n");
     return;
 }
 
@@ -825,36 +822,31 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
 
     delete [] nn;
 
-    if (display>2) {
+    if(display>2) {
         printf("\n s = [");
-        for (i = 0; i < curgen_db.entries; ++i) printf("%d ", sel[i]);
-        printf("]\n");
+        int nonzeros = 0;
+        for (i = 0; i < curgen_db.entries; ++i) { 
+            printf("%d ", sel[i]); 
+            if (sel[i] != 0) nonzeros++;
+        }
+        printf("] (total nonzeros %d )\n", nonzeros );
     }
 
     /* compute SS */
     unsigned int PROBDIM = data.Nth;
 
-    double mean_of_theta[PROBDIM];
-
     for (i = 0; i < PROBDIM; ++i) {
-        mean_of_theta[i] = 0;
-        for (j = 0; j < curgen_db.entries; ++j) mean_of_theta[i]+=curgen_db.entry[j].point[i]*q[j];
-
-        runinfo.meantheta[gen][i] = mean_of_theta[i];
+        runinfo.meantheta[gen][i] = 0;
+        for (j = 0; j < curgen_db.entries; ++j) runinfo.meantheta[gen][i] += curgen_db.entry[j].point[i]*q[j];
     }
 
-    if (display) print_matrix("mean_of_theta", mean_of_theta, PROBDIM);
-
-    double meanv[PROBDIM];
-    for (i = 0; i < PROBDIM; ++i) {
-        meanv[i] = mean_of_theta[i];
-    }
+    if (display) print_matrix("runinfo.meantheta", runinfo.meantheta[gen], PROBDIM);
 
     for (i = 0; i < PROBDIM; ++i) {
         for (j = i; j < PROBDIM; ++j) {
             double s = 0;
             for (unsigned int k = 0; k < curgen_db.entries; ++k) {
-                s += q[k]*(curgen_db.entry[k].point[i]-meanv[i])*(curgen_db.entry[k].point[j]-meanv[j]);
+                s += q[k]*(curgen_db.entry[k].point[i]-runinfo.meantheta[gen][i])*(curgen_db.entry[k].point[j]-runinfo.meantheta[gen][j]);
             }
             runinfo.SS[i][j] = runinfo.SS[j][i] = s;
         }
@@ -864,9 +856,7 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
 
 #ifdef CHECK_POSDEF
     int fixed = make_posdef(runinfo.SS[0], PROBDIM, 2);
-    if (fixed) {
-        printf("WARNING: runinfo.SS was forced to become positive definite\n");
-    }
+    if (fixed) printf("WARNING: runinfo.SS was forced to become positive definite\n");
 #endif
 
     if (display) print_matrix_2d("runinfo.SS", runinfo.SS, PROBDIM, PROBDIM);
@@ -1026,16 +1016,18 @@ bool TmcmcEngine::compute_candidate(double candidate[], double chain_mean[])
                 (candidate[idx] > data.upperbound[idx])) break;
     }
 
-    if (idx < data.Nth) return false;
-
-    return true;// all good
+    if (idx < data.Nth) {
+        runinfo.outside[runinfo.Gen] ++;
+        return false;
+    }
+    
+    return true;
 }
 
 
 bool TmcmcEngine::compute_candidate_cov(double candidate[], double chain_mean[],
                                        double chain_cov[])
 {
-
     mvnrnd(chain_mean, (double *)chain_cov, candidate, data.Nth);
     for (int i = 0; i < data.Nth; ++i) {
         if (isnan(candidate[i])) {
@@ -1044,7 +1036,7 @@ bool TmcmcEngine::compute_candidate_cov(double candidate[], double chain_mean[],
         }
         if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) return false;
     }
-    return true; // all good
+    return true;
 }
 
 
@@ -1058,17 +1050,11 @@ bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[]
 	double tmp[data.Nth];
 	double theta[data.Nth];
 
-    print_matrix("leader",leader,data.Nth);
-    print_matrix("mgrad",grad,data.Nth);
 	compute_mat_product_vect( SIG, grad, tmp, 0.5*eps, data.Nth);
 
 	for(i = 0; i<data.Nth; ++i) theta[i] = leader[i] + tmp[i];
 
-    print_matrix("SIG",SIG,data.Nth,data.Nth);
-    print_matrix("mSIG",epsSIG,data.Nth,data.Nth);
-	// propose with multivariate Normal distribution
 	mvnrnd( theta, epsSIG, candidate, data.Nth);
-
 
 	for (i = 0; i < data.Nth; ++i) {
 		if (isnan(candidate[i])) {
@@ -1076,7 +1062,10 @@ bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[]
 			break;
 		}
 
-		if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) return false;	// out of bounds
+		if ((candidate[i] < data.lowerbound[i])||(candidate[i] > data.upperbound[i])) {
+            runinfo.outside[runinfo.Gen] ++;
+            return false;	// out of bounds
+        }
 	}
 	return true; // all good
 }
@@ -1084,7 +1073,8 @@ bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[]
 
 double TmcmcEngine::accept_ratio( double lnfo_lik, double lnfo_pri, double lnfc_lik, double lnfc_pri) 
 {
-    return exp( runinfo.p[runinfo.Gen]*(lnfc_lik-lnfo_lik) + (lnfc_pri-lnfo_pri));
+    double L = exp( runinfo.p[runinfo.Gen]*(lnfc_lik-lnfo_lik) + (lnfc_pri-lnfo_pri));
+    return L;
 }
 
 
@@ -1094,7 +1084,16 @@ double TmcmcEngine::manifold_accept_ratio( double lnfo_lik, double lnfo_pri, dou
    	double p = runinfo.p[runinfo.Gen];
   	double tmpc[Nth];
   	double tmpo[Nth];
-    
+
+    if (data.options.Display > 2) {
+        printf("generation: %d\n", runinfo.Gen);
+        print_matrix("thetao",thetao,Nth);
+        print_matrix("thetac",thetac,Nth);
+        print_matrix("gradiento",gradiento,Nth);
+        print_matrix("gradientc",gradientc,Nth);
+        print_matrix("SIGo",SIGo,Nth, Nth);
+    }
+
     double o, c;
 	int i, k;
 	for (i=0; i<Nth; ++i)
@@ -1124,7 +1123,11 @@ double TmcmcEngine::manifold_accept_ratio( double lnfo_lik, double lnfo_pri, dou
 	double qc = -0.5*compute_dot_product(tmpc,tmp2c,Nth) / eps;
 	double qo = -0.5*compute_dot_product(tmpo,tmp2o,Nth) / eps;
 
-	return exp( p*(lnfc_lik-lnfo_lik) + (lnfc_pri-lnfo_pri) + qo-qc );  
+    //printf("qo: %f, qc: %f, lnfc_lik: %f, lnfo_lik: %f\n", qo, qc, lnfc_lik, lnfo_lik);
+
+	double L = exp( p*(lnfc_lik-lnfo_lik) + (lnfc_pri-lnfo_pri) + qo-qc );  
+    
+    return L;
 }
 
 
@@ -1137,7 +1140,6 @@ void TmcmcEngine::manifold_calculate_grad(const double* grad, double* gradOut)
 
 int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval[], double evec[], const double* pos)
 {
-    printf("manifold calculate sig:\n");
     int i, j, l;
 	int Nth = data.Nth;
     double p = runinfo.p[runinfo.Gen];
@@ -1199,14 +1201,14 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 
 	for (l=0; l<Nth; ++l)
 	{
-		double sc = sqrt(gsl_vector_get(gsl_eval,l)*data.moptions.chi2);
-        printf("sc before: %f\n", sc);
+        double scOrig, sc;
+		scOrig = sqrt(gsl_vector_get(gsl_eval,l)*data.moptions.chi2);
 		// correct eigenvectors to extended bounds
 		gsl_matrix_get_col (eigv, out_lik_evec, l);
-		sc = scale_to_box(pos,  sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
+		sc = scale_to_box(pos,  scOrig, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
 		sc = scale_to_box(pos, -sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
-        printf("sc after: %f\n", sc);
 		gsl_vector_set(gsl_eval, l, sc*sc/data.moptions.chi2);
+        if (scOrig != sc) runinfo.corrections[runinfo.Gen]++;
 	}
 	gsl_vector_free(eigv);
 
@@ -1214,7 +1216,6 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 	for (i = 0; i < Nth; ++i)
     		for (j = 0; j < Nth; ++j)
       			gsl_matrix_set(EVD_mat, i, j, gsl_matrix_get(out_lik_evec,i,j)*gsl_vector_get(gsl_eval, j));
-
 
 	gsl_matrix *SIGMA = gsl_matrix_alloc(Nth, Nth);
 	gsl_matrix_set_zero(SIGMA);
@@ -1230,6 +1231,7 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 	
     if (err_flg == GSL_EDOM) {
 		printf("manifold_calculate_Sig: correcton failed, SIGMA not posdef!!!\n");
+        runinfo.failedcorrections[runinfo.Gen]++;
 	} else{
         std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  pSIGMA); // XXX is this OK? vector-matrix
 	}
@@ -1250,7 +1252,6 @@ void TmcmcEngine::chaintask(double in_tparam[], int pnsteps, double out_tparam,
                             int winfo[4], double *init_mean, double *chain_cov)
 {
 
-    int nsteps   = pnsteps;
     int gen_id   = winfo[0];
     int chain_id = winfo[1];
 
@@ -1268,18 +1269,14 @@ void TmcmcEngine::chaintask(double in_tparam[], int pnsteps, double out_tparam,
 
     int burn_in = data.burn_in;
 
-    for (int step = 0; step < nsteps + burn_in; ++step) {
+    for (int step = 0; step < pnsteps + burn_in; ++step) {
         double chain_mean[data.Nth];
         if (step == 0)
             for (int i = 0; i < data.Nth; ++i) chain_mean[i] = init_mean[i];
         else
             for (int i = 0; i < data.Nth; ++i) chain_mean[i] = leader[i];
 
-#if 0
-        int fail = compute_candidate_cov(candidate, chain_mean, chain_cov);
-#else
         bool candidate_inbds = compute_candidate(candidate, chain_mean); // I keep this for the moment, for performance reasons
-#endif
 
         if (candidate_inbds) {
 
@@ -1318,7 +1315,6 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out
                                     int t_err, bool t_posdef, double *t_grad, 
                                     double *t_cov, double *t_evec, double *t_eval, int winfo[4]) 
 {
-    int nsteps   = pnsteps;
     int gen_id   = winfo[0];
     int chain_id = winfo[1];
 
@@ -1360,7 +1356,7 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out
     /* sigma to be calculated */
     double l_SIG[data.Nth*data.Nth];
     
-    for (step = 0; step < nsteps + burn_in; ++step) {
+    for (step = 0; step < pnsteps + burn_in; ++step) {
         bool candidate_inbds = false;
         int s_err = 1;
 
@@ -1433,12 +1429,12 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out
 			}
 
 		}        
-    }
  
-    /* increase counter or add the leader again in curgen_db*/
-    if (step >= burn_in) {
-        logprior_leader = prior.eval_logpdf(leader);
-        torc_update_manifold_curgen_db(leader, loglik_leader, logprior_leader, l_err, l_posdef, l_grad, l_cov, l_evec, l_eval);
+        /* increase counter or add the leader again in curgen_db*/
+        if (step >= burn_in) {
+            logprior_leader = prior.eval_logpdf(leader);
+            torc_update_manifold_curgen_db(leader, loglik_leader, logprior_leader, l_err, l_posdef, l_grad, l_cov, l_evec, l_eval);
+        }
     }
     
     return;
@@ -1488,9 +1484,6 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
                     /* do they differ in position? */
                     if (fabs(xi[p]-uniques[p][j]) > 1e-8) break; /* check next */
 
-                    /* do they differ in fun eval? */
-                    if (fabs(fi - uf[j]) > 1e-8) break; /* check next */
-
                     unflag = 0;         /* not unique */
                 }
 
@@ -1505,7 +1498,8 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         }
 
         runinfo.currentuniques[runinfo.Gen] = un;
-        runinfo.acceptance[runinfo.Gen]     = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen]; /* check this*/
+
+        runinfo.acceptance[runinfo.Gen] = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen];
 
         if(data.options.Display) {
 
@@ -1515,7 +1509,7 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
                 stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
             }
 
-            printf("prepare_newgen: CURGEN DB (UNIQUES) %d\n", runinfo.Gen);
+            printf("prepare_newgen: CURGEN DB (UNIQUES) %d\n", un);
             print_matrix("means", meanu, data.Nth);
             print_matrix("std", stdu, data.Nth);
         }
@@ -1613,7 +1607,6 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     /* TODO: do we need to copy this? (DW) esp. prior?
     double prior;
     int counter;    
-    int nsel;       
     int queue;          
     int surrogate;      
     double error;       
@@ -1629,12 +1622,10 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             if( _method == Manifold ) {
                 leaders[ldi].error_flg = curgen_db.entry[idx].error_flg;
                 leaders[ldi].posdef = curgen_db.entry[idx].posdef;
-                for (p = 0; p < data.Nth ; p++) leaders[ldi].gradient[p] = curgen_db.entry[idx].gradient[p];
-                for (p = 0; p < data.Nth ; p++) leaders[ldi].eval[p] = curgen_db.entry[idx].eval[p];                
-                for (p = 0; p < data.Nth*data.Nth ; p++) 
-                    leaders[ldi].cov[p] = curgen_db.entry[idx].cov[p];
-                for (p = 0; p < data.Nth*data.Nth ; p++) 
-                    leaders[ldi].evec[p] = curgen_db.entry[idx].evec[p];
+                for (p = 0; p < data.Nth ; p++)          leaders[ldi].gradient[p] = curgen_db.entry[idx].gradient[p];
+                for (p = 0; p < data.Nth ; p++)          leaders[ldi].eval[p] = curgen_db.entry[idx].eval[p];                
+                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[ldi].cov[p] = curgen_db.entry[idx].cov[p];
+                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[ldi].evec[p] = curgen_db.entry[idx].evec[p];
             }
         
             leaders[ldi].F = curgen_db.entry[idx].F;
@@ -1719,8 +1710,20 @@ void TmcmcEngine::print_runinfo()
     printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
     printf("runinfo.Gen = \n\n   %d\n\n", runinfo.Gen);
     print_matrix("runinfo.p", runinfo.p, runinfo.Gen+1);
+    print_matrix("runinfo.mean_of_theta", runinfo.meantheta[runinfo.Gen], data.Nth);
     print_matrix_2d("runinfo.SS", runinfo.SS, data.Nth, data.Nth);
+    print_matrixi("runinfo.outside", runinfo.outside, runinfo.Gen+1);
+    if ( _method == Manifold ) {
+        print_matrixi("runinfo.corrections", runinfo.corrections, runinfo.Gen+1);
+        print_matrixi("runinfo.failedcorrections", runinfo.failedcorrections, runinfo.Gen+1);
+    }
     printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+
+    printf("Acceptance rate         :  %lf \n", runinfo.acceptance[runinfo.Gen]) ;
+    printf("Annealing exponent      :  %lf \n", runinfo.p[runinfo.Gen]) ;
+    printf("Coeficient of Variation :  %lf \n", runinfo.CoefVar[runinfo.Gen]) ;
+    printf("----------------------------------------------------------------\n");
+
 }
 
 void TmcmcEngine::bcast_runinfo()
