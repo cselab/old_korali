@@ -33,6 +33,9 @@ public:
     ~TmcmcEngine();
     void run();
 
+    double* getNewMean();
+    double** getNewSampleCov();
+
 private:
     
     Method _method;

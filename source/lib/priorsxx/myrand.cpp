@@ -71,12 +71,10 @@ void gsl_rand_init(int seed)
         //printf("...... %p \n", r[i] );
     }
 
-    if (seed == 0) seed = time(0);
+    if (seed <= 0) seed = time(0);
 
     for (int i = 0; i < local_workers; ++i) {
-#if VERBOSE
         printf("node %d: initializing rng %d with seed %d\n", torc_node_id(), i, seed+i+local_workers*torc_node_id());
-#endif
         gsl_rng_set(r[i], seed+i+local_workers*torc_node_id());
     }
 

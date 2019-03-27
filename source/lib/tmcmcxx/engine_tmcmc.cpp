@@ -80,7 +80,7 @@ void TmcmcEngine::run()
 
     nchains = prepare_newgen(nchains, leaders);
     spmd_update_runinfo();
-    if (data.options.Display) print_runinfo();
+    if (data.options.Display > 0) print_runinfo();
 
     while(runinfo.p[runinfo.Gen] < 1.0 && ++runinfo.Gen < data.MaxStages) evalGen();
 
@@ -263,7 +263,7 @@ void TmcmcEngine::evalGen()
     nchains = prepare_newgen(nchains, leaders);
     spmd_update_runinfo();
 
-    if(data.options.Display) print_runinfo();
+    if(data.options.Display > 0) print_runinfo();
 
     return;
 }
@@ -758,24 +758,19 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
 #endif
 
 
-    /* gen: next generation number */
-    unsigned int j = gen+1;
-
     if ( conv && (xmin > p[gen]) ) {
-        p[j]       = xmin;
-        coefVar[j] = pow(fmin, 0.5) + data.TolCOV;
+        p[gen+1]       = xmin;
+        coefVar[gen+1] = pow(fmin, 0.5) + data.TolCOV;
     } else {
-        p[j]       = p[gen] + data.MinStep;
-        coefVar[j] = pow(tmcmc_objlogp(p[j], flc, curgen_db.entries,
-                                       p[j-1], data.TolCOV), 0.5) +
-                     data.TolCOV;
+        p[gen+1]       = p[gen] + data.MinStep;
+        coefVar[gen+1] = pow(tmcmc_objlogp(p[gen+1], flc, curgen_db.entries,
+                                       p[gen], data.TolCOV), 0.5) + data.TolCOV;
     }
 
-    if (p[j] > 1) {
-        p[j]       = 1;
-        coefVar[j] = pow(tmcmc_objlogp(p[j], flc, curgen_db.entries,
-                                       p[j-1], data.TolCOV), 0.5) +
-                     data.TolCOV;
+    if (p[gen+1] > 1) {
+        p[gen+1]       = 1;
+        coefVar[gen+1] = pow(tmcmc_objlogp(p[gen+1], flc, curgen_db.entries,
+                                       p[gen], data.TolCOV), 0.5) + data.TolCOV;
     }
 
     /* Compute weights and normalize*/
@@ -783,7 +778,7 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
 
     double *flcp  = new double[curgen_db.entries];
     for (i = 0; i < curgen_db.entries; ++i)
-        flcp[i] = flc[i]*(p[j]-p[j-1]);
+        flcp[i] = flc[i]*(p[gen+1]-p[gen]);
 
 
     const double fjmax = gsl_stats_max(flcp, 1, curgen_db.entries);
@@ -809,18 +804,11 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
 
     if (display) print_matrix("CoefVar", coefVar, gen+1);
 
-    unsigned int N = 1;
-
-    unsigned int *nn = new unsigned int[curgen_db.entries];
-
     for (i = 0; i < curgen_db.entries; ++i) sel[i] = 0;
 
     if (nselections == 0) nselections = curgen_db.entries;
-    N = nselections;
-    multinomialrand (curgen_db.entries, N, q, nn);
-    for (i = 0; i < curgen_db.entries; ++i) sel[i]+=nn[i];
-
-    delete [] nn;
+    
+    multinomialrand (curgen_db.entries, nselections, q, sel);
 
     if(display>2) {
         printf("\n s = [");
@@ -833,6 +821,7 @@ void TmcmcEngine::calculate_statistics(double flc[], int nselections,
     }
 
     /* compute SS */
+    unsigned int j;
     unsigned int PROBDIM = data.Nth;
 
     for (i = 0; i < PROBDIM; ++i) {
@@ -1085,7 +1074,7 @@ double TmcmcEngine::manifold_accept_ratio( double lnfo_lik, double lnfo_pri, dou
   	double tmpc[Nth];
   	double tmpo[Nth];
 
-    if (data.options.Display > 2) {
+    if (data.options.Display > 0) {
         printf("generation: %d\n", runinfo.Gen);
         print_matrix("thetao",thetao,Nth);
         print_matrix("thetac",thetac,Nth);
@@ -1501,7 +1490,7 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
         runinfo.acceptance[runinfo.Gen] = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen];
 
-        if(data.options.Display) {
+        if(data.options.Display > 0) {
 
             double meanu[data.Nth], stdu[data.Nth];
             for (p = 0; p < data.Nth; ++p) {
@@ -1685,7 +1674,7 @@ int TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         }
 
         printf("prepare_newgen: CURGEN DB (LEADER) %d: [nlead=%d]\n", runinfo.Gen, newchains);
-        if(data.options.Display) {
+        if(data.options.Display > 0) {
             print_matrix("means", meanx, data.Nth);
             print_matrix("std", stdx, data.Nth);
         }
@@ -1745,5 +1734,24 @@ void TmcmcEngine::spmd_update_runinfo()    /* step*/
     torc_waitall();
 #endif
 }
+
+double * TmcmcEngine::getNewMean()
+{
+    double * newmean = new double[data.Nth];
+    for(int i = 0; i < data.Nth; ++i) { newmean[i] =  runinfo.meantheta[runinfo.Gen][i]; }
+    return newmean;
+}
+
+double** TmcmcEngine::getNewSampleCov()
+{
+    double ** newSS = new double*[data.Nth];
+    for(int i = 0; i < data.Nth; ++i) { 
+        newSS[i] = new double[data.Nth];  
+        for(int j = 0; j < data.Nth; ++j)
+            newSS[i][j] = runinfo.SS[i][j]; 
+    }
+    return newSS;
+}
+
 
 } //namespace tmcmc

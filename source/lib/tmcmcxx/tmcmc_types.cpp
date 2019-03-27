@@ -21,7 +21,7 @@ data_t::data_t(const char * fname)
     TolCOV  = -1;
     MinStep = 1e-6;
     bbeta   = -1;
-    seed    = 280675;
+    seed    = -1;
     burn_in = 0;
     
     use_local_cov = false;

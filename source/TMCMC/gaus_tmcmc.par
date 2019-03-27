@@ -1,13 +1,16 @@
 # TMCMC configuration file
 
 #------------------------ GENERAL PARAMETERS ----------------------------------
-Nth		        2
+Nth		        5
 MaxStages	    100
 PopSize		    1000
 TolCOV	        1
 MinStep         1e-4
-Bound           -10 10
-Bound           -10 10
+Bound           -20 20
+Bound           -20 20
+Bound           -20 20
+Bound           -20 20
+Bound           -20 20
 
 
 #------------------------------ MCMC OPTIONS -----------------------------------
@@ -24,7 +27,7 @@ moptions.pct_eub    0.2
 moptions.pct_elb    0.2
 
 #---------------------------- OTHER OPTIONS ------------------------------------
-seed		    982324
+seed		    1234
 
 #---------------------------- Internal options ---------------------------------
 opt.MaxIter	    1000
