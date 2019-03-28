@@ -1073,7 +1073,7 @@ double TmcmcEngine::manifold_accept_ratio( double lnfo_lik, double lnfo_pri, dou
   	double tmpc[Nth];
   	double tmpo[Nth];
 
-    if (data.options.Display > 0) {
+    if (data.options.Display > 2) {
         printf("generation: %d\n", runinfo.Gen);
         print_matrix("thetao",thetao,Nth);
         print_matrix("thetac",thetac,Nth);
@@ -1181,24 +1181,28 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 
 	// make eval adaption to ebds (if necessary)
 	// const double chi2 = gsl_cdf_chisq_Qinv(data.conf,data.Nth);	//TODO: check chi2 value if chisq_Pinv is correct choice (chi2 = 9.2704 for Nth = 8)
-
-	gsl_matrix *out_lik_evec = gsl_matrix_alloc (Nth, Nth);
+    
+    gsl_matrix *out_lik_evec = gsl_matrix_alloc (Nth, Nth);
     std::copy(evec, evec+Nth*Nth, out_lik_evec->data);
+    
+    if (data.moptions.adapt)
+    {
 
-	gsl_vector *eigv = gsl_vector_alloc (Nth);
+        gsl_vector *eigv = gsl_vector_alloc (Nth);
 
-	for (l=0; l<Nth; ++l)
-	{
-        double scOrig, sc;
-		scOrig = sqrt(gsl_vector_get(gsl_eval,l)*data.moptions.chi2);
-		// correct eigenvectors to extended bounds
-		gsl_matrix_get_col (eigv, out_lik_evec, l);
-		sc = scale_to_box(pos,  scOrig, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
-		sc = scale_to_box(pos, -sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
-		gsl_vector_set(gsl_eval, l, sc*sc/data.moptions.chi2);
-        if (scOrig != sc) runinfo.corrections[runinfo.Gen]++;
-	}
-	gsl_vector_free(eigv);
+        for (l=0; l<Nth; ++l)
+        {
+            double scOrig, sc;
+            scOrig = sqrt(gsl_vector_get(gsl_eval,l)*data.moptions.chi2);
+            // correct eigenvectors to extended bounds
+            gsl_matrix_get_col (eigv, out_lik_evec, l);
+            sc = scale_to_box(pos,  scOrig, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
+            sc = scale_to_box(pos, -sc, eigv->data, data.moptions.elbds, data.moptions.eubds, Nth);
+            gsl_vector_set(gsl_eval, l, sc*sc/data.moptions.chi2);
+            if (scOrig != sc) runinfo.corrections[runinfo.Gen]++;
+        }
+        gsl_vector_free(eigv);
+    }
 
 	gsl_matrix *EVD_mat = gsl_matrix_alloc(Nth, Nth);
 	for (i = 0; i < Nth; ++i)
@@ -1208,25 +1212,34 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 	gsl_matrix *SIGMA = gsl_matrix_alloc(Nth, Nth);
 	gsl_matrix_set_zero(SIGMA);
 	int c = gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, EVD_mat, out_lik_evec, 1.0, SIGMA);
-	(void)c;
 
     // TEST AFTER ADAPTION
-	gsl_matrix *cSIGMA = gsl_matrix_alloc(Nth, Nth);
-    std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  cSIGMA->data); // XXX is this OK? vector-matrix
-	
     int err_flg;
-	err_flg = gsl_linalg_cholesky_decomp(cSIGMA);
-	
-    if (err_flg == GSL_EDOM) {
-		printf("manifold_calculate_Sig: correcton failed, SIGMA not posdef!!!\n");
-        runinfo.failedcorrections[runinfo.Gen]++;
-	} else{
+    if (data.moptions.adapt)
+    {
+	    gsl_matrix *cSIGMA = gsl_matrix_alloc(Nth, Nth);
+        std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  cSIGMA->data); // XXX is this OK? vector-matrix
+        
+        err_flg = gsl_linalg_cholesky_decomp(cSIGMA);
+        
+        if (err_flg == GSL_EDOM) {
+            printf("manifold_calculate_Sig: correcton failed, SIGMA not posdef!!!\n");
+            runinfo.failedcorrections[runinfo.Gen]++;
+        } else{
+            std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  pSIGMA); // XXX is this OK? vector-matrix
+        }
+
+	    gsl_matrix_free(cSIGMA);
+    
+    }
+    else
+    {
         std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  pSIGMA); // XXX is this OK? vector-matrix
-	}
+        err_flg = 0;
+    }
 
 	// clean memory
 	gsl_matrix_free(EVD_mat);
-	gsl_matrix_free(cSIGMA);
 	gsl_matrix_free(SIGMA);
 	gsl_matrix_free(out_lik_evec);
 	gsl_vector_free(gsl_eval);
@@ -1735,14 +1748,20 @@ void TmcmcEngine::spmd_update_runinfo()    /* step*/
 #endif
 }
 
-double * TmcmcEngine::getNewMean()
+
+double TmcmcEngine::getLogEvidence() const
+{
+    return compute_sum(runinfo.logselections, runinfo.Gen+1);
+}
+
+double * TmcmcEngine::getNewMean() const
 {
     double * newmean = new double[data.Nth];
     for(int i = 0; i < data.Nth; ++i) { newmean[i] =  runinfo.meantheta[runinfo.Gen][i]; }
     return newmean;
 }
 
-double** TmcmcEngine::getNewSampleCov()
+double** TmcmcEngine::getNewSampleCov() const
 {
     double ** newSS = new double*[data.Nth];
     for(int i = 0; i < data.Nth; ++i) { 
@@ -1752,6 +1771,5 @@ double** TmcmcEngine::getNewSampleCov()
     }
     return newSS;
 }
-
 
 } //namespace tmcmc

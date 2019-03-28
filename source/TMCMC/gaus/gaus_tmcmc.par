@@ -3,7 +3,7 @@
 #------------------------ GENERAL PARAMETERS ----------------------------------
 Nth		        5
 MaxStages	    100
-PopSize		    4000
+PopSize		    2000
 TolCOV	        1
 MinStep         1e-4
 Bound           -20 20
@@ -21,13 +21,14 @@ burn_in         0
 #--------------------------- MANIFOLD OPTIONS ----------------------------------
 
 moptions.eps        1.0
+moptions.adapt      1
 moptions.use_ebds   1
 moptions.conf       0.68
 moptions.pct_eub    0.2
 moptions.pct_elb    0.2
 
 #---------------------------- OTHER OPTIONS ------------------------------------
-seed		    1234
+seed		    -1
 
 #---------------------------- Internal options ---------------------------------
 opt.MaxIter	    1000
@@ -37,6 +38,6 @@ opt.Step	    1e-4
 opt.Lowerbound  0.0
 opt.Upperbound  4.0
 
-icdump		    1
+icdump		    0
 ifdump		    0
 

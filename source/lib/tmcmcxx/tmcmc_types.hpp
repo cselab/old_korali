@@ -34,9 +34,10 @@ struct optim_options {
 
 struct manifold_options {
     double eps;                 /* manifold time step discretization */
+    bool   adapt;               /* do COV adaptions? */
     double conf;                /* confidence region to fit bounds (or ebds) */
     double chi2;                /* chi square value calcualted from conf and dim */
-    bool use_ebds;              /* use extended bounds for cov adaption? */
+    bool   use_ebds;           /* use extended bounds for cov adaption? */
     double pct_elb, pct_eub;    /* extended bounds in pct of domain widths */
     double *elbds, *eubds;      /* actual values for extended bounds ([PROBDIM]) */
 };

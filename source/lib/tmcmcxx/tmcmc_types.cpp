@@ -34,6 +34,7 @@ data_t::data_t(const char * fname)
     options.UpperBound = 1.0;
     options.Zdump      = 0;
 
+    moptions.adapt    = true;
     moptions.use_ebds = true;
     moptions.conf     = 0.68;
     moptions.pct_elb  = 0.2;
@@ -137,6 +138,10 @@ data_t::data_t(const char * fname)
         } else if (strstr(line, "moptions.eps")) {
             sscanf(line, "%*s %lf", &moptions.eps);
             printf("setting manifold options epsilon = %lf\n", moptions.eps);
+         } else if (strstr(line, "moptions.adapt")) {
+            int TF; sscanf(line, "%*s %d", &TF);
+            moptions.adapt = (bool) TF;
+            printf("setting manifold options use_ebds = %d\n", moptions.use_ebds);
         } else if (strstr(line, "moptions.use_ebds")) {
             int TF; sscanf(line, "%*s %d", &TF);
             moptions.use_ebds = (bool) TF;

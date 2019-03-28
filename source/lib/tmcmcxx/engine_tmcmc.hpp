@@ -33,8 +33,9 @@ public:
     ~TmcmcEngine();
     void run();
 
-    double* getNewMean();
-    double** getNewSampleCov();
+    double  getLogEvidence() const;
+    double* getNewMean() const;
+    double** getNewSampleCov() const;
 
 private:
     
