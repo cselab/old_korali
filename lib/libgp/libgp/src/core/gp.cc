@@ -150,19 +150,17 @@ namespace libgp {
 
   Eigen::VectorXd GaussianProcess::dfdx(const double xd[]){
 
-    Eigen::Map<const Eigen::VectorXd> x(xd, input_dim);
-    Eigen::VectorXd grad = Eigen::VectorXd::Constant(input_dim,NAN);
+    Eigen::VectorXd grad = Eigen::VectorXd::Constant(input_dim,NAN); //why NAN and not 0? (DW)
     if (sampleset->empty()) return grad;
 
+    Eigen::Map<const Eigen::VectorXd> xin(xd, input_dim);
 
     int n = sampleset->size();
     Eigen::MatrixXd  D = Eigen::MatrixXd::Zero(input_dim,n);
 
-
-
     Eigen::VectorXd g(input_dim); g.setZero();
     for(size_t j = 0; j < n; ++j){
-      cf->gradx( x, sampleset->x(j), g );
+      cf->gradx( xin, sampleset->x(j), g );
       D.col(j) = g;
     }
 
@@ -286,7 +284,7 @@ namespace libgp {
   {
     if(sampleset->set_y(i,y)) {
       alpha_needs_update = true;
-      return 1;
+      return true;
     }
     return false;
   }

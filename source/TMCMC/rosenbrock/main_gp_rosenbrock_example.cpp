@@ -16,8 +16,8 @@ void testGp(GaussianProcess& gp, double low, double up, size_t N);
 
 int main(int argc, char *argv[])
 {    
-    double low = -3;
-    double up  = 3;
+    double low = -5;
+    double up  = 5;
 
     size_t nTraining = 100;
     size_t nTest     = 100;
@@ -55,11 +55,11 @@ int main(int argc, char *argv[])
 
     // init fitfun
     auto gplambda = [&gp] (const double *theta, int N) { return gp.f(theta); };
-    Fitfun rosenbrock = Fitfun(gplambda);
+    Fitfun rosenbrockgp = Fitfun(gplambda);
 
     //tmcmcm
     printf("run Tmcmcmc.. \n");
-    TmcmcEngine engine(&rosenbrock, Standard, "tmcmc_rosenbrock.par", "priors_rosenbrock.par");
+    TmcmcEngine engine(&rosenbrockgp, Standard, "tmcmc_rosenbrock.par", "priors_rosenbrock.par");
     engine.run();
     
     //exit

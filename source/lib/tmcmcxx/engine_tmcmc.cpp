@@ -438,7 +438,6 @@ void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double pri
 void TmcmcEngine::torc_update_manifold_curgen_db(double point[], double F, double prior, int error_flg, bool posdef, double gradient[], double cov[], double evec[], double eval[])
 {
 	if (torc_node_id() == 0) {
-        for(int i = 0; i < data.Nth; ++i) if (eval[i] == 0) printf("WTF\n");
 		update_manifold_curgen_db(point, F, prior, error_flg, posdef, gradient, cov, evec, eval);
 		return;
 	}

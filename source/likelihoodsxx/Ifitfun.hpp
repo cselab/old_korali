@@ -8,7 +8,7 @@ class IFitfun
 {
 
 public:
-
+ 
     virtual double evaluate (const double * x, size_t n, void* output,int * info) = 0;
     
     virtual double evaluateM (const double * x, size_t n, void* output,int * info) = 0;

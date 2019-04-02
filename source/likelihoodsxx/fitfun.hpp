@@ -30,10 +30,13 @@ class Fitfun : public IFitfun
 {
 
 public:
+    
 	Fitfun(fmodel_ptr model, grad_model_ptr grad = nullptr, hess_model_ptr hess = nullptr) : _model(model), _grad(grad), _hess(hess) {};
-
+    
+    // returns loglikelihood, output untouched
     double evaluate (const double* x, size_t n, void* output, int* info);
     
+    // returns loglikelihood, output populated with grad & cov of loglikelihood
     double evaluateM (const double* x, size_t n, void* output, int* info);
     
     void initialize(int argc, const  char **argv) {};

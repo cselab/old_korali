@@ -12,11 +12,13 @@ LIB_FITFUN ?= fitfun_tests
 
 DIR_FITFUN  = ../../likelihoods
 DIR_CATCH2  = ../../../lib/catch2
-DIR_PRIORS  = $L/priors
-DIR_CMAES   = $L/cmaes
-DIR_CMAESXX = $L/cmaesxx
+DIR_PRIORS   = $L/priors
+DIR_PRIORSXX = $L/priorsxx
+DIR_CMAES    = $L/cmaes
+DIR_CMAESXX  = $L/cmaesxx
 
 LDXLIBS := -L$(DIR_PRIORS) -lpriors $(LDXLIBS)
+LDXLIBS := -L$(DIR_PRIORSXX) -lpriorsxx $(LDXLIBS)
 LDXLIBS := -L$(DIR_CMAES) -lcmaes $(LDXLIBS)
 LDXLIBS := -L$(DIR_CMAESXX) -lcmaesxx $(LDXLIBS)  
 LDXLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDXLIBS)
@@ -24,6 +26,7 @@ LDXLIBS := -L$(DIR_FITFUN) -l$(LIB_FITFUN) $(LDXLIBS)
 CXXFLAGS += -I$(DIR_CMAES)
 CXXFLAGS += -I$(DIR_CMAESXX)
 CXXFLAGS += -I$(DIR_PRIORS)
+CXXFLAGS += -I$(DIR_PRIORSXX)
 CXXFLAGS += -I$(DIR_FITFUN)
 CXXFLAGS += -I$(DIR_CATCH2)
 
