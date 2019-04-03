@@ -290,6 +290,7 @@ namespace libgp {
   }
 
 
+  const SampleSet* GaussianProcess::get_sampleset() { return sampleset; }
 
 
   size_t GaussianProcess::get_sampleset_size()

@@ -32,10 +32,10 @@ namespace libgp {
     void add(const Eigen::VectorXd x, double y);
     
     /** Get input vector at index k. */
-    const Eigen::VectorXd & x (size_t k);
+    const Eigen::VectorXd & x (size_t k) const;
 
     /** Get target value at index k. */
-    double y (size_t k);
+    double y (size_t k) const;
 
     /** Set target value at index i. */
     bool set_y(size_t i, double y);

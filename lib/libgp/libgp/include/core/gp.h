@@ -75,6 +75,8 @@ namespace libgp {
     /** Get number of samples in the training set. */
     size_t get_sampleset_size();
 
+    const SampleSet * get_sampleset();
+
     /** Clear sample set and free memory. */
     void clear_sampleset();
 
