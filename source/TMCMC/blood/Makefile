@@ -1,9 +1,9 @@
-# source/CMAES/gp/Makefile
+# source/TMCMC/blood/Makefile
 
 include ../../make/common.mk
 
-all: gp_blood \
-	 cmaes_gp_blood
+all: tmcmc_gp_blood \
+	 mtmcmc_gp_blood
 
 LEXT = ../../../lib
 DIR_STAN     ?= ${LEXT}
@@ -32,13 +32,11 @@ DIR_FITFUNXX = ../../likelihoodsxx
 LDXLIBS  := -L$(DIR_FITFUNXX) -l$(LIB_FITFUNXX) $(LDXLIBS)
 CXXFLAGS += -I$(DIR_FITFUNXX)
 
-DIR_CMAES    = $L/cmaes
-DIR_CMAESXX  = $L/cmaesxx
+DIR_TMCMCXX  = $L/tmcmcxx
 
-CXXFLAGS += -I$(DIR_CMAES)
-CXXFLAGS += -I$(DIR_CMAESXX)
-LDXLIBS  := -L$(DIR_CMAES) -lcmaes $(LDXLIBS)
-LDXLIBS  := -L$(DIR_CMAESXX) -lcmaesxx $(LDXLIBS)
+LDXLIBS  := -L$(DIR_TMCMCXX) -ltmcmcxx $(LDXLIBS)
+CXXFLAGS += -I$(DIR_TMCMCXX)
+
 
 STANINCLUDES := -I$(DIR_STAN)
 STANINCLUDES += -I$(DIR_EIGEN)
@@ -50,16 +48,16 @@ CXXFLAGS += $(STANINCLUDES)
 CXXFLAGS += -I$(DIR_LIBGP)
 LDXLIBS  += -L$(DIR_LIBGPLIB) -l$(LIB_LIBGP)
 
-gp_blood: gp_blood.o	
+tmcmc_gp_blood: tmcmc_gp_blood.o	
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
-gp_blood.o: gp_blood.cpp
+tmcmc_gp_blood.o: tmcmc_gp_blood.cpp
 
-cmaes_gp_blood: cmaes_gp_blood.o	
+mtmcmc_gp_blood: mtmcmc_gp_blood.o	
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
-cmaes_gp_blood.o: cmaes_gp_blood.cpp
+mtmcmc_gp_blood.o: mtmcmc_gp_blood.cpp
 
-clean:; rm -rf gp_blood cmaes_gp_blood *.o
+clean:; rm -rf tmcmc_gp_blood mtmcmc_gp_blood *.o
 
 .PHONY: clean all

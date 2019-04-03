@@ -55,16 +55,16 @@ int main(int argc, char *argv[])
     testGp(gp, low, up, nTest);
 
     // init fitfun
-    auto gplambda = [&gp] (const double *theta, int N) { return gp.f(theta); };
+    auto gpllk = [&gp] (const double *theta, int N) { return gp.f(theta); };
 
-    auto gplambdaGrad = [&gp] (const double *theta, int N) { 
+    auto gpllkGrad = [&gp] (const double *theta, int N) { 
                                 Eigen::VectorXd gradx = gp.dfdx(theta); 
                                 gsl_vector* gsl_grad  = gsl_vector_alloc(N);
                                 for(int i = 0; i < N; ++i) gsl_vector_set(gsl_grad, i, gradx[i]); 
                                 return gsl_grad; 
     };
 
-    auto gplambdaFisher = [&gp] (const double *theta, int N) {
+    auto gpllkFIM = [&gp] (const double *theta, int N) {
                 double var = gp.var(theta);
                 Eigen::VectorXd gradx = gp.dfdx(theta); 
                 gsl_matrix * FIM      = gsl_matrix_calloc(N,N);
