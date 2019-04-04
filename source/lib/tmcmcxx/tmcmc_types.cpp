@@ -20,7 +20,7 @@ data_t::data_t(const char * fname)
 
     TolCOV  = -1;
     MinStep = 1e-6;
-    beta2   = -1;
+    beta2   = 0.04;
     seed    = -1;
     burn_in = 0;
     
