@@ -2,7 +2,7 @@
 
 include ../../make/common.mk
 
-LIB_FITFUNXX ?= ../../fitfunxx
+LIB_FITFUNXX ?= fitfunxx
 DIR_FITFUNXX ?= ../../likelihoodsxx
 
 LEXT = ../../../lib/
