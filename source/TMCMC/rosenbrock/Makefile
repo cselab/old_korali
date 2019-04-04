@@ -5,7 +5,7 @@ include ../../make/common.mk
 LIB_FITFUNXX ?= fitfunxx
 DIR_FITFUNXX ?= ../../likelihoodsxx
 
-LEXT = ../../../lib/
+LEXT = ../../../lib
 DIR_STAN     ?= ${LEXT}
 DIR_EIGEN    ?= ${LEXT}/stan/lib/eigen_3.3.3
 DIR_BOOST    ?= ${LEXT}/stan/lib/boost_1.66.0

@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
                 return FIM; 
     };
     
-    Fitfun rosenbrockgp = Fitfun(gplambda, gplambdaGrad, gplambdaFisher);
+    Fitfun rosenbrockgp = Fitfun(gpllk, gpllkGrad, gpllkFIM);
 
     //tmcmcm
     printf("run Tmcmcmc.. \n");
