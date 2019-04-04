@@ -21,6 +21,8 @@ doc/mkdocs/site/
 source/CMAES/trial.dSYM/
 source/CMAES/test/testxx.dSYM/
 source/CMAES/gp/run/*.dat
+source/CMAES/gp/cmaes_gp_blood
+source/CAMES/gp/cmaes_gp_blood.dSYM/
 
 # CMA test relevant files
 source/CMAES/test/*/*.dat
