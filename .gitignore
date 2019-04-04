@@ -19,6 +19,8 @@ runs/
 doc/mkdocs/site/
 
 source/CMAES/trial.dSYM/
+source/CMAES/test/testxx.dSYM/
+source/CMAES/gp/run/*.dat
 
 # CMA test relevant files
 source/CMAES/test/*/*.dat
@@ -35,11 +37,13 @@ source/CMAES/test/testxx
 
 source/TMCMC/engine_tmcmc
 source/TMCMC/tmcmcxx
-source/TMCMC/main_autodiff_example
-source/TMCMC/main_rosenbrock_example
-
-
-
+source/TMCMC/autodiff/main_autodiff_example
+source/TMCMC/rosenbrock/main_rosenbrock_example
+source/TMCMC/blood/mtmcmc_gp_blood
+source/TMCMC/gaus/main_manifold_gaus_example
+source/TMCMC/blood/tmcmc_gp_blood
+source/TMCMC/rosenbrock/main_gp_manifold_rosenbrock_example
+source/TMCMC/rosenbrock/main_rosenbrock_example
 
 *.bbl
 *.blg
