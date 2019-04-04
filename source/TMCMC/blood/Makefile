@@ -3,7 +3,7 @@
 include ../../make/common.mk
 
 all: tmcmc_gp_blood \
-#	 mtmcmc_gp_blood
+	 mtmcmc_gp_blood
 
 LEXT = ../../../lib
 DIR_STAN     ?= ${LEXT}
