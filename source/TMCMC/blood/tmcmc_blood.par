@@ -1,13 +1,17 @@
 # TMCMC configuration file
 
 #------------------------ GENERAL PARAMETERS ----------------------------------
-Nth		        2
+Nth		        6
 MaxStages	    100
-PopSize		    10000
-TolCOV	        1
+PopSize		    100000
+TolCOV	        0.2
 MinStep         1e-4
-Bound           -5 5
-Bound           -5 5
+Bound           0 1    # Q1
+Bound           0 1    # Q2
+Bound           0 1    # Q3
+Bound           0 1    # Q4
+Bound           1 5    # mu0
+Bound           0 0.02 # sigma_sh
 
 #------------------------------ MCMC OPTIONS -----------------------------------
 use_local_cov   0

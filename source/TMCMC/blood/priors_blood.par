@@ -1,7 +1,11 @@
 # This file has the priors.
 # First we define the number of priors to be read
 
-N 2
+N 6
 
-uniform  -5 5
-uniform  -5 5
+uniform  0 1    # Q1
+uniform  0 1    # Q2
+uniform  0 1    # Q3
+uniform  0 1    # Q4
+uniform  1 5    # Q5
+uniform  0 0.02 # sigma_sh
