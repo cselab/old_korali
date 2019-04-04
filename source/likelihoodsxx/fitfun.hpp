@@ -68,30 +68,8 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
 
     result->grad      = _grad(x,n);
 
-    /*
-    gsl_vector* invgrad = gsl_vector_calloc(n);
-    gsl_vector_memcpy(invgrad, grad);
-
-    gsl_matrix* igrad2 = gsl_matrix_calloc(n,n);
-    for(size_t i = 0; i<n; ++i)
-        for(size_t j = 0; j<=i; ++j) {
-            double c = -gsl_vector_get(invgrad,i)*gsl_vector_get(grad,j);
-            gsl_matrix_set(igrad2,i,j,c);
-            gsl_matrix_set(igrad2,j,i,c);
-        }
-
-    gsl_vector_free(invgrad);
-
-    gsl_matrix* hess  = _hess(x,n);
-    gsl_matrix_scale(hess, 1.0/llk);
-
-    gsl_matrix_add(hess, igrad2);
-    gsl_matrix_free(igrad2);
-    */
-
-
     gsl_permutation * permutation = gsl_permutation_alloc(n);
-    gsl_matrix * inv_neg_hess = gsl_matrix_alloc(n,n);
+    gsl_matrix * inv_neg_hess     = gsl_matrix_alloc(n,n);
 
     gsl_matrix* hess  = _hess(x,n);
 
