@@ -198,7 +198,7 @@ void TmcmcEngine::evalGen()
                     for (int d = 0; d < data.Nth; ++d)
                         for (int e = 0; e < data.Nth; ++e)
                             chain_cov[d*data.Nth+e]=
-                                data.bbeta*runinfo.SS[d][e];
+                                data.beta2*runinfo.SS[d][e];
 
                     for (int d = 0; d < data.Nth; ++d) init_mean[d] = in_tparam[d];
                 }
@@ -557,7 +557,7 @@ void TmcmcEngine::dump_curgen_db()
 
     sprintf(fname, "curgen_db_%03d.txt", runinfo.Gen);
     fp = fopen(fname, "w");
-    for (int pos = 0; pos < curgen_db.entries; pos++) {
+    for (size_t pos = 0; pos < curgen_db.entries; pos++) {
 
         for (int i = 0; i < data.Nth; ++i) {
             fprintf(fp, "%20.16lf ", curgen_db.entry[pos].point[i]);
@@ -591,8 +591,7 @@ int TmcmcEngine::load_curgen_db()
     fclose(fp);
     fp = fopen(fname, "r");
 
-    int pos;
-    for (pos = 0; pos < curgen_db.entries; ++pos) {
+    for (size_t pos = 0; pos < curgen_db.entries; ++pos) {
         for (int i = 0; i < data.Nth; ++i) {
             if (curgen_db.entry[pos].point == NULL)
                 curgen_db.entry[pos].point = new double[data.Nth];
@@ -968,7 +967,7 @@ void TmcmcEngine::precompute_chain_covariances(const cgdbp_t* leader,double** in
     if (status != GSL_SUCCESS) {
         for (int i = 0; i < D; ++i)
             for (int j = 0; j < D; ++j)
-                chain_cov[pos][i*D+j] = data.bbeta*runinfo.SS[i][j];
+                chain_cov[pos][i*D+j] = data.beta2*runinfo.SS[i][j];
     }
 
     // deallocate space
@@ -989,7 +988,7 @@ bool TmcmcEngine::compute_candidate(double candidate[], double chain_mean[])
 
     for (int i = 0; i < data.Nth; ++i)
         for (int j = 0; j < data.Nth; ++j)
-            bSS[i*data.Nth+j]= data.bbeta*runinfo.SS[i][j];
+            bSS[i*data.Nth+j]= data.beta2*runinfo.SS[i][j];
 
     mvnrnd(chain_mean, (double *)bSS, candidate, data.Nth);
 
@@ -1161,7 +1160,7 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 		{
 			if ( gsl_vector_get(gsl_eval, idx->data[i])<=0 )  
                 //smallest eigenvalue of SS
-				gsl_vector_set(gsl_eval, idx->data[i], data.bbeta*evalSS->data[0]);
+				gsl_vector_set(gsl_eval, idx->data[i], data.beta2*evalSS->data[0]);
 			else  
                 //scale positive eigs
 				gsl_vector_set( gsl_eval, idx->data[i], gsl_vector_get(gsl_eval, idx->data[i])/p );
@@ -1210,10 +1209,12 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
 
 	gsl_matrix *SIGMA = gsl_matrix_alloc(Nth, Nth);
 	gsl_matrix_set_zero(SIGMA);
-	int c = gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, EVD_mat, out_lik_evec, 1.0, SIGMA);
+	int err_gemm = gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, EVD_mat, out_lik_evec, 1.0, SIGMA);
+    if (err_gemm) printf("manifold_calculate_Sig: gsl_blas_dgemm failed (case untreated) !!!\n");
+
 
     // TEST AFTER ADAPTION
-    int err_flg;
+    int err_flg = 0;
     if (data.moptions.adapt)
     {
 	    gsl_matrix *cSIGMA = gsl_matrix_alloc(Nth, Nth);
@@ -1234,7 +1235,6 @@ int TmcmcEngine::manifold_calculate_Sig(double *pSIGMA, bool posdef, double eval
     else
     {
         std::copy(SIGMA->data, SIGMA->data+Nth*Nth,  pSIGMA); // XXX is this OK? vector-matrix
-        err_flg = 0;
     }
 
 	// clean memory

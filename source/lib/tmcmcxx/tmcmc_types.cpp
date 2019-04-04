@@ -20,7 +20,7 @@ data_t::data_t(const char * fname)
 
     TolCOV  = -1;
     MinStep = 1e-6;
-    bbeta   = -1;
+    beta2   = -1;
     seed    = -1;
     burn_in = 0;
     
@@ -82,9 +82,10 @@ data_t::data_t(const char * fname)
         } else if (strstr(line, "MinStep")) {
             sscanf(line, "%*s %lf", &MinStep);
             printf("setting Minstep = %lf\n", MinStep);
-        } else if (strstr(line, "bbeta")) {
-            sscanf(line, "%*s %lf", &bbeta);
-            printf("setting bbeta = %lf\n", bbeta);
+        } else if (strstr(line, "beta")) {
+            sscanf(line, "%*s %lf", &beta2);
+            beta2 *= beta2;
+            printf("setting beta2 = %lf\n", beta2);
         } else if (strstr(line, "seed")) {
             sscanf(line, "%*s %ld", &seed);
             printf("setting seed = %ld\n", seed);

@@ -68,7 +68,7 @@ typedef struct data_t {
 
     double TolCOV;              /* Target coefficient of variation of weights */
     double MinStep;             /* Min update of rho */
-    double bbeta;               /* Covariance scaling parameter */
+    double beta2;               /* Covariance scaling parameter */
     long   seed;
     int    burn_in;             /* Number of burn in iterations */
 
@@ -139,7 +139,7 @@ typedef struct cgdbp_s {
 
 
 typedef struct cgdb_s {
-    int     entries;    
+    size_t  entries;    
     cgdbp_t *entry;     /*[MAX_DB_ENTRIES];*/
     pthread_mutex_t m;
 } cgdb_t;
