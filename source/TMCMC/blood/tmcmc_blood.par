@@ -14,9 +14,10 @@ Bound           1 5    # mu0
 Bound           0 0.02 # sigma_sh
 
 #------------------------------ MCMC OPTIONS -----------------------------------
+MaxChainLength  1
 use_local_cov   0
 beta		    0.2
-burn_in         0
+burn_in         4
 
 #--------------------------- MANIFOLD OPTIONS ----------------------------------
 

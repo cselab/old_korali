@@ -41,6 +41,8 @@ private:
     
     Method _method;
 
+    gsl_error_handler_t * gsl_error_handler;
+
     data_t    data;
     runinfo_t runinfo;
 

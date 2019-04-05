@@ -48,16 +48,25 @@ CXXFLAGS += $(STANINCLUDES)
 CXXFLAGS += -I$(DIR_LIBGP)
 LDXLIBS  += -L$(DIR_LIBGPLIB) -l$(LIB_LIBGP)
 
-tmcmc_gp_blood: tmcmc_gp_blood.o	
+tmcmc_gp_blood: tmcmc_gp_blood.o
+	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
+	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
+	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
 tmcmc_gp_blood.o: tmcmc_gp_blood.cpp
 
-mtmcmc_gp_blood: mtmcmc_gp_blood.o	
+mtmcmc_gp_blood: mtmcmc_gp_blood.o
+	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
+	(cd $(DIR_FITFUNXX); make lib$(LIB_FITFUNXX).a)
+	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
 mtmcmc_gp_blood.o: mtmcmc_gp_blood.cpp
 
 clean:; rm -rf tmcmc_gp_blood mtmcmc_gp_blood *.o
+	(cd $(DIR_PRIORSXX); make clean)
+	(cd $(DIR_FITFUNXX); make clean)
+	(cd $(DIR_TMCMCXX); make clean)
 
 .PHONY: clean all

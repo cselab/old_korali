@@ -27,7 +27,10 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
     prior(fpriorpar),
     ifitfun_ptr_(ifitfun_ptr)
 {
-    for (int i = 0; i< data.PopSize; ++i)
+
+    gsl_error_handler = gsl_set_error_handler_off ();
+    
+        for (int i = 0; i< data.PopSize; ++i)
         leaders[i].point = new double[data.Nth];
 
     if (_method == Manifold) {
@@ -663,7 +666,6 @@ void TmcmcEngine::manifold_evaluate_candidate(double point[], double *Fval, int 
 
 	if (result->eval != nullptr) std::copy(result->eval->data, result->eval->data+Nth, eval);
     else std::memset(eval, 0, Nth*sizeof(double));
-
 
 	if (result->evec != nullptr) std::copy(result->evec->data, result->evec->data+Nth*Nth, evec);
 	else std::memset(evec, 0, Nth*Nth*sizeof(double));
@@ -1468,8 +1470,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         int un = 0, unflag, j;
 
         uf[un] = curgen_db.entry[0].F;
-        for( p = 0; p < data.Nth; ++p )
-            uniques[p][un] = curgen_db.entry[0].point[p];
+        for( p = 0; p < data.Nth; ++p ) uniques[p][un] = curgen_db.entry[0].point[p];
 
         un++;
         for (i = 1; i < n; ++i) {
@@ -1482,9 +1483,11 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
                 for (p = 0; p < data.Nth; ++p) {
 
                     /* do they differ in position? */
-                    if (fabs(xi[p]-uniques[p][j]) > 1e-8) break; /* check next */
+                    if (fabs(xi[p]-uniques[p][j]) > 1e-8) {
+                        unflag = 0; /* not unique */
+                        break;      /* check next */
+                    }
 
-                    unflag = 0;         /* not unique */
                 }
 
                 if (unflag == 0) break; /* not unique - stop comparison */
@@ -1540,53 +1543,28 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         if (sel[i] != 0) newchains++;
     }
 
-#if VERBOSE
-    printf("Points before qsort\n");
-    for (i = 0; i < n; ++i)
-        printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
+    qsort(list, n, sizeof(sort_t), compar_desc);//why do we sort this? (DW)
 
-#endif
-
-    qsort(list, n, sizeof(sort_t), compar_desc);
-
-#if VERBOSE
-    printf("Points after qsort\n");
-    for (i = 0; i < n; ++i)
-        printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
-
-#endif
-
-    /* UPPER THRESHOLD */
-    /* splitting long chains */
-    //TODO: untested feature (DW)
     if (data.MaxChainLength > 0) {
+        /* UPPER THRESHOLD */
+        /* splitting long chains */
         int initial_newchains = newchains;
-        int h_threshold = data.MaxChainLength;
         for (i = 0; i < initial_newchains; ++i) {
-            if (list[i].nsel > h_threshold) {
-                while (list[i].nsel > h_threshold) {
-                    list[newchains] = list[i];
-                    list[newchains].nsel = h_threshold;
-                    list[i].nsel = list[i].nsel - h_threshold;
-                    newchains++;
-                }
+            while (list[i].nsel > data.MaxChainLength) {
+                list[newchains] = list[i];
+                list[newchains].nsel = data.MaxChainLength;
+                list[i].nsel = list[i].nsel - data.MaxChainLength;
+                newchains++;
             }
         }
 
-        qsort(list, n, sizeof(sort_t), compar_desc);
-
-#if VERBOSE
-        printf("Points broken\n");
-        for (i = 0; i < n; ++i)
-            printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
-
-#endif
+        qsort(list, n, sizeof(sort_t), compar_desc);//why do we sort this? (DW)
     }
 
-    /* LOWER THRESHOLD */
-    /* setting min chain length */
-    //TODO: untested feature (DW)
     if (data.MinChainLength > 0) {
+        /* LOWER THRESHOLD */
+        /* setting min chain length */
+        //TODO: untested feature (DW)
         int l_threshold = data.MinChainLength;
         for (i = 0; i < newchains; ++i) {
             if ((list[i].nsel > 0)&&(list[i].nsel < l_threshold)) {
@@ -1594,14 +1572,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             }
         }
 
-        qsort(list, n, sizeof(sort_t), compar_desc);
-
-#if VERBOSE
-        printf("Points advanced\n");
-        for (i = 0; i < n; ++i) {
-            printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
-        }
-#endif
+        qsort(list, n, sizeof(sort_t), compar_desc);//why do we sort this? (DW)
     }
 
     /* TODO: do we need to copy this? (DW) esp. prior?
@@ -1611,7 +1582,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     int surrogate;      
     double error;       
     */
-
 
     int ldi = 0;                    /* leader index */
     for (i = 0; i < n; ++i) {       /* newleader */
@@ -1668,7 +1638,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     }
 #endif
 
-#endif
+#endif//_USE_TORC_
 
     if (1) {
         double **x = g_x;

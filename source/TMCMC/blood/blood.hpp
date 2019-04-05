@@ -65,9 +65,7 @@ gsl_vector * gpllk_grad(const double * theta, int N) {
 
         diff = gpblood.f(x_gp) - OUT[i];
         sse += diff*diff;
-        for(int k = 0; k < N-1; ++k) {
-            gsl_vector_set(tmp, k, diff*gpgradx[k]);
-        }
+        for(int k = 0; k < N-1; ++k) gsl_vector_set(tmp, k, diff*gpgradx[k]);
         gsl_vector_add(grad, tmp);
     }
     gsl_vector_free(tmp);
