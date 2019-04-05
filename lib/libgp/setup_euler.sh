@@ -7,7 +7,8 @@ module unload gcc
 module load new
 module load gcc/6.3.0
 
-echo "WARNING: this script does not work properly, compile code manually with cmake + make and the move libgp.a do lib folder (see code here)"
+echo "WARNING: this script does not work properly, compile code manually with
+cmake + make and the move libgp.a to build  folder (see code here)"
 
 # complie the libgp library
 (

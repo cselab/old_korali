@@ -7,8 +7,8 @@ use_omp?=0
 
 CC  := gcc
 LD  := gcc
-CXX := g++-8
-LDX := g++-8
+CXX := g++
+LDX := g++
 
 ifeq ($(use_torc),1)
 	CFLAGS   += -D_USE_TORC_=1 `torc_cflags` 

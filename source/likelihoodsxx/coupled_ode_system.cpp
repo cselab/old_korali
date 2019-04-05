@@ -314,9 +314,9 @@ inline double CoupledOdeSystem::evaluate(const double *x, size_t n, void* output
 
     gsl_matrix *evec = gsl_matrix_calloc(n, n);
     gsl_vector *eval = gsl_vector_calloc(n);
-    for(int i = 0; i < n; ++i) {
+    for(size_t i = 0; i < n; ++i) {
         gsl_vector_set(eval, i, eigInvEigenValues(i));
-        for(int j = 0; j < n; ++j) {
+        for(size_t j = 0; j < n; ++j) {
             gsl_matrix_set(evec, i, j, eigInvEigenVectors(i,j));
         }
     }
@@ -341,13 +341,13 @@ inline double CoupledOdeSystem::evaluate(const double *x, size_t n, void* output
     //Eigen::MatrixXd tmp = eigInv_FIM * eigFIM; (for debug)
 
     gsl_matrix * invFIM  = gsl_matrix_calloc(n, n);
-    for(int i = 0; i< n; ++i) {
-        for(int j = 0; j<n; ++j) {
+    for(size_t i = 0; i< n; ++i) {
+        for(size_t j = 0; j<n; ++j) {
             gsl_matrix_set(invFIM, i, j, eigInvFIM(i,j));
         }
     }
 
-    for (int i = 0; i< n; ++i) {
+    for (size_t i = 0; i< n; ++i) {
         if (!std::isfinite(gsl_vector_get(eval, i))) {
             printf("CoupledOdeSystem::fitfun: Eval not finite. \n");
             result->error_flg = 2;
@@ -362,8 +362,8 @@ inline double CoupledOdeSystem::evaluate(const double *x, size_t n, void* output
     result->eval = eval;
     gsl_vector_free(eval);
 
-    for (int i = 0; i<n; ++i) {
-        for (int j = 0; j<n; ++j) {
+    for (size_t i = 0; i<n; ++i) {
+        for (size_t j = 0; j<n; ++j) {
             if (!std::isfinite(gsl_matrix_get(evec, i, j)) ||
                     !std::isfinite(gsl_matrix_get(invFIM, i, j)) )  {
                 printf("CoupledOdeSystem::fitfun: Evec or invFIM not finite. \n");
