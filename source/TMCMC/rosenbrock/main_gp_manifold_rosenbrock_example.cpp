@@ -12,8 +12,8 @@ using namespace libgp;
 using namespace tmcmc;
 using namespace fitfun;
 
-double low = -5;
-double up  = 5;
+double low = -6;
+double up  = 6;
 
 size_t nTraining = 100;
 size_t nTest     = 100;

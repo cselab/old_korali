@@ -7,8 +7,8 @@ use_omp?=0
 
 CC  := gcc
 LD  := gcc
-CXX := g++
-LDX := g++
+CXX := g++-8
+LDX := g++-8
 
 ifeq ($(use_torc),1)
 	CFLAGS   += -D_USE_TORC_=1 `torc_cflags` 
@@ -24,12 +24,13 @@ ifeq ($(use_omp),1)
 endif
 
 
-CFLAGS += -O3 -std=c99 -g
+CFLAGS += -O3 -std=c99
 CFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
 CFLAGS += -Wall -Wno-unused-function
 CFLAGS += `gsl-config --cflags`
 
 CXXFLAGS += -std=c++14
+#CXXFLAGS += -O3
 CXXFLAGS += -g -DDEBUG #remove debug if done and add -O3
 CXXFLAGS += -Wall -Wno-unused-function
 CXXFLAGS += `gsl-config --cflags`

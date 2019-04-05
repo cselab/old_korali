@@ -16,8 +16,8 @@ void testGp(GaussianProcess& gp, double low, double up, size_t N);
 
 int main(int argc, char *argv[])
 {    
-    double low = -5;
-    double up  = 5;
+    double low = -6;
+    double up  = 6;
 
     size_t nTraining = 100;
     size_t nTest     = 100;

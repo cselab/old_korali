@@ -16,9 +16,9 @@ LIB_LIBGP    ?= gp
 DIR_LIBGPLIB ?= $(DIR_LIBGP)build
 
 L=../../lib
-DIR_PRIORS   = $L/priors
+DIR_PRIORS   = $L/priorsxx
 
-LDXLIBS  := -L$(DIR_PRIORS) -lpriors $(LDXLIBS)
+LDXLIBS  := -L$(DIR_PRIORS) -lpriorsxx $(LDXLIBS)
 CXXFLAGS += -I$(DIR_PRIORS) -I$(DIR_PRIORS)
 
 DIR_PRIORSXX = $L/priorsxx

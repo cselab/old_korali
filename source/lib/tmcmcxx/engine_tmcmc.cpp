@@ -1489,7 +1489,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
                     }
 
                 }
-                printf("unique: %d\n",(int)unique_flag);
                 if (unique_flag == false) break;
             }
 

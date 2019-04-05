@@ -70,8 +70,16 @@ gsl_vector * gpllk_grad(const double * theta, int N) {
     }
     gsl_vector_free(tmp);
 
-    gsl_vector_set(grad, N-1, -NEXP*theta[N-1]+sse/theta[N-1]); //divide by var below
+    gsl_vector_set(grad, N-1, -1.0*NEXP*theta[N-1]+sse/theta[N-1]); //divide by var below
     gsl_vector_scale(grad,1.0/var);                             //divide all elements by var
+
+#ifdef DEBUG
+    printf("_sse: %f\n", sse);
+    printf("_sig: %f\n", theta[N-1]);
+    printf("_grad:");  
+    for(size_t i = 0; i <  N; ++i) printf("  %f  ", *(grad->data+i));
+    printf("\n");
+#endif
 
     return grad;
 }
@@ -109,6 +117,18 @@ gsl_matrix * gpllk_FIM(const double * theta, int N) {
 
     gsl_matrix_set(FIM,N-1,N-1,2*NEXP);
     gsl_matrix_scale(FIM,1.0/var);
+
+#ifdef DEBUG
+    printf("_FIM:");  
+    for(size_t i = 0; i < N; ++i) {
+        for(size_t j = 0; j < N; ++j) {
+            printf("  %f  ", gsl_matrix_get(FIM,i,j));
+        }
+        printf("\n");
+    }
+    printf("\n");
+#endif
+
     return FIM;
 
 }

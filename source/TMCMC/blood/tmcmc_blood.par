@@ -19,7 +19,6 @@ beta		    0.2
 burn_in         4
 
 #--------------------------- MANIFOLD OPTIONS ----------------------------------
-
 moptions.eps        1.0
 moptions.use_ebds   1
 moptions.conf       0.68
@@ -27,7 +26,7 @@ moptions.pct_eub    0.2
 moptions.pct_elb    0.2
 
 #---------------------------- OTHER OPTIONS ------------------------------------
-seed		    982323
+seed		    982324
 
 #---------------------------- Internal options ---------------------------------
 opt.MaxIter	    1000

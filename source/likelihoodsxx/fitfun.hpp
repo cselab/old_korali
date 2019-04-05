@@ -74,13 +74,6 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
 
     result->grad      = _grad(x,n);
 
-#ifdef DEBUG
-    printf("_llk: %f\n",llk);
-    printf("_grad:");  
-    for(size_t i = 0; i < n; ++i) printf("  %f  ", *(result->grad->data+i));
-    printf("\n");
-#endif
-
     for(size_t i = 0; i<n; ++i) {
         if(!isfinite(gsl_vector_get(result->grad,i))) {
             result->error_flg = 1;
@@ -94,18 +87,6 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
     gsl_matrix * inv_neg_hess     = gsl_matrix_alloc(n,n);
 
     gsl_matrix* hess  = _hess(x,n);
-
-#ifdef DEBUG
-    printf("_hess:");  
-    for(size_t i = 0; i < n; ++i) {
-        for(size_t j = 0; j <n; ++j) {
-            printf("  %f  ", gsl_matrix_get(hess,i,j));
-        }
-        printf("\n");
-    }
-
-    printf("\n");
-#endif
 
     int LU_dec_err = 0, signum;
     LU_dec_err = gsl_linalg_LU_decomp(hess, permutation, &signum);
