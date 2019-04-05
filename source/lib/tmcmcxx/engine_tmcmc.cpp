@@ -1465,11 +1465,11 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     
     /* calculate uniques & acceptance rate */
     {
-        double * uf = new double[n];
         double **uniques = g_x;
-        int un = 0, unflag, j;
+        int un = 0,  j;
+        bool unique_flag;
 
-        uf[un] = curgen_db.entry[0].F;
+        /* copy first into uniques list */
         for( p = 0; p < data.Nth; ++p ) uniques[p][un] = curgen_db.entry[0].point[p];
 
         un++;
@@ -1478,23 +1478,22 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             double fi = curgen_db.entry[i].F;
             for (p = 0; p < data.Nth; ++p) xi[p] = curgen_db.entry[i].point[p];
 
-            unflag = 1;                 /* is this point unique? */
             for (j = 0; j < un; ++j) {  /* compare with  previous uniques */
+                unique_flag = false;             /* is this point unique? */
                 for (p = 0; p < data.Nth; ++p) {
 
                     /* do they differ in position? */
                     if (fabs(xi[p]-uniques[p][j]) > 1e-8) {
-                        unflag = 0; /* not unique */
-                        break;      /* check next */
+                        unique_flag = true; /* unique */
+                        break;              /* check next */
                     }
 
                 }
-
-                if (unflag == 0) break; /* not unique - stop comparison */
+                printf("unique: %d\n",(int)unique_flag);
+                if (unique_flag == false) break;
             }
 
-            if (unflag) {               /* unique, put it in the table */
-                uf[un] = fi;
+            if (unique_flag) { /* unique, put it in the table */
                 for (p = 0; p < data.Nth; ++p) uniques[p][un] = xi[p];
                 un++;
             }
