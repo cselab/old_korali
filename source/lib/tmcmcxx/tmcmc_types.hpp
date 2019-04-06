@@ -61,8 +61,8 @@ typedef struct data_t {
     int    auxil_size;
     double *auxil_data;
 
-    int MinChainLength;         /* MinChainLength > 0: setting MinChainLength */
-    int MaxChainLength;         /* MaxChainLength > 0: splitting long chains */
+    int MinChainLength;         /* MinChainLength >= 0: setting MinChainLength */
+    int MaxChainLength;         /* MaxChainLength >= 0: splitting long chains */
 
     double lb, ub;              /* generic lower and upper bound*/
 
@@ -187,7 +187,6 @@ typedef struct fparam_s {
 typedef struct sort_s {
     int idx;
     int nsel;
-    double F;
 } sort_t;
 
 

@@ -58,7 +58,6 @@ data_t::data_t(const char * fname)
     }
 
     char line[256];
-    // TODO: can this initialization be aligned with CMAES? (DW)
     int line_no = 0;
     while (fgets(line, 256, f)!= NULL) {
         line_no++;
@@ -132,9 +131,11 @@ data_t::data_t(const char * fname)
             idx++;
         } else if (strstr(line, "MaxChainLength")) {
             sscanf(line, "%*s %d", &MaxChainLength);
+            if(MaxChainLength<0) MaxChainLength = 0;
             printf("setting MaxChainLength = %d\n", MaxChainLength);
         } else if (strstr(line, "MinChainLength")) {
             sscanf(line, "%*s %d", &MinChainLength);
+            if(MinChainLength<0) MinChainLength = 0;
             printf("setting MinChainLength = %d\n", MinChainLength);
         } else if (strstr(line, "moptions.eps")) {
             sscanf(line, "%*s %lf", &moptions.eps);

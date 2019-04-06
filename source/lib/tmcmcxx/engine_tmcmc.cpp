@@ -1457,7 +1457,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
     int n = curgen_db.entries;
 
-    unsigned int *sel = new unsigned int[n];
 
     double **g_x = new double*[data.Nth];
     for (i = 0; i < data.Nth; ++i) g_x[i] = new double[n];
@@ -1471,8 +1470,8 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
         /* copy first into uniques list */
         for( p = 0; p < data.Nth; ++p ) uniques[p][un] = curgen_db.entry[0].point[p];
-
         un++;
+
         for (i = 1; i < n; ++i) {
             double xi[data.Nth];
             double fi = curgen_db.entry[i].F;
@@ -1502,28 +1501,17 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
         runinfo.acceptance[runinfo.Gen] = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen];
 
-        if(data.options.Display > 0) {
 
-            double meanu[data.Nth], stdu[data.Nth];
-            for (p = 0; p < data.Nth; ++p) {
-                meanu[p] = gsl_stats_mean(uniques[p], 1, n);
-                stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
-            }
-
-            printf("prepare_newgen: CURGEN DB (UNIQUES) %d\n", un);
-            print_matrix("means", meanu, data.Nth);
-            print_matrix("std", stdu, data.Nth);
-        }
+        printf("prepare_newgen: num uniques directly after :  %d\n", un);
     } 
     /* end block*/
 
-
-    /* calculate statistics */
+    unsigned int *sel = new unsigned int[n];
     {
+        /* calculate statistics and resample */
         double *fj = new double[n];
         double t0  = torc_gettime();
-        for (i = 0; i < n; ++i)
-            fj[i] = curgen_db.entry[i].F;    /* separate point from F ?*/
+        for (i = 0; i < n; ++i) fj[i] = curgen_db.entry[i].F;    /* separate point from F ?*/
         double t1 = torc_gettime();
         calculate_statistics(fj, data.Num[runinfo.Gen], runinfo.Gen, sel);
         double t2 = torc_gettime();
@@ -1531,112 +1519,84 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         delete[] fj;
     }
 
-
+    
+    /* calculate new chains */
+    int totsel = 0;
     int newchains = 0;
     sort_t *list = new sort_t[n];
     for (i = 0; i < n; ++i) {
         list[i].idx  = i;
         list[i].nsel = sel[i];
-        list[i].F    = curgen_db.entry[i].F;
         if (sel[i] != 0) newchains++;
+        totsel += list[i].nsel;
     }
+    printf("prepare_newgen: newchains sampled :  %d\n", newchains);
+    printf("prepare_newgen: total selections after sampling:  %d\n (sanity check)", totsel);
 
-    qsort(list, n, sizeof(sort_t), compar_desc);//why do we sort this? (DW)
+    qsort(list, n, sizeof(sort_t), compar_desc);
 
     if (data.MaxChainLength > 0) {
         /* UPPER THRESHOLD */
         /* splitting long chains */
+        totsel = 0;
         int initial_newchains = newchains;
         for (i = 0; i < initial_newchains; ++i) {
             while (list[i].nsel > data.MaxChainLength) {
                 list[newchains] = list[i];
                 list[newchains].nsel = data.MaxChainLength;
                 list[i].nsel = list[i].nsel - data.MaxChainLength;
+                totsel += list[newchains].nsel;
                 newchains++;
             }
+            totsel += list[i].nsel;
         }
-
-        qsort(list, n, sizeof(sort_t), compar_desc);//why do we sort this? (DW)
+        printf("prepare_newgen: newchains after breaking long chains :  %d\n", newchains);
+        printf("prepare_newgen: total selections after breaking long chains:  %d\n (sanity check)", totsel);
+        qsort(list, n, sizeof(sort_t), compar_desc);
     }
 
     if (data.MinChainLength > 0) {
         /* LOWER THRESHOLD */
         /* setting min chain length */
         //TODO: untested feature (DW)
+        totsel = 0;
         int l_threshold = data.MinChainLength;
         for (i = 0; i < newchains; ++i) {
             if ((list[i].nsel > 0)&&(list[i].nsel < l_threshold)) {
                 list[i].nsel = l_threshold;
             }
+            totsel += list[i].nsel;
         }
-
-        qsort(list, n, sizeof(sort_t), compar_desc);//why do we sort this? (DW)
+        printf("prepare_newgen: newchains after upstepping short chains :  %d\n (sanity check)", newchains);
+        printf("prepare_newgen: total selections after upstepping short chains:  %d\n", totsel);
+        qsort(list, n, sizeof(sort_t), compar_desc);
     }
 
     /* TODO: do we need to copy this? (DW) esp. prior?
     double prior;
     int counter;    
-    int queue;          
     int surrogate;      
     double error;       
     */
 
-    int ldi = 0;                    /* leader index */
-    for (i = 0; i < n; ++i) {       /* newleader */
-        if (list[i].nsel != 0) {
+    for (i = 0; i < newchains; ++i) {       /* newleader */
             int idx = list[i].idx;
-            for (p = 0; p < data.Nth ; p++) leaders[ldi].point[p] = curgen_db.entry[idx].point[p];
+            for (p = 0; p < data.Nth ; p++) leaders[i].point[p] = curgen_db.entry[idx].point[p];
     
             if( _method == Manifold ) {
-                leaders[ldi].error_flg = curgen_db.entry[idx].error_flg;
-                leaders[ldi].posdef = curgen_db.entry[idx].posdef;
-                for (p = 0; p < data.Nth ; p++)          leaders[ldi].gradient[p] = curgen_db.entry[idx].gradient[p];
-                for (p = 0; p < data.Nth ; p++)          leaders[ldi].eval[p] = curgen_db.entry[idx].eval[p];                
-                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[ldi].cov[p] = curgen_db.entry[idx].cov[p];
-                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[ldi].evec[p] = curgen_db.entry[idx].evec[p];
+                leaders[i].error_flg = curgen_db.entry[idx].error_flg;
+                leaders[i].posdef = curgen_db.entry[idx].posdef;
+                for (p = 0; p < data.Nth ; p++)          leaders[i].gradient[p] = curgen_db.entry[idx].gradient[p];
+                for (p = 0; p < data.Nth ; p++)          leaders[i].eval[p] = curgen_db.entry[idx].eval[p];                
+                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[i].cov[p] = curgen_db.entry[idx].cov[p];
+                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[i].evec[p] = curgen_db.entry[idx].evec[p];
             }
         
-            leaders[ldi].F = curgen_db.entry[idx].F;
-            leaders[ldi].nsel = list[i].nsel;
-            ldi++;
-        }
+            leaders[i].F = curgen_db.entry[idx].F;
+            leaders[i].nsel = list[i].nsel;
     }
 
     delete[] list;
-
-    for (i = 0; i < newchains; ++i) leaders[i].queue = -1;    /* rr*/
-
-
-#ifdef _USE_TORC_
-
-#if VERBOSE
-    printf("Leaders before partitioning\n");
-    for (i = 0; i < newchains; ++i) {
-        printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
-    }
-#endif
-
-    /* cool and greedy partitioning ala Panos-- ;-) */
-    int nworkers  = torc_num_workers();
-    int *workload = new int[nworkers];
-
-    for (i = 0; i < newchains; ++i) {
-        int least_loaded_worker = compute_min_idx_i(workload, nworkers);
-        leaders[i].queue = least_loader_worker;
-        workload[least_loaded_worker] += leaders[i].nsel;
-    }
-
-    print_matrix_i("initial workload", workload, nworkers);
-    delete[] workload;
-
-#if VERBOSE
-    printf("Leaders after partitioning\n");
-    for (i = 0; i < newchains; ++i) {
-        printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
-    }
-#endif
-
-#endif//_USE_TORC_
 
     if (1) {
         double **x = g_x;
@@ -1652,7 +1612,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             stdx[p]  = gsl_stats_sd_m(x[p], 1, newchains, meanx[p]);
         }
 
-        printf("prepare_newgen: CURGEN DB (LEADER) (Gen: %d): [nlead=%d]\n", runinfo.Gen, newchains);
+        printf("prepare_newgen: CURGEN DB (Gen: %d): [newchains=%d]\n", runinfo.Gen, newchains);
         if(data.options.Display > 0) {
             print_matrix("means", meanx, data.Nth);
             print_matrix("std", stdx, data.Nth);
@@ -1663,7 +1623,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         precompute_chain_covariances(leaders, data.init_mean, data.local_cov, newchains);
 
     curgen_db.entries = 0;
-    printf("prepare_newgen: newchains=%d\n", newchains);
 
     for (i = 0; i < data.Nth; ++i) delete g_x[i];
 
