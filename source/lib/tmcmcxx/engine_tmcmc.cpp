@@ -1542,7 +1542,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         int initial_newchains = newchains;
         for (i = 0; i < initial_newchains; ++i) {
             while (list[i].nsel > data.MaxChainLength) {
-                list[newchains] = list[i];
+                list[newchains].idx  = list[i].idx;
                 list[newchains].nsel = data.MaxChainLength;
                 list[i].nsel = list[i].nsel - data.MaxChainLength;
                 totsel += list[newchains].nsel;
