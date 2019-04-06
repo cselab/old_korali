@@ -1573,7 +1573,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     }
 
     /* TODO: do we need to copy this? (DW) esp. prior?
-    double prior;
     int counter;    
     int surrogate;      
     double error;       
@@ -1581,6 +1580,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
     for (i = 0; i < newchains; ++i) {       /* newleader */
             int idx = list[i].idx;
+
             for (p = 0; p < data.Nth ; p++) leaders[i].point[p] = curgen_db.entry[idx].point[p];
     
             if( _method == Manifold ) {
@@ -1592,8 +1592,9 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
                 for (p = 0; p < data.Nth*data.Nth ; p++) leaders[i].evec[p] = curgen_db.entry[idx].evec[p];
             }
         
-            leaders[i].F = curgen_db.entry[idx].F;
-            leaders[i].nsel = list[i].nsel;
+            leaders[i].F     = curgen_db.entry[idx].F;
+            leaders[i].prior = curgen_db.entry[idx].prior;
+            leaders[i].nsel  = list[i].nsel;
     }
 
     delete[] list;

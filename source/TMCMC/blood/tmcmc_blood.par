@@ -16,7 +16,7 @@ Bound           0 0.02 # sigma_sh
 #------------------------------ MCMC OPTIONS -----------------------------------
 use_local_cov   0
 MaxChainLength  0
-MinChainLength  -1
+MinChainLength  0
 beta		    0.2
 burn_in         4
 
