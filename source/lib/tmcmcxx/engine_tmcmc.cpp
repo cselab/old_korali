@@ -1531,7 +1531,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         totsel += list[i].nsel;
     }
     printf("prepare_newgen: newchains sampled :  %d\n", newchains);
-    printf("prepare_newgen: total selections after sampling:  %d\n (sanity check)", totsel);
+    printf("prepare_newgen: total selections after sampling:  %d (sanity check) \n", totsel);
 
     qsort(list, n, sizeof(sort_t), compar_desc);
 
@@ -1551,7 +1551,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             totsel += list[i].nsel;
         }
         printf("prepare_newgen: newchains after breaking long chains :  %d\n", newchains);
-        printf("prepare_newgen: total selections after breaking long chains:  %d\n (sanity check)", totsel);
+        printf("prepare_newgen: total selections after breaking long chains:  %d (sanity check) \n", totsel);
         qsort(list, n, sizeof(sort_t), compar_desc);
     }
 
@@ -1567,7 +1567,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             }
             totsel += list[i].nsel;
         }
-        printf("prepare_newgen: newchains after upstepping short chains :  %d\n (sanity check)", newchains);
+        printf("prepare_newgen: newchains after upstepping short chains :  %d (sanity check) \n", newchains);
         printf("prepare_newgen: total selections after upstepping short chains:  %d\n", totsel);
         qsort(list, n, sizeof(sort_t), compar_desc);
     }
