@@ -3,6 +3,7 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <vector>
 
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sort_vector.h>
@@ -1474,7 +1475,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
         for (i = 1; i < n; ++i) {
             double xi[data.Nth];
-            double fi = curgen_db.entry[i].F;
             for (p = 0; p < data.Nth; ++p) xi[p] = curgen_db.entry[i].point[p];
 
             for (j = 0; j < un; ++j) {  /* compare with  previous uniques */
@@ -1523,7 +1523,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     /* calculate new chains */
     int totsel = 0;
     int newchains = 0;
-    sort_t *list = new sort_t[n];
+    std::vector<sort_t> list(n);
     for (i = 0; i < n; ++i) {
         list[i].idx  = i;
         list[i].nsel = sel[i];
@@ -1533,7 +1533,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     printf("prepare_newgen: newchains sampled :  %d\n", newchains);
     printf("prepare_newgen: total selections after sampling:  %d (sanity check) \n", totsel);
 
-    qsort(list, n, sizeof(sort_t), compar_desc);
+    std::sort(list.begin(), list.end(), compar_desc);
 
     if (data.MaxChainLength > 0) {
         /* UPPER THRESHOLD */
@@ -1542,8 +1542,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         int initial_newchains = newchains;
         for (i = 0; i < initial_newchains; ++i) {
             while (list[i].nsel > data.MaxChainLength) {
-                list[newchains].idx  = list[i].idx;
-                list[newchains].nsel = data.MaxChainLength;
+                list.push_back( { list[i].idx, data.MaxChainLength } );
                 list[i].nsel = list[i].nsel - data.MaxChainLength;
                 totsel += list[newchains].nsel;
                 newchains++;
@@ -1552,7 +1551,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         }
         printf("prepare_newgen: newchains after breaking long chains :  %d\n", newchains);
         printf("prepare_newgen: total selections after breaking long chains:  %d (sanity check) \n", totsel);
-        qsort(list, n, sizeof(sort_t), compar_desc);
+        std::sort(list.begin(), list.end(), compar_desc);
     }
 
     if (data.MinChainLength > 0) {
@@ -1569,7 +1568,7 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         }
         printf("prepare_newgen: newchains after upstepping short chains :  %d (sanity check) \n", newchains);
         printf("prepare_newgen: total selections after upstepping short chains:  %d\n", totsel);
-        qsort(list, n, sizeof(sort_t), compar_desc);
+        std::sort(list.begin(), list.end(), compar_desc);
     }
 
     /* TODO: do we need to copy this? (DW) esp. prior?
@@ -1596,8 +1595,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             leaders[i].prior = curgen_db.entry[idx].prior;
             leaders[i].nsel  = list[i].nsel;
     }
-
-    delete[] list;
 
     if (1) {
         double **x = g_x;

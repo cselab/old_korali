@@ -24,16 +24,9 @@ int in_rect(double *v1, double *v2, double *diam, double sc, int D)
 }
 
 
-int compar_desc(const void* p1, const void* p2)
+bool compar_desc(const sort_t p1, const sort_t p2)
 {
-    int dir = +1;   /* -1: ascending order, +1: descending order */
-    sort_t *s1 = (sort_t *) p1;
-    sort_t *s2 = (sort_t *) p2;
-
-    if (s1->nsel < s2->nsel) return dir;
-    if (s1->nsel > s2->nsel) return -dir;
-
-    return 0;
+    return p1.nsel < p2.nsel;
 }
 
 double compute_sum(double *v, int n)
