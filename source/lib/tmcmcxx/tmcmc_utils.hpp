@@ -80,7 +80,7 @@ int get_tfc();
 void inc_nfc();
 void reset_nfc();
 
-int compar_desc(const void *p1, const void *p2);
+bool compar_desc(const sort_t p1, const sort_t p2);
 
 double compute_sum(double *v, int n);
 

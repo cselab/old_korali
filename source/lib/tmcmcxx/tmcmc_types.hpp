@@ -185,8 +185,8 @@ typedef struct fparam_s {
 
 
 typedef struct sort_s {
-    int idx;
-    int nsel;
+    int idx  = -1;
+    int nsel = 0;
 } sort_t;
 
 
