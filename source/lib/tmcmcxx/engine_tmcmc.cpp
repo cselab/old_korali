@@ -1596,33 +1596,14 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
             leaders[i].nsel  = list[i].nsel;
     }
 
-    if (1) {
-        double **x = g_x;
-        for (i = 0; i < newchains; ++i) {
-            for (p = 0; p < data.Nth; p++) {
-                x[p][i] = leaders[i].point[p];
-            }
-        }
-
-        double meanx[data.Nth], stdx[data.Nth];
-        for (p = 0; p < data.Nth; p++) {
-            meanx[p] = gsl_stats_mean(x[p], 1, newchains);
-            stdx[p]  = gsl_stats_sd_m(x[p], 1, newchains, meanx[p]);
-        }
-
-        printf("prepare_newgen: CURGEN DB (Gen: %d): [newchains=%d]\n", runinfo.Gen, newchains);
-        if(data.options.Display > 0) {
-            print_matrix("means", meanx, data.Nth);
-            print_matrix("std", stdx, data.Nth);
-        }
-    }
+    printf("prepare_newgen: CURGEN DB (Gen: %d): [newchains=%d]\n", runinfo.Gen, newchains);
 
     if (data.use_local_cov)
         precompute_chain_covariances(leaders, data.init_mean, data.local_cov, newchains);
 
     curgen_db.entries = 0;
 
-    for (i = 0; i < data.Nth; ++i) delete g_x[i];
+    for (i = 0; i < data.Nth; ++i) delete [] g_x[i];
 
     delete[] g_x;
     delete[] sel;
