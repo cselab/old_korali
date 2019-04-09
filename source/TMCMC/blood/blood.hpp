@@ -29,7 +29,8 @@ double gpllk(const double* theta, int N) {
     double var = theta[N-1]*theta[N-1];
 
     double x_gp[N-1]; // Q1, Q2, Q3, Q4, F'
-    std::copy(theta,theta+N-2,x_gp);
+    for(int i = 0; i < N-2; ++i) x_gp[i] = theta[i];
+    //std::copy(theta,theta+N-2,x_gp);
 
     double sse = 0.0;
     for(size_t i = 0; i < NEXP; ++i) {
