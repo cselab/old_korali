@@ -26,7 +26,7 @@ int in_rect(double *v1, double *v2, double *diam, double sc, int D)
 
 bool compar_desc(const sort_t p1, const sort_t p2)
 {
-    return p1.nsel < p2.nsel;
+    return p1.nsel > p2.nsel;
 }
 
 double compute_sum(double *v, int n)
