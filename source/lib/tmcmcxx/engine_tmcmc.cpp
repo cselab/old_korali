@@ -45,7 +45,7 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
 
     curres_db.entries = 0;
 
-    ifitfun_ptr_->initialize(0, NULL);
+    ifitfun_ptr_->initialize(0, nullptr);
     init();
 }
 
@@ -351,7 +351,7 @@ void TmcmcEngine::sample_from_prior()
 
 void TmcmcEngine::init_full_db()
 {
-    pthread_mutex_init(&full_db.m, NULL);
+    pthread_mutex_init(&full_db.m, nullptr);
     full_db.entries = 0;
     full_db.entry   = new dbp_t[data.MaxStages*data.PopSize];
 }
@@ -364,7 +364,7 @@ void TmcmcEngine::update_full_db(double point[], double F, double *G, int n, int
     full_db.entries++;
     pthread_mutex_unlock(&full_db.m);
 
-    if (full_db.entry[pos].point == NULL)
+    if (full_db.entry[pos].point == nullptr)
         full_db.entry[pos].point = new double[data.Nth] ;
 
     for (int i = 0; i < data.Nth; ++i) full_db.entry[pos].point[i] = point[i];
@@ -414,7 +414,7 @@ void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double pri
 	curgen_db.entries++;
 	pthread_mutex_unlock(&curgen_db.m);
 
-	if (curgen_db.entry[pos].point == NULL) curgen_db.entry[pos].point = new double[data.Nth];
+	if (curgen_db.entry[pos].point == nullptr) curgen_db.entry[pos].point = new double[data.Nth];
 
 	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].point[i] = point[i];
 	curgen_db.entry[pos].F = F;
@@ -423,16 +423,16 @@ void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double pri
 	curgen_db.entry[pos].error_flg = error_flg;
 	curgen_db.entry[pos].posdef = posdef;
 
-	if (curgen_db.entry[pos].gradient == NULL) curgen_db.entry[pos].gradient = new double[data.Nth];
+	if (curgen_db.entry[pos].gradient == nullptr) curgen_db.entry[pos].gradient = new double[data.Nth];
 	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].gradient[i] = gradient[i];
 
-	if (curgen_db.entry[pos].cov == NULL) curgen_db.entry[pos].cov = new double[data.Nth*data.Nth];
+	if (curgen_db.entry[pos].cov == nullptr) curgen_db.entry[pos].cov = new double[data.Nth*data.Nth];
 	for (i = 0; i < data.Nth*data.Nth; ++i) curgen_db.entry[pos].cov[i] = cov[i];
 
-	if (curgen_db.entry[pos].evec == NULL) curgen_db.entry[pos].evec = new double[data.Nth*data.Nth];
+	if (curgen_db.entry[pos].evec == nullptr) curgen_db.entry[pos].evec = new double[data.Nth*data.Nth];
 	for (i = 0; i < data.Nth*data.Nth; ++i) curgen_db.entry[pos].evec[i] = evec[i];
 
-	if (curgen_db.entry[pos].eval == NULL) curgen_db.entry[pos].eval = new double[data.Nth];
+	if (curgen_db.entry[pos].eval == nullptr) curgen_db.entry[pos].eval = new double[data.Nth];
 	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].eval[i] = eval[i];
 
     return;
@@ -501,7 +501,7 @@ void TmcmcEngine::dump_full_db()
 
 void TmcmcEngine::init_curgen_db()
 {
-    pthread_mutex_init(&curgen_db.m, NULL);
+    pthread_mutex_init(&curgen_db.m, nullptr);
     curgen_db.entries = 0;
     curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize];
 }
@@ -514,7 +514,8 @@ void TmcmcEngine::update_curgen_db(double point[], double F, double prior)
     curgen_db.entries++;
     pthread_mutex_unlock(&curgen_db.m);
 
-    if (curgen_db.entry[pos].point == NULL) curgen_db.entry[pos].point = (double *)malloc(data.Nth*sizeof(double));
+    if (curgen_db.entry[pos].point == nullptr) curgen_db.entry[pos].point = new double[data.Nth];
+    if (curgen_db.entry[pos].point == nullptr) curgen_db.entry[pos].point = new double[data.Nth];
 
     for (int i = 0; i < data.Nth; ++i) curgen_db.entry[pos].point[i] = point[i];
     curgen_db.entry[pos].F = F;
@@ -581,7 +582,7 @@ int TmcmcEngine::load_curgen_db()
     char fname[256];
     sprintf(fname, "curgen_db_%03d.txt", runinfo.Gen);
     fp = fopen(fname, "r");
-    if (fp == NULL) {
+    if (fp == nullptr) {
         printf("DB file: %s not found!!!\n", fname);
         exit(1);
         return 1;
@@ -589,7 +590,7 @@ int TmcmcEngine::load_curgen_db()
 
     curgen_db.entries = 0;
     char line[1024];
-    while (fgets(line, 1024, fp) != NULL)
+    while (fgets(line, 1024, fp) != nullptr)
         curgen_db.entries++;
 
     fclose(fp);
@@ -597,7 +598,7 @@ int TmcmcEngine::load_curgen_db()
 
     for (size_t pos = 0; pos < curgen_db.entries; ++pos) {
         for (int i = 0; i < data.Nth; ++i) {
-            if (curgen_db.entry[pos].point == NULL)
+            if (curgen_db.entry[pos].point == nullptr)
                 curgen_db.entry[pos].point = new double[data.Nth];
             fscanf(fp, "%lf", &curgen_db.entry[pos].point[i]);
         }
@@ -612,7 +613,7 @@ int TmcmcEngine::load_curgen_db()
 
 void TmcmcEngine::init_curres_db()
 {
-    pthread_mutex_init(&curres_db.m, NULL);
+    pthread_mutex_init(&curres_db.m, nullptr);
     curres_db.entries = 0;
     curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize];
 }
@@ -715,7 +716,7 @@ void TmcmcEngine::initchaintask(double in_tparam[],  int winfo[4])
 
     }
     
-    if (data.ifdump) torc_update_full_db(leader, loglik_leader, NULL, 0, 0);
+    if (data.ifdump) torc_update_full_db(leader, loglik_leader, nullptr, 0, 0);
 
     return;
 }
@@ -874,7 +875,7 @@ void TmcmcEngine::check_for_exit()
 
     FILE *fp;
     fp = fopen("exit.txt", "r");
-    if (fp != NULL) {
+    if (fp != nullptr) {
         printf("Found Exit File!!!\n");
         fclose(fp);
 #ifdef _USE_TORC_
@@ -1285,7 +1286,7 @@ void TmcmcEngine::chaintask(double in_tparam[], int pnsteps, double out_tparam,
 
             evaluate_candidate(candidate, &loglik_candidate, me, gen_id, chain_id, step, 1);    // this can spawn many tasks
 
-            if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglik_candidate, NULL, 0, 0);
+            if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglik_candidate, nullptr, 0, 0);
             // last argument should be 1 if it is a surrogate
 
             logprior_candidate = prior.eval_logpdf(candidate);
@@ -1381,7 +1382,7 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out
         /* candidate in bounds */
         manifold_evaluate_candidate(candidate, &loglike_candidate, &c_err, &c_posdef, c_grad, c_cov, c_evec, c_eval, me, gen_id, chain_id, step, 1);
 
-        if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglike_candidate, NULL, 0, 0); //TODO: not the manifold update version? (DW)
+        if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglike_candidate, nullptr, 0, 0); //TODO: not the manifold update version? (DW)
     
     	logprior_candidate = prior.eval_logpdf(candidate);
 		logprior_leader    = prior.eval_logpdf(leader);

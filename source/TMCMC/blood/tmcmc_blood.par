@@ -3,7 +3,7 @@
 #------------------------ GENERAL PARAMETERS ----------------------------------
 Nth		        6
 MaxStages	    100
-PopSize		    10000
+PopSize		    20
 TolCOV	        0.2
 MinStep         1e-6
 Bound           0 1    # Q1
@@ -15,7 +15,7 @@ Bound           0 0.02 # sigma_sh
 
 #------------------------------ MCMC OPTIONS -----------------------------------
 use_local_cov   0
-MaxChainLength  1
+MaxChainLength  0
 MinChainLength  0
 beta		    0.2
 burn_in         4

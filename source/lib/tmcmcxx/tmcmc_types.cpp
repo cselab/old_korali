@@ -52,14 +52,14 @@ data_t::data_t(const char * fname)
     int idx = 0;
 
     FILE *f = fopen(fname, "r");
-    if (f == NULL) {
+    if (f == nullptr) {
         printf("\nThe input file '%s' is missing. Exit...\n", fname);
         exit(EXIT_FAILURE);
     }
 
     char line[256];
     int line_no = 0;
-    while (fgets(line, 256, f)!= NULL) {
+    while (fgets(line, 256, f)!= nullptr) {
         line_no++;
         if ((line[0] == '#')||(strlen(line)==0)) {
             continue;
@@ -300,7 +300,7 @@ bool runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fn
 
     /* allocate and initialize runinfo */
     FILE *f = fopen("runinfo.txt", "r");
-    if (f == NULL) return false;
+    if (f == nullptr) return false;
 
     fscanf(f, "%s", header);
     fscanf(f, "%d", &runinfo.Gen);
