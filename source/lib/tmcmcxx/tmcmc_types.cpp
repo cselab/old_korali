@@ -335,5 +335,4 @@ bool runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fn
     return true;
 }
 
-
 }//namespace tmcmc

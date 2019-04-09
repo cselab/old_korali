@@ -16,11 +16,6 @@ using namespace libgp;
 using namespace fitfun;
 using namespace tmcmc;
 
-size_t NEXP  = 5; // num experimental data
-double F[]   = { 6.555291, 9.832936, 13.110581, 16.388226, 19.665872 }; // 5: experimental data (Force)
-double OUT[] = { 0.039364, 0.030558, 0.032415, 0.028117, 0.028064 };    // 5: experimental data (TTf)
-
-
 //size_t NEXP  = 5; // num experimental data
 //double F[] = { 5.714981 11.435213 12.377169 22.796679 24.760591 }; //3
 //double OUT[] = { 0.029267; 0.026932; 0.023028; 0.021188; 0.021306 }; //3
@@ -29,10 +24,13 @@ double OUT[] = { 0.039364, 0.030558, 0.032415, 0.028117, 0.028064 };    // 5: ex
 //double F[] = { 6.059418 10.820390 20.602023 }; //4
 //double OUT[] = { 0.035286; 0.032080; 0.030420 }; //4
 
+size_t NEXP  = 5; // num experimental data
+double F[]   = { 6.555291, 9.832936, 13.110581, 16.388226, 19.665872 }; // 5: experimental data (Force)
+double OUT[] = { 0.039364, 0.030558, 0.032415, 0.028117, 0.028064 };    // 5: experimental data (TTf)
+
 //size_t NEXP  = 5; // num experimental data
 //double F[] = { 5.867770 11.611925 12.005029 23.673504 24.671042 }; //6
 //double OUT[] = { 0.035660 0.031749; 0.031790; 0.028413; 0.028243 }; //6
-
 
 //size_t NEXP  = 2; // num experimental data
 //double F[] = { 6.242403 12.590044 }; //7
@@ -97,7 +95,7 @@ gsl_vector * gpllk_grad(const double * theta, int N) {
     printf("_sse: %f\n", sse);
     printf("_sig: %f\n", theta[N-1]);
     printf("_grad:");  
-    for(size_t i = 0; i <  N; ++i) printf("  %f  ", *(grad->data+i));
+    for(int i = 0; i <  N; ++i) printf("  %f  ", *(grad->data+i));
     printf("\n");
 #endif
 
@@ -140,8 +138,8 @@ gsl_matrix * gpllk_FIM(const double * theta, int N) {
 
 #ifdef DEBUG
     printf("_FIM:");  
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < N; ++j) {
+    for(int i = 0; i < N; ++i) {
+        for(int j = 0; j < N; ++j) {
             printf("  %f  ", gsl_matrix_get(FIM,i,j));
         }
         printf("\n");
