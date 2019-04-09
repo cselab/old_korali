@@ -3,8 +3,8 @@
 #------------------------ GENERAL PARAMETERS ----------------------------------
 Nth		        6
 MaxStages	    100
-PopSize		    20
-TolCOV	        0.2
+PopSize		    50000
+TolCOV	        1.0
 MinStep         1e-6
 Bound           0 1    # Q1
 Bound           0 1    # Q2
@@ -18,7 +18,7 @@ use_local_cov   0
 MaxChainLength  0
 MinChainLength  0
 beta		    0.2
-burn_in         4
+burn_in         10
 
 #--------------------------- MANIFOLD OPTIONS ----------------------------------
 moptions.eps        1.0
