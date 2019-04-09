@@ -17,8 +17,14 @@ using namespace fitfun;
 using namespace tmcmc;
 
 size_t NEXP  = 5; // num experimental data
-double F[]   = { 6.555291, 9.832936, 13.110581, 16.388226, 19.665872 }; // experimental data (Force)
-double OUT[] = { 0.039364, 0.030558, 0.032415, 0.028117, 0.028064 };    // experimental data (TTf)
+double F[]   = { 6.555291, 9.832936, 13.110581, 16.388226, 19.665872 }; // 5: experimental data (Force)
+double OUT[] = { 0.039364, 0.030558, 0.032415, 0.028117, 0.028064 };    // 5: experimental data (TTf)
+
+//double F[] = { 5.714981 11.435213 12.377169 22.796679 24.760591 }; //3
+//double OUT[] = { 0.029267; 0.026932; 0.023028; 0.021188; 0.021306 }; //3
+
+//double F[] = { 6.059418 10.820390 20.602023 }; //4
+//double OUT[] = { 0.035286; 0.032080; 0.030420 }; //4
 
 GaussianProcess gpblood("gp_blood_cmaes_opt.txt");
 
