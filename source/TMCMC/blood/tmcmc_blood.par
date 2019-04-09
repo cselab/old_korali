@@ -3,7 +3,7 @@
 #------------------------ GENERAL PARAMETERS ----------------------------------
 Nth		        6
 MaxStages	    100
-PopSize		    50000
+PopSize		    30
 TolCOV	        1.0
 MinStep         1e-6
 Bound           0 1    # Q1

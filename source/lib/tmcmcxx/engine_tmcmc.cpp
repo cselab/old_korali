@@ -45,7 +45,7 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
 
     curres_db.entries = 0;
 
-    ifitfun_ptr_->initialize(0, nullptr);
+    ifitfun_ptr_->initialize(0, NULL);
     init();
 }
 
