@@ -1541,17 +1541,20 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         totsel = 0;
         int initial_newchains = newchains;
         for (i = 0; i < initial_newchains; ++i) {
+            //printf("before list[i].nsel %d (totsel: %d) \n ", list[i].nsel, totsel);
             while (list[i].nsel > data.MaxChainLength) {
-                list.push_back( { list[i].idx, data.MaxChainLength } );
-                list[i].nsel = list[i].nsel - data.MaxChainLength;
-                totsel += list[newchains].nsel;
+                list.push_back( { .idx = list[i].idx, .nsel = data.MaxChainLength } );
+                totsel += data.MaxChainLength;
                 newchains++;
+                list[i].nsel = list[i].nsel - data.MaxChainLength;
             }
             totsel += list[i].nsel;
+            //printf("after list[i].nsel %d (%d) \n", list[i].nsel, totsel);
         }
         printf("prepare_newgen: newchains after breaking long chains :  %d\n", newchains);
         printf("prepare_newgen: total selections after breaking long chains:  %d (sanity check) \n", totsel);
         std::sort(list.begin(), list.end(), compar_desc);
+        //for(auto& el : list) printf("  (idx:%d, nsel:%d)  \n", el.idx, el.nsel);
     }
 
     if (data.MinChainLength > 0) {
