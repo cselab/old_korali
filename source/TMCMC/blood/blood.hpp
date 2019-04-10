@@ -89,7 +89,7 @@ gsl_vector * gpllk_grad(const double * theta, int N) {
     gsl_vector_free(tmp);
 
     gsl_vector_set(grad, N-1, -1.0*NEXP*theta[N-1]+sse/theta[N-1]); //divide by var below
-    gsl_vector_scale(grad,1.0/var);                             //divide all elements by var
+    gsl_vector_scale(grad,1.0/var);                                 //divide all elements by var
 
 #ifdef DEBUG
     printf("_sse: %f\n", sse);
