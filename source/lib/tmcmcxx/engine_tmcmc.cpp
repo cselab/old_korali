@@ -1040,6 +1040,9 @@ bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[]
 	double tmp[data.Nth];
 	double theta[data.Nth];
 
+    print_matrix("grad",grad,data.Nth);
+    print_matrix("SIG",SIG,data.Nth,data.Nth);
+
 	compute_mat_product_vect( SIG, grad, tmp, 0.5*eps, data.Nth);
 
 	for(i = 0; i<data.Nth; ++i) theta[i] = leader[i] + tmp[i];
