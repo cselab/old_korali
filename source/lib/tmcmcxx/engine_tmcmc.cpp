@@ -3,6 +3,7 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <vector>
 
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sort_vector.h>
@@ -27,7 +28,10 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
     prior(fpriorpar),
     ifitfun_ptr_(ifitfun_ptr)
 {
-    for (int i = 0; i< data.PopSize; ++i)
+
+    gsl_error_handler = gsl_set_error_handler_off ();
+    
+        for (int i = 0; i< data.PopSize; ++i)
         leaders[i].point = new double[data.Nth];
 
     if (_method == Manifold) {
@@ -41,7 +45,7 @@ TmcmcEngine::TmcmcEngine(fitfun::IFitfun * ifitfun_ptr, Method method, const cha
 
     curres_db.entries = 0;
 
-    ifitfun_ptr_->initialize(0, NULL);
+    ifitfun_ptr_->initialize(0, nullptr);
     init();
 }
 
@@ -347,7 +351,7 @@ void TmcmcEngine::sample_from_prior()
 
 void TmcmcEngine::init_full_db()
 {
-    pthread_mutex_init(&full_db.m, NULL);
+    pthread_mutex_init(&full_db.m, nullptr);
     full_db.entries = 0;
     full_db.entry   = new dbp_t[data.MaxStages*data.PopSize];
 }
@@ -360,7 +364,7 @@ void TmcmcEngine::update_full_db(double point[], double F, double *G, int n, int
     full_db.entries++;
     pthread_mutex_unlock(&full_db.m);
 
-    if (full_db.entry[pos].point == NULL)
+    if (full_db.entry[pos].point == nullptr)
         full_db.entry[pos].point = new double[data.Nth] ;
 
     for (int i = 0; i < data.Nth; ++i) full_db.entry[pos].point[i] = point[i];
@@ -410,7 +414,7 @@ void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double pri
 	curgen_db.entries++;
 	pthread_mutex_unlock(&curgen_db.m);
 
-	if (curgen_db.entry[pos].point == NULL) curgen_db.entry[pos].point = new double[data.Nth];
+	if (curgen_db.entry[pos].point == nullptr) curgen_db.entry[pos].point = new double[data.Nth];
 
 	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].point[i] = point[i];
 	curgen_db.entry[pos].F = F;
@@ -419,16 +423,16 @@ void TmcmcEngine::update_manifold_curgen_db(double point[], double F, double pri
 	curgen_db.entry[pos].error_flg = error_flg;
 	curgen_db.entry[pos].posdef = posdef;
 
-	if (curgen_db.entry[pos].gradient == NULL) curgen_db.entry[pos].gradient = new double[data.Nth];
+	if (curgen_db.entry[pos].gradient == nullptr) curgen_db.entry[pos].gradient = new double[data.Nth];
 	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].gradient[i] = gradient[i];
 
-	if (curgen_db.entry[pos].cov == NULL) curgen_db.entry[pos].cov = new double[data.Nth*data.Nth];
+	if (curgen_db.entry[pos].cov == nullptr) curgen_db.entry[pos].cov = new double[data.Nth*data.Nth];
 	for (i = 0; i < data.Nth*data.Nth; ++i) curgen_db.entry[pos].cov[i] = cov[i];
 
-	if (curgen_db.entry[pos].evec == NULL) curgen_db.entry[pos].evec = new double[data.Nth*data.Nth];
+	if (curgen_db.entry[pos].evec == nullptr) curgen_db.entry[pos].evec = new double[data.Nth*data.Nth];
 	for (i = 0; i < data.Nth*data.Nth; ++i) curgen_db.entry[pos].evec[i] = evec[i];
 
-	if (curgen_db.entry[pos].eval == NULL) curgen_db.entry[pos].eval = new double[data.Nth];
+	if (curgen_db.entry[pos].eval == nullptr) curgen_db.entry[pos].eval = new double[data.Nth];
 	for (i = 0; i < data.Nth; ++i) curgen_db.entry[pos].eval[i] = eval[i];
 
     return;
@@ -497,7 +501,7 @@ void TmcmcEngine::dump_full_db()
 
 void TmcmcEngine::init_curgen_db()
 {
-    pthread_mutex_init(&curgen_db.m, NULL);
+    pthread_mutex_init(&curgen_db.m, nullptr);
     curgen_db.entries = 0;
     curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize];
 }
@@ -510,7 +514,8 @@ void TmcmcEngine::update_curgen_db(double point[], double F, double prior)
     curgen_db.entries++;
     pthread_mutex_unlock(&curgen_db.m);
 
-    if (curgen_db.entry[pos].point == NULL) curgen_db.entry[pos].point = (double *)malloc(data.Nth*sizeof(double));
+    if (curgen_db.entry[pos].point == nullptr) curgen_db.entry[pos].point = new double[data.Nth];
+    if (curgen_db.entry[pos].point == nullptr) curgen_db.entry[pos].point = new double[data.Nth];
 
     for (int i = 0; i < data.Nth; ++i) curgen_db.entry[pos].point[i] = point[i];
     curgen_db.entry[pos].F = F;
@@ -577,7 +582,7 @@ int TmcmcEngine::load_curgen_db()
     char fname[256];
     sprintf(fname, "curgen_db_%03d.txt", runinfo.Gen);
     fp = fopen(fname, "r");
-    if (fp == NULL) {
+    if (fp == nullptr) {
         printf("DB file: %s not found!!!\n", fname);
         exit(1);
         return 1;
@@ -585,7 +590,7 @@ int TmcmcEngine::load_curgen_db()
 
     curgen_db.entries = 0;
     char line[1024];
-    while (fgets(line, 1024, fp) != NULL)
+    while (fgets(line, 1024, fp) != nullptr)
         curgen_db.entries++;
 
     fclose(fp);
@@ -593,7 +598,7 @@ int TmcmcEngine::load_curgen_db()
 
     for (size_t pos = 0; pos < curgen_db.entries; ++pos) {
         for (int i = 0; i < data.Nth; ++i) {
-            if (curgen_db.entry[pos].point == NULL)
+            if (curgen_db.entry[pos].point == nullptr)
                 curgen_db.entry[pos].point = new double[data.Nth];
             fscanf(fp, "%lf", &curgen_db.entry[pos].point[i]);
         }
@@ -608,7 +613,7 @@ int TmcmcEngine::load_curgen_db()
 
 void TmcmcEngine::init_curres_db()
 {
-    pthread_mutex_init(&curres_db.m, NULL);
+    pthread_mutex_init(&curres_db.m, nullptr);
     curres_db.entries = 0;
     curgen_db.entry   = new cgdbp_t[(data.MinChainLength+1)*data.PopSize];
 }
@@ -664,7 +669,6 @@ void TmcmcEngine::manifold_evaluate_candidate(double point[], double *Fval, int 
 	if (result->eval != nullptr) std::copy(result->eval->data, result->eval->data+Nth, eval);
     else std::memset(eval, 0, Nth*sizeof(double));
 
-
 	if (result->evec != nullptr) std::copy(result->evec->data, result->evec->data+Nth*Nth, evec);
 	else std::memset(evec, 0, Nth*Nth*sizeof(double));
 	
@@ -712,7 +716,7 @@ void TmcmcEngine::initchaintask(double in_tparam[],  int winfo[4])
 
     }
     
-    if (data.ifdump) torc_update_full_db(leader, loglik_leader, NULL, 0, 0);
+    if (data.ifdump) torc_update_full_db(leader, loglik_leader, nullptr, 0, 0);
 
     return;
 }
@@ -871,7 +875,7 @@ void TmcmcEngine::check_for_exit()
 
     FILE *fp;
     fp = fopen("exit.txt", "r");
-    if (fp != NULL) {
+    if (fp != nullptr) {
         printf("Found Exit File!!!\n");
         fclose(fp);
 #ifdef _USE_TORC_
@@ -1035,6 +1039,9 @@ bool TmcmcEngine::compute_manifold_candidate(double candidate[], double leader[]
 
 	double tmp[data.Nth];
 	double theta[data.Nth];
+
+    print_matrix("grad",grad,data.Nth);
+    print_matrix("SIG",SIG,data.Nth,data.Nth);
 
 	compute_mat_product_vect( SIG, grad, tmp, 0.5*eps, data.Nth);
 
@@ -1282,7 +1289,7 @@ void TmcmcEngine::chaintask(double in_tparam[], int pnsteps, double out_tparam,
 
             evaluate_candidate(candidate, &loglik_candidate, me, gen_id, chain_id, step, 1);    // this can spawn many tasks
 
-            if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglik_candidate, NULL, 0, 0);
+            if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglik_candidate, nullptr, 0, 0);
             // last argument should be 1 if it is a surrogate
 
             logprior_candidate = prior.eval_logpdf(candidate);
@@ -1378,7 +1385,7 @@ void TmcmcEngine::manifold_chaintask(double in_tparam[], int pnsteps, double out
         /* candidate in bounds */
         manifold_evaluate_candidate(candidate, &loglike_candidate, &c_err, &c_posdef, c_grad, c_cov, c_evec, c_eval, me, gen_id, chain_id, step, 1);
 
-        if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglike_candidate, NULL, 0, 0); //TODO: not the manifold update version? (DW)
+        if (data.ifdump && step >= burn_in) torc_update_full_db(candidate, loglike_candidate, nullptr, 0, 0); //TODO: not the manifold update version? (DW)
     
     	logprior_candidate = prior.eval_logpdf(candidate);
 		logprior_leader    = prior.eval_logpdf(leader);
@@ -1455,7 +1462,6 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
     int n = curgen_db.entries;
 
-    unsigned int *sel = new unsigned int[n];
 
     double **g_x = new double*[data.Nth];
     for (i = 0; i < data.Nth; ++i) g_x[i] = new double[n];
@@ -1463,35 +1469,33 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
     
     /* calculate uniques & acceptance rate */
     {
-        double * uf = new double[n];
         double **uniques = g_x;
-        int un = 0, unflag, j;
+        int un = 0,  j;
+        bool unique_flag;
 
-        uf[un] = curgen_db.entry[0].F;
-        for( p = 0; p < data.Nth; ++p )
-            uniques[p][un] = curgen_db.entry[0].point[p];
-
+        /* copy first into uniques list */
+        for( p = 0; p < data.Nth; ++p ) uniques[p][un] = curgen_db.entry[0].point[p];
         un++;
+
         for (i = 1; i < n; ++i) {
             double xi[data.Nth];
-            double fi = curgen_db.entry[i].F;
             for (p = 0; p < data.Nth; ++p) xi[p] = curgen_db.entry[i].point[p];
 
-            unflag = 1;                 /* is this point unique? */
             for (j = 0; j < un; ++j) {  /* compare with  previous uniques */
+                unique_flag = false;             /* is this point unique? */
                 for (p = 0; p < data.Nth; ++p) {
 
                     /* do they differ in position? */
-                    if (fabs(xi[p]-uniques[p][j]) > 1e-8) break; /* check next */
+                    if (fabs(xi[p]-uniques[p][j]) > 1e-8) {
+                        unique_flag = true; /* unique */
+                        break;              /* check next */
+                    }
 
-                    unflag = 0;         /* not unique */
                 }
-
-                if (unflag == 0) break; /* not unique - stop comparison */
+                if (unique_flag == false) break;
             }
 
-            if (unflag) {               /* unique, put it in the table */
-                uf[un] = fi;
+            if (unique_flag) { /* unique, put it in the table */
                 for (p = 0; p < data.Nth; ++p) uniques[p][un] = xi[p];
                 un++;
             }
@@ -1501,28 +1505,17 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
 
         runinfo.acceptance[runinfo.Gen] = (1.0*runinfo.currentuniques[runinfo.Gen])/data.Num[runinfo.Gen];
 
-        if(data.options.Display > 0) {
 
-            double meanu[data.Nth], stdu[data.Nth];
-            for (p = 0; p < data.Nth; ++p) {
-                meanu[p] = gsl_stats_mean(uniques[p], 1, n);
-                stdu[p]  = gsl_stats_sd_m(uniques[p], 1, n, meanu[p]);
-            }
-
-            printf("prepare_newgen: CURGEN DB (UNIQUES) %d\n", un);
-            print_matrix("means", meanu, data.Nth);
-            print_matrix("std", stdu, data.Nth);
-        }
+        printf("prepare_newgen: num uniques directly after :  %d\n", un);
     } 
     /* end block*/
 
-
-    /* calculate statistics */
+    unsigned int *sel = new unsigned int[n];
     {
+        /* calculate statistics and resample */
         double *fj = new double[n];
         double t0  = torc_gettime();
-        for (i = 0; i < n; ++i)
-            fj[i] = curgen_db.entry[i].F;    /* separate point from F ?*/
+        for (i = 0; i < n; ++i) fj[i] = curgen_db.entry[i].F;    /* separate point from F ?*/
         double t1 = torc_gettime();
         calculate_statistics(fj, data.Num[runinfo.Gen], runinfo.Gen, sel);
         double t2 = torc_gettime();
@@ -1530,174 +1523,94 @@ void TmcmcEngine::prepare_newgen(int nchains, cgdbp_t *leaders)
         delete[] fj;
     }
 
-
+    
+    /* calculate new chains */
+    int totsel = 0;
     int newchains = 0;
-    sort_t *list = new sort_t[n];
+    std::vector<sort_t> list(n);
     for (i = 0; i < n; ++i) {
         list[i].idx  = i;
         list[i].nsel = sel[i];
-        list[i].F    = curgen_db.entry[i].F;
         if (sel[i] != 0) newchains++;
+        totsel += list[i].nsel;
     }
+    printf("prepare_newgen: newchains sampled :  %d\n", newchains);
+    printf("prepare_newgen: total selections after sampling:  %d (sanity check) \n", totsel);
 
-#if VERBOSE
-    printf("Points before qsort\n");
-    for (i = 0; i < n; ++i)
-        printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
+    std::sort(list.begin(), list.end(), compar_desc);
 
-#endif
-
-    qsort(list, n, sizeof(sort_t), compar_desc);
-
-#if VERBOSE
-    printf("Points after qsort\n");
-    for (i = 0; i < n; ++i)
-        printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
-
-#endif
-
-    /* UPPER THRESHOLD */
-    /* splitting long chains */
-    //TODO: untested feature (DW)
     if (data.MaxChainLength > 0) {
+        /* UPPER THRESHOLD */
+        /* splitting long chains */
+        totsel = 0;
         int initial_newchains = newchains;
-        int h_threshold = data.MaxChainLength;
         for (i = 0; i < initial_newchains; ++i) {
-            if (list[i].nsel > h_threshold) {
-                while (list[i].nsel > h_threshold) {
-                    list[newchains] = list[i];
-                    list[newchains].nsel = h_threshold;
-                    list[i].nsel = list[i].nsel - h_threshold;
-                    newchains++;
-                }
+            //printf("before list[i].nsel %d (totsel: %d) \n ", list[i].nsel, totsel);
+            while (list[i].nsel > data.MaxChainLength) {
+                list.push_back( { .idx = list[i].idx, .nsel = data.MaxChainLength } );
+                totsel += data.MaxChainLength;
+                newchains++;
+                list[i].nsel = list[i].nsel - data.MaxChainLength;
             }
+            totsel += list[i].nsel;
+            //printf("after list[i].nsel %d (%d) \n", list[i].nsel, totsel);
         }
-
-        qsort(list, n, sizeof(sort_t), compar_desc);
-
-#if VERBOSE
-        printf("Points broken\n");
-        for (i = 0; i < n; ++i)
-            printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
-
-#endif
+        printf("prepare_newgen: newchains after breaking long chains :  %d\n", newchains);
+        printf("prepare_newgen: total selections after breaking long chains:  %d (sanity check) \n", totsel);
+        std::sort(list.begin(), list.end(), compar_desc);
+        //for(auto& el : list) printf("  (idx:%d, nsel:%d)  \n", el.idx, el.nsel);
     }
 
-    /* LOWER THRESHOLD */
-    /* setting min chain length */
-    //TODO: untested feature (DW)
     if (data.MinChainLength > 0) {
+        /* LOWER THRESHOLD */
+        /* setting min chain length */
+        //TODO: untested feature (DW)
+        totsel = 0;
         int l_threshold = data.MinChainLength;
         for (i = 0; i < newchains; ++i) {
             if ((list[i].nsel > 0)&&(list[i].nsel < l_threshold)) {
                 list[i].nsel = l_threshold;
             }
+            totsel += list[i].nsel;
         }
-
-        qsort(list, n, sizeof(sort_t), compar_desc);
-
-#if VERBOSE
-        printf("Points advanced\n");
-        for (i = 0; i < n; ++i) {
-            printf("%d: %d %d %f\n", i, list[i].idx, list[i].nsel, list[i].F);
-        }
-#endif
+        printf("prepare_newgen: newchains after upstepping short chains :  %d (sanity check) \n", newchains);
+        printf("prepare_newgen: total selections after upstepping short chains:  %d\n", totsel);
+        std::sort(list.begin(), list.end(), compar_desc);
     }
 
     /* TODO: do we need to copy this? (DW) esp. prior?
-    double prior;
     int counter;    
-    int queue;          
     int surrogate;      
     double error;       
     */
 
-
-    int ldi = 0;                    /* leader index */
-    for (i = 0; i < n; ++i) {       /* newleader */
-        if (list[i].nsel != 0) {
+    for (i = 0; i < newchains; ++i) {       /* newleader */
             int idx = list[i].idx;
-            for (p = 0; p < data.Nth ; p++) leaders[ldi].point[p] = curgen_db.entry[idx].point[p];
+
+            for (p = 0; p < data.Nth ; p++) leaders[i].point[p] = curgen_db.entry[idx].point[p];
     
             if( _method == Manifold ) {
-                leaders[ldi].error_flg = curgen_db.entry[idx].error_flg;
-                leaders[ldi].posdef = curgen_db.entry[idx].posdef;
-                for (p = 0; p < data.Nth ; p++)          leaders[ldi].gradient[p] = curgen_db.entry[idx].gradient[p];
-                for (p = 0; p < data.Nth ; p++)          leaders[ldi].eval[p] = curgen_db.entry[idx].eval[p];                
-                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[ldi].cov[p] = curgen_db.entry[idx].cov[p];
-                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[ldi].evec[p] = curgen_db.entry[idx].evec[p];
+                leaders[i].error_flg = curgen_db.entry[idx].error_flg;
+                leaders[i].posdef = curgen_db.entry[idx].posdef;
+                for (p = 0; p < data.Nth ; p++)          leaders[i].gradient[p] = curgen_db.entry[idx].gradient[p];
+                for (p = 0; p < data.Nth ; p++)          leaders[i].eval[p] = curgen_db.entry[idx].eval[p];                
+                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[i].cov[p] = curgen_db.entry[idx].cov[p];
+                for (p = 0; p < data.Nth*data.Nth ; p++) leaders[i].evec[p] = curgen_db.entry[idx].evec[p];
             }
         
-            leaders[ldi].F = curgen_db.entry[idx].F;
-            leaders[ldi].nsel = list[i].nsel;
-            ldi++;
-        }
+            leaders[i].F     = curgen_db.entry[idx].F;
+            leaders[i].prior = curgen_db.entry[idx].prior;
+            leaders[i].nsel  = list[i].nsel;
     }
 
-    delete[] list;
-
-    for (i = 0; i < newchains; ++i) leaders[i].queue = -1;    /* rr*/
-
-
-#ifdef _USE_TORC_
-
-#if VERBOSE
-    printf("Leaders before partitioning\n");
-    for (i = 0; i < newchains; ++i) {
-        printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
-    }
-#endif
-
-    /* cool and greedy partitioning ala Panos-- ;-) */
-    int nworkers  = torc_num_workers();
-    int *workload = new int[nworkers];
-
-    for (i = 0; i < newchains; ++i) {
-        int least_loaded_worker = compute_min_idx_i(workload, nworkers);
-        leaders[i].queue = least_loader_worker;
-        workload[least_loaded_worker] += leaders[i].nsel;
-    }
-
-    print_matrix_i("initial workload", workload, nworkers);
-    delete[] workload;
-
-#if VERBOSE
-    printf("Leaders after partitioning\n");
-    for (i = 0; i < newchains; ++i) {
-        printf("%d %d %f %d\n", i, leaders[i].nsel, leaders[i].F, leaders[i].queue);
-    }
-#endif
-
-#endif
-
-    if (1) {
-        double **x = g_x;
-        for (i = 0; i < newchains; ++i) {
-            for (p = 0; p < data.Nth; p++) {
-                x[p][i] = leaders[i].point[p];
-            }
-        }
-
-        double meanx[data.Nth], stdx[data.Nth];
-        for (p = 0; p < data.Nth; p++) {
-            meanx[p] = gsl_stats_mean(x[p], 1, newchains);
-            stdx[p]  = gsl_stats_sd_m(x[p], 1, newchains, meanx[p]);
-        }
-
-        printf("prepare_newgen: CURGEN DB (LEADER) (Gen: %d): [nlead=%d]\n", runinfo.Gen, newchains);
-        if(data.options.Display > 0) {
-            print_matrix("means", meanx, data.Nth);
-            print_matrix("std", stdx, data.Nth);
-        }
-    }
+    printf("prepare_newgen: CURGEN DB (Gen: %d): [newchains=%d]\n", runinfo.Gen, newchains);
 
     if (data.use_local_cov)
         precompute_chain_covariances(leaders, data.init_mean, data.local_cov, newchains);
 
     curgen_db.entries = 0;
-    printf("prepare_newgen: newchains=%d\n", newchains);
 
-    for (i = 0; i < data.Nth; ++i) delete g_x[i];
+    for (i = 0; i < data.Nth; ++i) delete [] g_x[i];
 
     delete[] g_x;
     delete[] sel;

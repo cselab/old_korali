@@ -61,8 +61,8 @@ typedef struct data_t {
     int    auxil_size;
     double *auxil_data;
 
-    int MinChainLength;         /* MinChainLength > 0: setting MinChainLength */
-    int MaxChainLength;         /* MaxChainLength > 0: splitting long chains */
+    int MinChainLength;         /* MinChainLength >= 0: setting MinChainLength */
+    int MaxChainLength;         /* MaxChainLength >= 0: splitting long chains */
 
     double lb, ub;              /* generic lower and upper bound*/
 
@@ -118,23 +118,23 @@ typedef struct runinfo_t {
 } runinfo_t;
 
 
-typedef struct cgdbp_s {
-    double *point;      /*[PROBDIM];*/
-    double F;
-    double prior;
+typedef struct cgdbp_t { 
+    double *point = nullptr;     /*[PROBDIM];*/
+    double F = std::numeric_limits<double>::min();
+    double prior = std::numeric_limits<double>::min();
 
-    int counter;        /* not used (?)*/
-    int nsel;           /* for selection of leaders only*/
-    int queue;          /* for submission of leaders only*/
-    int surrogate;      //TODO: used? (DW)
-    double error;       //TODO: used? (DW)
+    int counter = -1;        /* not used (?)*/
+    int queue = -1;          /* for submission of leaders only*/
+    int surrogate = -1;      //TODO: used? (DW)
+    double error = -1;       //TODO: used? (DW)
+    int nsel = 0;            /* for selection of leaders only*/
 
-    int error_flg; 
-    int posdef;         //TODO: can we combine this with error_flg? (DW)
-    double *gradient;   /*[PROBDIM]*/
-    double *cov;        /*[PROBDIM*PROBDIM]*/
-    double *evec;       /*[PROBDIM*PROBDIM]*/
-    double *eval;       /*[PROBDIM]*/
+    int error_flg = 0; 
+    int posdef = 1; //TODO: can we combine this with error_flg? (DW)
+    double *gradient = nullptr;   /*[PROBDIM]*/
+    double *cov = nullptr;        /*[PROBDIM*PROBDIM]*/
+    double *evec = nullptr;       /*[PROBDIM*PROBDIM]*/
+    double *eval = nullptr;       /*[PROBDIM]*/
 } cgdbp_t;
 
 
@@ -185,9 +185,8 @@ typedef struct fparam_s {
 
 
 typedef struct sort_s {
-    int idx;
-    int nsel;
-    double F;
+    int idx  = -1;
+    int nsel = 0;
 } sort_t;
 
 

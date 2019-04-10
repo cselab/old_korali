@@ -12,15 +12,21 @@
 
 namespace fitfun{
 
-typedef struct {
+struct return_type {
     double loglike;
-    int error_flg; //0: all good, 1: only llk, 2: llk & grad ok
+    int error_flg; //0: all good, 1: only llk (no grad, no cov), 2: llk & grad ok (no cov)
     bool posdef;
     gsl_vector* grad;
     gsl_matrix* cov;
     gsl_matrix* evec;
     gsl_vector* eval;
-} return_type;
+
+    return_type() { grad = nullptr; cov = nullptr; evec = nullptr; eval = nullptr; };
+    ~return_type() { if(grad != nullptr) gsl_vector_free(grad); 
+                     if(cov  != nullptr) gsl_matrix_free(cov); 
+                     if(evec != nullptr) gsl_matrix_free(evec); 
+                     if(eval != nullptr) gsl_vector_free(eval); };
+};
 
 using fmodel_ptr = std::function<double(const double *x, int n)>;
 using grad_model_ptr = std::function<gsl_vector*(const double* x, int n)>;
@@ -68,30 +74,17 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
 
     result->grad      = _grad(x,n);
 
-    /*
-    gsl_vector* invgrad = gsl_vector_calloc(n);
-    gsl_vector_memcpy(invgrad, grad);
-
-    gsl_matrix* igrad2 = gsl_matrix_calloc(n,n);
-    for(size_t i = 0; i<n; ++i)
-        for(size_t j = 0; j<=i; ++j) {
-            double c = -gsl_vector_get(invgrad,i)*gsl_vector_get(grad,j);
-            gsl_matrix_set(igrad2,i,j,c);
-            gsl_matrix_set(igrad2,j,i,c);
+    for(size_t i = 0; i<n; ++i) {
+        if(!isfinite(gsl_vector_get(result->grad,i))) {
+            result->error_flg = 1;
+            result->posdef    = false;
+            gsl_vector_free(result->grad);
+            return llk;
         }
-
-    gsl_vector_free(invgrad);
-
-    gsl_matrix* hess  = _hess(x,n);
-    gsl_matrix_scale(hess, 1.0/llk);
-
-    gsl_matrix_add(hess, igrad2);
-    gsl_matrix_free(igrad2);
-    */
-
+    }
 
     gsl_permutation * permutation = gsl_permutation_alloc(n);
-    gsl_matrix * inv_neg_hess = gsl_matrix_alloc(n,n);
+    gsl_matrix * inv_neg_hess     = gsl_matrix_alloc(n,n);
 
     gsl_matrix* hess  = _hess(x,n);
 
@@ -162,7 +155,7 @@ inline double Fitfun::evaluateM (const double* x, size_t n, void* output, int* i
         return llk;
     }
    
-    result->error_flg = false;
+    result->error_flg = 0;
     result->posdef    = posdef;
     result->cov       = inv_neg_hess;
     result->eval      = eval;

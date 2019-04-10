@@ -52,15 +52,14 @@ data_t::data_t(const char * fname)
     int idx = 0;
 
     FILE *f = fopen(fname, "r");
-    if (f == NULL) {
+    if (f == nullptr) {
         printf("\nThe input file '%s' is missing. Exit...\n", fname);
         exit(EXIT_FAILURE);
     }
 
     char line[256];
-    // TODO: can this initialization be aligned with CMAES? (DW)
     int line_no = 0;
-    while (fgets(line, 256, f)!= NULL) {
+    while (fgets(line, 256, f)!= nullptr) {
         line_no++;
         if ((line[0] == '#')||(strlen(line)==0)) {
             continue;
@@ -132,9 +131,11 @@ data_t::data_t(const char * fname)
             idx++;
         } else if (strstr(line, "MaxChainLength")) {
             sscanf(line, "%*s %d", &MaxChainLength);
+            if(MaxChainLength<0) MaxChainLength = 0;
             printf("setting MaxChainLength = %d\n", MaxChainLength);
         } else if (strstr(line, "MinChainLength")) {
             sscanf(line, "%*s %d", &MinChainLength);
+            if(MinChainLength<0) MinChainLength = 0;
             printf("setting MinChainLength = %d\n", MinChainLength);
         } else if (strstr(line, "moptions.eps")) {
             sscanf(line, "%*s %lf", &moptions.eps);
@@ -299,7 +300,7 @@ bool runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fn
 
     /* allocate and initialize runinfo */
     FILE *f = fopen("runinfo.txt", "r");
-    if (f == NULL) return false;
+    if (f == nullptr) return false;
 
     fscanf(f, "%s", header);
     fscanf(f, "%d", &runinfo.Gen);
@@ -333,6 +334,5 @@ bool runinfo_t::load(runinfo_t& runinfo, int nth, int maxstages, const char * fn
 
     return true;
 }
-
 
 }//namespace tmcmc

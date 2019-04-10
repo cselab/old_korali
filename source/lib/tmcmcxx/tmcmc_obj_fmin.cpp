@@ -118,7 +118,7 @@ int fmincon(const double *fj, int fn, double pj, double objTol,
         fm = f_hi;
     }
 
-    int i;
+    size_t i;
     for (i = 1; i < max_iter; ++i) {
         double x = x_lo + i*(x_hi-x_lo)/max_iter;
         double fx = tmcmc_objlogp_gsl(x, &fp);
