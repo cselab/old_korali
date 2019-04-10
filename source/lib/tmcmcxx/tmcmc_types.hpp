@@ -169,6 +169,13 @@ typedef struct resdbp_s {
 } resdbp_t;
 
 
+typedef struct resdb_s {
+    int      entries;
+    resdbp_t *entry; /*[MAX_DB_ENTRIES];*/
+    pthread_mutex_t m;
+} resdb_t;
+
+
 typedef struct fparam_s {
     const double *fj;
     int           fn;
