@@ -148,7 +148,8 @@ namespace libgp {
 
 
 
-  Eigen::VectorXd GaussianProcess::dfdx(const double xd[]){
+  Eigen::VectorXd GaussianProcess::dfdx(const double xd[])
+  {
 
     Eigen::VectorXd grad = Eigen::VectorXd::Constant(input_dim,NAN); //why NAN and not 0? (DW)
     if (sampleset->empty()) return grad;
@@ -159,7 +160,7 @@ namespace libgp {
     Eigen::MatrixXd  D = Eigen::MatrixXd::Zero(input_dim,n);
 
     Eigen::VectorXd g(input_dim); g.setZero();
-    for(size_t j = 0; j < n; ++j){
+    for(int j = 0; j < n; ++j){
       cf->gradx( xin, sampleset->x(j), g );
       D.col(j) = g;
     }
@@ -172,7 +173,42 @@ namespace libgp {
   }
 
 
+  Eigen::VectorXd GaussianProcess::dvardx(const double dx[])
+  {
+    Eigen::VectorXd vargrad = Eigen::VectorXd::Constant(input_dim,0.0);
+    if (sampleset->empty()) return vargrad;
 
+    Eigen::Map<const Eigen::VectorXd> xin(dx, input_dim);
+    
+    compute();
+    update_alpha();
+    update_k_star(xin);
+
+
+    int n = sampleset->size();
+    Eigen::MatrixXd D1 = Eigen::MatrixXd::Zero(n,input_dim);
+    Eigen::MatrixXd D2 = Eigen::MatrixXd::Zero(n,input_dim);
+   
+    Eigen::VectorXd g1(input_dim); g1.setZero();
+    Eigen::VectorXd g2(input_dim); g2.setZero();
+
+    for(int j = 0; j < n; ++j){
+      cf->gradx( xin, sampleset->x(j), g1 ); // TODO: optimize this, most of the cases gradx(xin,xj) = - gradx(xj,xin)
+      cf->gradx( sampleset->x(j), xin, g2 ); // TODO: optimize (DW)
+      D1.row(j) = g1;
+      D2.row(j) = g2;
+    }
+
+    L.topLeftCorner(n, n).triangularView<Eigen::Lower>().solveInPlace(D1);
+    L.topLeftCorner(n, n).triangularView<Eigen::Lower>().solveInPlace(D2);
+
+    vargrad = - k_star.transpose() * (D1 - D2); // TODO: minus because of product rule, we cannot generalize this!! (DW)
+
+    // TODO: what about derivative k_star_star (DW)
+
+    return vargrad;
+
+  }
 
 
   void GaussianProcess::compute()
@@ -201,9 +237,6 @@ namespace libgp {
     //solver.compute(K.selfadjointView<Eigen::Lower>());
     L.topLeftCorner(n, n) = L.topLeftCorner(n, n).selfadjointView<Eigen::Lower>().llt().matrixL();
     alpha_needs_update = true;
-
-
-
 
 
   }

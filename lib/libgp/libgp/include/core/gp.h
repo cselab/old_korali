@@ -62,6 +62,11 @@ namespace libgp {
      *  @return predicted variance */
     virtual double var(const double x[]);
 
+    /** gradient of the variance of prediction for given input.
+     *  @param x input vector
+     *  @return gradient of var */
+    virtual Eigen::VectorXd dvardx(const double[]);
+
     /** Add input-output-pair to sample set.
      *  Add a copy of the given input-output-pair to sample set.
      *  @param x input array

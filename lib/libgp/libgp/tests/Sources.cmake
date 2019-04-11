@@ -5,6 +5,7 @@ SET(LIBGP_TESTS
   test_optimizer.cc
   test_covariance_functions.cc
   test_gradx_covariance_functions.cc
+  test_vargradx_covariance_functions.cc
   test_gp_utils.cc
   test_cov_factory.cc
 )

@@ -57,8 +57,14 @@ namespace libgpwrap{
       void eval_f( );
 
       void eval_df( );
+      
+      void eval_var( );
+      
+      void eval_dvar( );
 
       double validate_df( int k, double h, std::string filename );
+      
+      double validate_dvar( int k, double h, std::string filename );
 
     protected:
 
@@ -66,8 +72,9 @@ namespace libgpwrap{
 
       dmatrix data;
 
-      Eigen::MatrixXd X, DF;
-      Eigen::VectorXd F, DFFD;
+      Eigen::MatrixXd X, DF, DV;
+      
+      Eigen::VectorXd F, DFFD, V, DVVD;
 
       int Ns, dim;
 

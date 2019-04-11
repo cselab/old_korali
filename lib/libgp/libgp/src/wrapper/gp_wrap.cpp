@@ -207,11 +207,44 @@ namespace libgpwrap{
       DF.row(i) = gp->dfdx( x );
 
     }
-
+  
   }
 
 
+  void gp_data::eval_var( ){
 
+    assert( X.rows()>0 && X.cols()==dim );
+
+    V.resize( X.rows() );
+
+    for( int i=0; i<X.rows(); i++){
+
+      double x[dim];  // ugly; find better way. overload?
+      for(int j=0 ; j<X.cols() ; j++) x[j] = X(i,j);
+
+      V(i) = gp->var(x);
+    
+    }
+
+  }
+
+   
+  void gp_data::eval_dvar( ){
+
+    assert( X.rows()>0 && X.cols()==dim );
+
+    DV.resize( X.rows(), X.cols() );
+
+    for( int i=0; i<X.rows(); i++){
+
+      double x[dim];  // ugly; find better way. overload?
+      for(int j=0 ; j<X.cols() ; j++) x[j] = X(i,j);
+
+      DV.row(i) = gp->dvardx( x );
+
+    }
+
+  }
 
   double gp_data::validate_df( int k, double h, string filename ){
 
@@ -227,11 +260,33 @@ namespace libgpwrap{
     if( !filename.empty() ){
       FILE *fp = fopen(filename.c_str(),"w");
       for( int i=1; i<N-1; i++ )
-        fprintf(fp,"%.10le %.10le %.10le \n ",X(i,k),DF(i,k),DFFD(i-1));
+        fprintf(fp,"%.10le %.10le %.10le \n ", X(i,k), DF(i,k), DFFD(i-1));
       fclose(fp);
     }
 
     return ( DFFD - DF.col(k).segment(1,N-2) ).norm();
+
+  }
+
+  double gp_data::validate_dvar( int k, double h, string filename ){
+
+    assert( X.rows()>0 && X.cols()==dim );
+    assert( k < dim);
+
+    int N = X.rows();
+
+    DVVD.resize( X.rows()-2 );
+
+    DVVD = ( V.tail(N-2) - V.head(N-2) )/(2*h);
+
+    if( !filename.empty() ){
+      FILE *fp = fopen(filename.c_str(),"w");
+      for( int i=1; i<N-1; i++ )
+        fprintf(fp,"%.10le %.10le %.10le \n ", X(i,k), DV(i,k), DVVD(i-1));
+      fclose(fp);
+    }
+
+    return ( DVVD - DV.col(k).segment(1,N-2) ).norm();
 
   }
 
