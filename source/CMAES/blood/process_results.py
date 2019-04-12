@@ -10,15 +10,17 @@ for x in lines:
 
 f.close()
 
-x1 = list(zip(*result))[0]
-x2 = list(zip(*result))[1]
-x3 = list(zip(*result))[2]
-x4 = list(zip(*result))[3]
-x5 = list(zip(*result))[4]
-x6 = list(zip(*result))[5]
+get = lambda idx : list(map(float, list(zip(*result))[idx]))
 
 print(result)
-print(x1)
 
-plt.plot(x2,x3,x4,x5,x6)
-plt.axis(x1)
+x1 = get(0)
+x2 = get(1)
+x3 = get(2)
+x4 = get(3)
+x5 = get(4)
+x6 = get(5)
+f  = get(6)
+
+plt.plot(x1,x2,'--b')
+plt.show()
