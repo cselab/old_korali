@@ -1,3 +1,5 @@
+source/make/common.mk
+
 *.o
 *.a
 *.swp

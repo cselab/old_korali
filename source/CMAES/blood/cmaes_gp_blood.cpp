@@ -29,7 +29,7 @@ double *bds;
 void write_best(int idx, CmaesEngine& engine);
 void testGp(GaussianProcess& gp, double low, double up, size_t N);
 
-const char* fname = "results6.txt";
+const char* fname = "amresults6.txt";
 
 int main(int argc, char** argv)
 {
@@ -53,8 +53,8 @@ int main(int argc, char** argv)
         
         double dx = (double)i*(bds[1]-bds[0])/(double)M + bds[0];
         printf("\n\nITERATION %d of %d (dx = %.9f)\n", i, M, dx);
-        auto f = [dx] (double* theta, int N, void*, int*) { double x[N+1]; for(int j = 0; j<N+1; ++j) { if ( j < (P-1) ) x[j] = theta[j]; else if (j == (P-1)) x[j] = dx; else x[j] = theta[j-1]; }  return gpllk(x, N+1); };
-        auto engine = CmaesEngine(f, "./run/");
+        auto f = [dx] (double* theta, int N, void*, int*) { double x[N+1]; for(int j = 0; j<N+1; ++j) { if ( j < (P-1) ) x[j] = theta[j]; else if (j == (P-1)) x[j] = dx; else x[j] = theta[j-1]; }  return -gpllk(x, N+1); };
+        auto engine = CmaesEngine(f, "./arun/");
         engine.run();
         write_best(i , engine);
     }
