@@ -1,7 +1,10 @@
 # source/CMAES/blood/Makefile
 
-CXXFLAGS += -DD5
-CXXFLAGS += -DP4
+# run: make DATA=XXX PARAM=YYY
+#CXXFLAGS += -DDATASET$(DATA)
+#CXXFLAGS += -DPARAM$(PARAM)
+
+CXXFLAGS += -DDATASET5
 
 include ../../make/common.mk
 

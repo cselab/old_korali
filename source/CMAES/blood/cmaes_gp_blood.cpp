@@ -13,9 +13,9 @@
 using namespace libgp;
 using namespace fitfun;
 
-int M = 1000000;
+int P;
+int M = 1e4;
 
-int P = 6;
 double bds_q1 [] = {0, 1};
 double bds_q2 [] = {0, 1};
 double bds_q3 [] = {0, 1};
@@ -28,34 +28,21 @@ double *bds;
 void write_best(int idx, CmaesEngine& engine);
 void testGp(GaussianProcess& gp, double low, double up, size_t N);
 
-const char* fname = "amresults4.txt";
+const char* fname;
+const char* folder;
 
 int main(int argc, char** argv)
 {
 
-    #ifdef P1
-    P=1;
-    #endif
-    #ifdef P2
-    P=2;
-    #endif
-    #ifdef P3
-    P=3;
-    #endif
-    #ifdef P4
-    P=4;
-    #endif
-    #ifdef P5
-    P=5;
-    #endif
+    P = atoi(argv[1]);
 
     switch(P) {
-        case 1 : bds = bds_q1; break;
-        case 2 : bds = bds_q2; break;
-        case 3 : bds = bds_q3; break;
-        case 4 : bds = bds_q4; break;
-        case 5 : bds = bds_mu; break;
-        case 6 : bds = bds_sig; break;
+        case 1 : folder = "./arun1/"; fname = "p1_results.txt"; bds = bds_q1; break;
+        case 2 : folder = "./arun2/"; fname = "p2_results.txt"; bds = bds_q2; break;
+        case 3 : folder = "./arun3/"; fname = "p3_results.txt"; bds = bds_q3; break;
+        case 4 : folder = "./arun4/"; fname = "p4_results.txt"; bds = bds_q4; break;
+        case 5 : folder = "./arun5/"; fname = "p5_results.txt"; bds = bds_mu; break;
+        case 6 : folder = "./arun6/"; fname = "p6_results.txt"; bds = bds_sig; break;
     }
     
     FILE * pFile = fopen(fname, "a");
@@ -70,7 +57,7 @@ int main(int argc, char** argv)
         double dx = (double)i*(bds[1]-bds[0])/(double)M + bds[0];
         printf("\n\nITERATION %d of %d (dx = %.9f)\n", i, M, dx);
         auto f = [dx] (double* theta, int N, void*, int*) { double x[N+1]; for(int j = 0; j<N+1; ++j) { if ( j < (P-1) ) x[j] = theta[j]; else if (j == (P-1)) x[j] = dx; else x[j] = theta[j-1]; }  return -gpllk(x, N+1); };
-        auto engine = CmaesEngine(f, "./arun4/");
+        auto engine = CmaesEngine(f, folder);
         engine.run();
         write_best(i , engine);
     }

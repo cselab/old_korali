@@ -1,0 +1,61 @@
+#function number 1 2 5 6 8 23  # the first number is read by example_restarts.c, see there.
+#restarts 0                    # read by example_restarts.c, remark that restarts 
+                              # with the same initialX might be sub-optimal
+#
+# Input parameter file for cmaes_t.  
+# Comments start with '#' or '%' until end of line.
+# Actual recent parameter setting is written to file actparcmaes.par.
+# 
+
+## --- OBLIGATORY SETTINGS
+# these settings, if read, overwrite the input values to cmaes_init 
+
+N 5              # Problem dimension, overwrites parameter in cmaes_init
+initialX 5:      # Initial search point. Syntax: 1==read one number, see also end of file. 
+  0.5 0.5 0.5  2.5 0.01
+typicalX 5:      # Typical search point (useful for restarts, cave: boundaries), overwritten by initialX 
+  0.5  0.5 0.5 2.5 0.01
+initialStandardDeviations  5:    #  1==read only one number for all coordinates
+  0.2  0.2  0.2  1 0.005
+                                 #  numbers should not differ by orders of magnitude
+                                 #  should be roughly 1/4 of the search interval
+                                 #  this number essentially influences the global 
+                                 #  search ability (ie. the horizon where to search
+                                 #  at all) on multimodal functions
+
+## --- OPTIONAL SETTINGS
+
+# stop-Parameters can be changed online via cmaes_signals.par
+
+stopMaxFunEvals   1e9   # max number of f-evaluations, 900*(N+3)*(N+3) is default
+stopMaxIter       1e6     # max number of iterations (generations), inf is default
+
+stopTolFun 1e-10     # stop if function value differences are 
+                     # smaller than stopTolFun, default=1e-12
+stopTolFunHist 1e-10 # stop if function value differences of best values are 
+                     # smaller than stopTolFunHist, default was 0
+stopTolX 1e-10   # stop if step sizes/steps in x-space are 
+                 # smaller than TolX, default=0
+stopTolUpXFactor 1e3 # stop if std dev increases more than by TolUpXFactor, default 1e3
+
+seed 0            # 0 == by time, also regard maxTimeFractionForEigendecomposition
+                  #   below, as for values smaller than one the outcome might not be  
+                  #   exactly reproducible even with the same seed
+
+
+## --- Strategy internal parameter ---
+##     default values are set in cmaes_readpara_SupplementDefaults()
+## -- Selection related parameters
+lambda 16        # number of offspring == samplesize
+# mu  
+# weights      log # possible values: log (==default), 
+                   #   lin (==linearely decreasing), or equal 
+
+## -- Adaptation (distribution estimation) related parameters
+# diagonalCovarianceMatrix -1   # number of iterations, 1<==>always, -1<==>2+100*N/sqrt(lambda)
+# fac*damp      1  # increase or decrease damping for step size control.
+# ccumcov       1  # default is 4/(N+4), 1 means no cumulation for p_c.
+# mucov         1  # 1 means only rank 1 update of C
+# fac*ccov      1  # multiplier for default learning rate for cov. matrix
+
+
