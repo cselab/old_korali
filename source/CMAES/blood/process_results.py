@@ -22,5 +22,28 @@ x5 = get(4)
 x6 = get(5)
 f  = get(6)
 
+plt.subplot(611)
+plt.plot(x1, x2)
+plt.ylim(0,1)
+plt.subplot(612)
+plt.plot(x1, x3)
+plt.ylim(0,1)
+plt.subplot(613)
+plt.plot(x1, x4)
+plt.ylim(0,1)
+plt.subplot(614)
+plt.plot(x1, x5)
+plt.ylim(0,1)
+plt.subplot(615)
+plt.plot(x1, x6)
+plt.ylim(0,0.02)
+plt.subplot(616)
+plt.plot(x1, f)
+plt.ylim(-30,-25)
+
+
+
+
+plt.show()
 plt.plot(x1,x2,'--b')
 plt.show()
