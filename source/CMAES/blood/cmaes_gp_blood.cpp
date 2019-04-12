@@ -44,9 +44,9 @@ int main(int argc, char** argv)
     
     FILE * pFile = fopen(fname, "a");
     if (pFile == NULL) { printf("ERROR: could not open file!!!"); return 1; }
-    fprintf(pFile, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+    fprintf(pFile, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
     fprintf(pFile, " Profiling Parameter %d with bounds (%f, %f) and %d Steps\n", P, bds[0], bds[1], M);
-    fprintf(pFile, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+    fprintf(pFile, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
     fclose (pFile); 
 
     for(int i = 0; i <= M; ++i) {
@@ -77,7 +77,7 @@ void write_best(int idx, CmaesEngine& engine)
     for(int i = 0; i < evo->sp.N+1; ++i) {
         if ( i < (P-1) )     x = evo->rgxbestever[i]; 
         else if (i == (P-1)) x = dx; 
-        else             x = evo->rgxbestever[i-1];  
+        else                 x = evo->rgxbestever[i-1];  
         
         fprintf(pFile, "%.15f\t", x);
     }
