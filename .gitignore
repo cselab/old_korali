@@ -36,6 +36,8 @@ lib/torc_lite/
 source/CMAES/cma
 source/CMAES/test/*/cma
 source/CMAES/test/testxx
+source/CMAES/blood/cmaes_gp_blood
+source/CMAES/blood/cmaes_x_blood
 
 source/TMCMC/engine_tmcmc
 source/TMCMC/tmcmcxx
