@@ -17,6 +17,7 @@
 
 #include <string>
 #include <stdio.h>
+#include <functional>
 
 extern "C" {
 
@@ -33,19 +34,22 @@ extern "C" {
 
 #define VERBOSE 0
 #define JOBMAXTIME 0
-#define _IODUMP_ 1
+#define _IODUMP_ 0
+
 
 class CmaesEngine
 {
 
 public:
-    CmaesEngine(double (*fun) (double*, int, void*, int*),
+    CmaesEngine(std::function<double(double*, int, void*, int*)> fun,
                 std::string workdir = ".",
                 std::string cmaes_par = "cmaes_initials.par",
                 std::string cmaes_bounds_par = "cmaes_bounds.par",
                 std::string prios_par = "priors.par",
                 int restart = 0);
 
+    using F = std::function<double(double*, int, void*, int*)>;
+    
     ~CmaesEngine();
 
     double run();
@@ -75,7 +79,7 @@ private:
     double *const*pop_;
     double *arFunvals_;
 
-    static double (*fitfun_) (double*, int, void*, int*);
+    static F fitfun_;
     static void taskfun_(double *x, int *no, double* res, int *info);
     double evaluate_population( cmaes_t *evo, double *arFunvals, double * const* pop, Density *d, int step );
 };

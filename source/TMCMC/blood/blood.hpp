@@ -92,8 +92,9 @@ gsl_vector * gpllk_grad(const double * theta, int N) {
     gsl_vector_scale(grad,1.0/var);                                 //divide all elements by var
 
 #ifdef DEBUG
+    printf("_NEXP: %d\n", NEXP);
+    printf("_var: %f\n", var);
     printf("_sse: %f\n", sse);
-    printf("_sig: %f\n", theta[N-1]);
     printf("_grad:");  
     for(int i = 0; i <  N; ++i) printf("  %f  ", *(grad->data+i));
     printf("\n");

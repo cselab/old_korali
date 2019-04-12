@@ -3,7 +3,7 @@
 #include "engine_cmaes.hpp"
 #include "engine_cmaes_utils.hpp"
 
-CmaesEngine::CmaesEngine(double (*fun) (double*, int, void*, int*),
+CmaesEngine::CmaesEngine(std::function<double(double*, int, void*, int*)> fun,
                          std::string workdir, std::string cmaes_par,
                          std::string cmaes_bounds_par, std::string priors_par,
                          int restart)
@@ -219,7 +219,7 @@ double CmaesEngine::run()
     return 0.0;
 }
 
-double (*CmaesEngine::fitfun_) (double*, int, void*, int*);
+CmaesEngine::F CmaesEngine::fitfun_;
 
 void CmaesEngine::taskfun_(double *x, int *n, double *res,
                            int /* deprecated */ *info)

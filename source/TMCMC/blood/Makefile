@@ -54,7 +54,7 @@ tmcmc_gp_blood: tmcmc_gp_blood.o
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
-tmcmc_gp_blood.o: tmcmc_gp_blood.cpp
+tmcmc_gp_blood.o: tmcmc_gp_blood.cpp blood.hpp
 
 mtmcmc_gp_blood: mtmcmc_gp_blood.o
 	(cd $(DIR_PRIORSXX); make libpriorsxx.a)
@@ -62,7 +62,7 @@ mtmcmc_gp_blood: mtmcmc_gp_blood.o
 	(cd $(DIR_TMCMCXX); make libtmcmcxx.a)
 	$(LINK.o.xx) $^ $(LDXLIBS)
 
-mtmcmc_gp_blood.o: mtmcmc_gp_blood.cpp
+mtmcmc_gp_blood.o: mtmcmc_gp_blood.cpp blood.hpp
 
 clean:; rm -rf tmcmc_gp_blood mtmcmc_gp_blood *.o
 	(cd $(DIR_PRIORSXX); make clean)
