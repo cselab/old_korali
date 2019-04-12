@@ -15,7 +15,7 @@ using namespace fitfun;
 
 int P = 6;
 
-int M = 10000;
+int M = 1000000;
 
 double bds_q1 [] = {0, 1};
 double bds_q2 [] = {0, 1};
