@@ -28,6 +28,9 @@ source/CAMES/gp/cmaes_gp_blood.dSYM/
 source/CMAES/test/*/*.dat
 source/CMAES/test/*/*.err
 source/CMAES/test/*/*.par
+actparcmaes.par
+allcmaes.dat
+
 
 # Torc libs
 lib/torc_lite/
