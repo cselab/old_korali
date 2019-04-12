@@ -13,10 +13,9 @@
 using namespace libgp;
 using namespace fitfun;
 
-int P = 6;
-
 int M = 1000000;
 
+int P = 6;
 double bds_q1 [] = {0, 1};
 double bds_q2 [] = {0, 1};
 double bds_q3 [] = {0, 1};
@@ -29,10 +28,27 @@ double *bds;
 void write_best(int idx, CmaesEngine& engine);
 void testGp(GaussianProcess& gp, double low, double up, size_t N);
 
-const char* fname = "amresults6.txt";
+const char* fname = "amresults4.txt";
 
 int main(int argc, char** argv)
 {
+
+    #ifdef P1
+    P=1;
+    #endif
+    #ifdef P2
+    P=2;
+    #endif
+    #ifdef P3
+    P=3;
+    #endif
+    #ifdef P4
+    P=4;
+    #endif
+    #ifdef P5
+    P=5;
+    #endif
+
     switch(P) {
         case 1 : bds = bds_q1; break;
         case 2 : bds = bds_q2; break;
@@ -54,7 +70,7 @@ int main(int argc, char** argv)
         double dx = (double)i*(bds[1]-bds[0])/(double)M + bds[0];
         printf("\n\nITERATION %d of %d (dx = %.9f)\n", i, M, dx);
         auto f = [dx] (double* theta, int N, void*, int*) { double x[N+1]; for(int j = 0; j<N+1; ++j) { if ( j < (P-1) ) x[j] = theta[j]; else if (j == (P-1)) x[j] = dx; else x[j] = theta[j-1]; }  return -gpllk(x, N+1); };
-        auto engine = CmaesEngine(f, "./arun/");
+        auto engine = CmaesEngine(f, "./arun4/");
         engine.run();
         write_best(i , engine);
     }

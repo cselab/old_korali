@@ -1,6 +1,7 @@
 # source/CMAES/blood/Makefile
 
 CXXFLAGS += -DD5
+CXXFLAGS += -DP4
 
 include ../../make/common.mk
 
