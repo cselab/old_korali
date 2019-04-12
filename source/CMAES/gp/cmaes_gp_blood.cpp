@@ -5,12 +5,9 @@
 #include <libgp/libgp/include/core/gp_utils.h>
 #include <libgp/libgp/include/core/rprop.h>
 
-#include "fitfun.hpp"
-#include "rosenbrock.hpp"
 #include "engine_cmaes.hpp"
 
 using namespace libgp;
-using namespace fitfun;
 
 GaussianProcess gpblood("gp_blood.txt");
 
