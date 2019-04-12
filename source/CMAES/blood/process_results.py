@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-f=open("p1_results.txt", 'r')
+f=open("p4_results.txt", 'r')
 
 lines=f.readlines()[3:] # skip first
 result=[]
@@ -11,8 +11,6 @@ for x in lines:
 f.close()
 
 get = lambda idx : list(map(float, list(zip(*result))[idx]))
-
-print(result)
 
 x1 = get(0)
 x2 = get(1)
@@ -41,9 +39,4 @@ plt.subplot(616)
 plt.plot(x1, f)
 plt.ylim(-30,-25)
 
-
-
-
-plt.show()
-plt.plot(x1,x2,'--b')
 plt.show()
