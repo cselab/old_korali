@@ -2,13 +2,20 @@
 
 # compilers and flags
 
+euler?=0
 use_torc?=0
 use_omp?=0
 
 CC  := gcc
 LD  := gcc
-CXX := g++-8
-LDX := g++-8
+
+ifeq($(euler),1)
+	CXX := g++
+	LDX := g++
+else
+	CXX := g++-8
+	LXX := g++-8
+endif
 
 ifeq ($(use_torc),1)
 	CFLAGS   += -D_USE_TORC_=1 `torc_cflags` 
