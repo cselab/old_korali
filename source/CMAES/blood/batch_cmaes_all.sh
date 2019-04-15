@@ -1,3 +1,5 @@
+#!/bin/bash
+
 for d in {3..7}
 do
 
