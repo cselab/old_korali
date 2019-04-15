@@ -9,7 +9,7 @@ use_omp?=0
 CC  := gcc
 LD  := gcc
 
-ifeq($(euler),1)
+ifeq ($(euler),1)
 	CXX := g++
 	LDX := g++
 else

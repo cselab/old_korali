@@ -15,7 +15,7 @@ using namespace fitfun;
 
 
 #ifdef DATASET3
-std::string datastr = "set3";
+std::string datastr = "set3_";
 size_t NEXP  = 5; // num experimental data
 double F[] = { 5.714981, 11.435213, 12.377169, 22.796679, 24.760591 }; //3
 double OUT[] = { 0.029267, 0.026932, 0.023028, 0.021188, 0.021306 }; //3
@@ -23,7 +23,7 @@ double OUT[] = { 0.029267, 0.026932, 0.023028, 0.021188, 0.021306 }; //3
 
 
 #ifdef DATASET4
-std::string datastr = "set4";
+std::string datastr = "set4_";
 size_t NEXP  = 3; // num experimental data
 double F[] = { 6.059418, 10.820390, 20.602023 }; //4
 double OUT[] = { 0.035286, 0.032080, 0.030420 }; //4
@@ -31,7 +31,7 @@ double OUT[] = { 0.035286, 0.032080, 0.030420 }; //4
 
 
 #ifdef DATASET5
-std::string datastr = "set5";
+std::string datastr = "set5_";
 size_t NEXP  = 5; // num experimental data
 double F[]   = { 6.555291, 9.832936, 13.110581, 16.388226, 19.665872 }; // 5: experimental data (Force)
 double OUT[] = { 0.039364, 0.030558, 0.032415, 0.028117, 0.028064 };    // 5: experimental data (TTf)
@@ -39,7 +39,7 @@ double OUT[] = { 0.039364, 0.030558, 0.032415, 0.028117, 0.028064 };    // 5: ex
 
 
 #ifdef DATASET6
-std::string datastr = "set6";
+std::string datastr = "set6_";
 size_t NEXP  = 5; // num experimental data
 double F[] = { 5.867770, 11.611925, 12.005029, 23.673504, 24.671042 }; //6
 double OUT[] = { 0.035660, 0.031749, 0.031790, 0.028413, 0.028243 }; //6
@@ -47,7 +47,7 @@ double OUT[] = { 0.035660, 0.031749, 0.031790, 0.028413, 0.028243 }; //6
 
 
 #ifdef DATASET7
-std::string datastr = "set7";
+std::string datastr = "set7_";
 size_t NEXP  = 2; // num experimental data
 double F[] = { 6.242403, 12.590044 }; //7
 double OUT[] = { 0.031000, 0.028000 }; //7
