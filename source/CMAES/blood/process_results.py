@@ -1,6 +1,14 @@
+import sys
+import numpy as np
 import matplotlib.pyplot as plt
 
-f=open("p4_results.txt", 'r')
+param = sys.argv[1]
+
+print("running param " + param)
+filename = "p" + param + "_results.txt"
+
+print("opening file: " + filename)
+f=open(filename, 'r')
 
 lines=f.readlines()[3:] # skip first
 result=[]
@@ -20,23 +28,28 @@ x5 = get(4)
 x6 = get(5)
 f  = get(6)
 
-plt.subplot(611)
-plt.plot(x1, x2)
-plt.ylim(0,1)
-plt.subplot(612)
-plt.plot(x1, x3)
-plt.ylim(0,1)
-plt.subplot(613)
-plt.plot(x1, x4)
-plt.ylim(0,1)
-plt.subplot(614)
-plt.plot(x1, x5)
-plt.ylim(0,1)
-plt.subplot(615)
-plt.plot(x1, x6)
-plt.ylim(0,0.02)
-plt.subplot(616)
-plt.plot(x1, f)
-plt.ylim(-30,-25)
+main = get(int(param)-1)
+
+plt.subplot(711)
+plt.plot(main, x1)
+plt.ylim(-0.1,1.1)
+plt.subplot(712)
+plt.plot(main, x2)
+plt.ylim(-0.1,1.1)
+plt.subplot(713)
+plt.plot(main, x3)
+plt.ylim(-0.1,1.1)
+plt.subplot(714)
+plt.plot(main, x4)
+plt.ylim(-0.1,1.1)
+plt.subplot(715)
+plt.plot(main, x5)
+plt.ylim(-0.1,1.1)
+plt.subplot(716)
+plt.plot(main, x6)
+plt.ylim(-0.02,0.22)
+plt.subplot(717)
+plt.plot(main, np.log(f))
+#plt.ylim(-30,-25)
 
 plt.show()
