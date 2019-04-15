@@ -4,7 +4,7 @@
 #CXXFLAGS += -DDATASET$(DATA)
 #CXXFLAGS += -DPARAM$(PARAM)
 
-CXXFLAGS += -DDATASET5
+CXXFLAGS += -DDATASET$(DATA)
 
 include ../../make/common.mk
 

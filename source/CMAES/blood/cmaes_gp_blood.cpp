@@ -28,7 +28,7 @@ double *bds;
 void write_best(int idx, CmaesEngine& engine);
 void testGp(GaussianProcess& gp, double low, double up, size_t N);
 
-const char* fname;
+std::string fname;
 const char* folder;
 
 int main(int argc, char** argv)
@@ -37,15 +37,15 @@ int main(int argc, char** argv)
     P = atoi(argv[1]);
 
     switch(P) {
-        case 1 : folder = "./arun1/"; fname = "p1_results.txt"; bds = bds_q1; break;
-        case 2 : folder = "./arun2/"; fname = "p2_results.txt"; bds = bds_q2; break;
-        case 3 : folder = "./arun3/"; fname = "p3_results.txt"; bds = bds_q3; break;
-        case 4 : folder = "./arun4/"; fname = "p4_results.txt"; bds = bds_q4; break;
-        case 5 : folder = "./arun5/"; fname = "p5_results.txt"; bds = bds_mu; break;
-        case 6 : folder = "./arun6/"; fname = "p6_results.txt"; bds = bds_sig; break;
+        case 1 : folder = "./arun1/"; fname = datastr + "p1_results_set1.txt"; bds = bds_q1; break;
+        case 2 : folder = "./arun2/"; fname = datastr + "p2_results_set1.txt"; bds = bds_q2; break;
+        case 3 : folder = "./arun3/"; fname = datastr + "p3_results_set1.txt"; bds = bds_q3; break;
+        case 4 : folder = "./arun4/"; fname = datastr + "p4_results_set1.txt"; bds = bds_q4; break;
+        case 5 : folder = "./arun5/"; fname = datastr + "p5_results_set1.txt"; bds = bds_mu; break;
+        case 6 : folder = "./arun6/"; fname = datastr + "p6_results_set1.txt"; bds = bds_sig; break;
     }
     
-    FILE * pFile = fopen(fname, "a");
+    FILE * pFile = fopen(fname.c_str(), "a");
     if (pFile == NULL) { printf("ERROR: could not open file!!!"); return 1; }
     fprintf(pFile, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
     fprintf(pFile, " Profiling Parameter %d with bounds (%f, %f) and %d Steps\n", P, bds[0], bds[1], M);
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
 void write_best(int idx, CmaesEngine& engine)
 {
-    FILE * pFile = fopen(fname, "a");
+    FILE * pFile = fopen(fname.c_str(), "a");
     if (pFile == NULL) { printf("ERROR: could not open file!!!"); return; }
     
     auto evo = engine.getEvo();
