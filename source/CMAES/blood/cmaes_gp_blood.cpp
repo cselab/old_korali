@@ -37,12 +37,12 @@ int main(int argc, char** argv)
     P = atoi(argv[1]);
 
     switch(P) {
-        case 1 : folder = "./arun1/"; fname = datastr + "p1_results_set1.txt"; bds = bds_q1; break;
-        case 2 : folder = "./arun2/"; fname = datastr + "p2_results_set1.txt"; bds = bds_q2; break;
-        case 3 : folder = "./arun3/"; fname = datastr + "p3_results_set1.txt"; bds = bds_q3; break;
-        case 4 : folder = "./arun4/"; fname = datastr + "p4_results_set1.txt"; bds = bds_q4; break;
-        case 5 : folder = "./arun5/"; fname = datastr + "p5_results_set1.txt"; bds = bds_mu; break;
-        case 6 : folder = "./arun6/"; fname = datastr + "p6_results_set1.txt"; bds = bds_sig; break;
+        case 1 : folder = "./arun1/"; fname = datastr + "p1_results.txt"; bds = bds_q1; break;
+        case 2 : folder = "./arun2/"; fname = datastr + "p2_results.txt"; bds = bds_q2; break;
+        case 3 : folder = "./arun3/"; fname = datastr + "p3_results.txt"; bds = bds_q3; break;
+        case 4 : folder = "./arun4/"; fname = datastr + "p4_results.txt"; bds = bds_q4; break;
+        case 5 : folder = "./arun5/"; fname = datastr + "p5_results.txt"; bds = bds_mu; break;
+        case 6 : folder = "./arun6/"; fname = datastr + "p6_results.txt"; bds = bds_sig; break;
     }
     
     FILE * pFile = fopen(fname.c_str(), "a");
